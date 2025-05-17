@@ -11,20 +11,26 @@ export const useMutateLogin = () => {
   const setToken = useSetRecoilState(tokenState);
 
   return useMutation({
-    mutationFn: (params) => {
-      return API.request({
+    mutationFn: async (params) => {
+      // Return the result from API.request
+      const response = await API.request({
         url: '/api/auth/login',
         method: 'POST',
         params: params
-      })
-        .then((res) => {
-          const token = res.token;
-          setToken(token);
-          navigate('/');
-        })
-        .catch(() => {
-          showToast({ type: 'error', message: 'Tài khoản hoặc mật khẩu không chính xác' });
-        });
+      });
+
+      return response; // Return the response so we can use it in onSuccess
+    },
+    onSuccess: (response) => {
+      const token = response.token;
+      setToken(token);
+      navigate('/');
+    },
+    onError: () => {
+      showToast({
+        type: 'error',
+        message: 'Tài khoản hoặc mật khẩu không chính xác'
+      });
     }
   });
 };
@@ -38,25 +44,29 @@ export const useQueryUserInfo = () => {
 
   const { data, isLoading, error } = useQuery({
     queryKey,
-    queryFn: () =>
-      API.request({
+    queryFn: async () => {
+      const res = await API.request({
         url: '/api/user'
-      }).then((res) => {
-        const userRoles = res?.authorities?.map((i) => i.role) || [];
+      });
 
-        if (!userRoles?.includes('ROLE_SUPER_ADMIN') && !userRoles?.includes('ROLE_ADMIN')) {
-          showToast({
-            type: 'error',
-            message: 'Bạn không có quyền đăng nhập hệ thống'
-          });
-          setToken(undefined);
-          return;
-        }
+      // const userRoles = res?.authorities?.map((i) => i.role) || [];
 
-        setUserInfo(res);
-        return res;
-      }),
-    enabled: isEmpty(dataClient) && !!token
+      // if (!userRoles?.includes('ROLE_SUPER_ADMIN') && !userRoles?.includes('ROLE_ADMIN')) {
+      //   throw new Error('Bạn không có quyền đăng nhập hệ thống');
+      // }
+
+      setUserInfo(res);
+      return res;
+    },
+    onError: (err) => {
+      showToast({
+        type: 'error',
+        message: err.message
+      });
+      setToken(undefined);
+    },
+    enabled: isEmpty(dataClient) && !!token,
+    retry: false
   });
 
   if (!isEmpty(dataClient)) {
