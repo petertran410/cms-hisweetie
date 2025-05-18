@@ -2,6 +2,7 @@ import { tokenState, userInfoAtom } from '@/states/common';
 import { API } from '@/utils/API';
 import { showToast } from '@/utils/helper';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { jwtDecode } from 'jwt-decode';
 import { isEmpty } from 'lodash';
 import { useNavigate } from 'react-router-dom';
 import { useRecoilState, useSetRecoilState } from 'recoil';
@@ -19,7 +20,7 @@ export const useMutateLogin = () => {
         params: params
       });
 
-      return response; // Return the response so we can use it in onSuccess
+      return response;
     },
     onSuccess: (response) => {
       const token = response.token;
@@ -49,14 +50,20 @@ export const useQueryUserInfo = () => {
         url: '/api/user'
       });
 
-      // const userRoles = res?.authorities?.map((i) => i.role) || [];
+      const decoded = jwtDecode(token);
+      const userRoles = decoded?.roles ? decoded.roles.split(',') : [];
 
-      // if (!userRoles?.includes('ROLE_SUPER_ADMIN') && !userRoles?.includes('ROLE_ADMIN')) {
-      //   throw new Error('Bạn không có quyền đăng nhập hệ thống');
-      // }
+      if (!userRoles?.includes('ROLE_SUPER_ADMIN') && !userRoles?.includes('ROLE_ADMIN')) {
+        throw new Error('Bạn không có quyền đăng nhập hệ thống');
+      }
 
-      setUserInfo(res);
-      return res;
+      const userWithRoles = {
+        ...res,
+        authorities: userRoles.map((role) => ({ role }))
+      };
+
+      setUserInfo(userWithRoles);
+      return userWithRoles;
     },
     onError: (err) => {
       showToast({
