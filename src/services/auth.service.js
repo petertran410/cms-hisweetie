@@ -59,7 +59,7 @@ export const useQueryUserInfo = () => {
 
       const userWithRoles = {
         ...res,
-        authorities: userRoles.map((role) => ({ role }))
+        authority: userRoles.map((role) => ({ role }))
       };
 
       setUserInfo(userWithRoles);

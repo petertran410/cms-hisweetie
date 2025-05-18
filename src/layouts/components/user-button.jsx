@@ -11,13 +11,13 @@ const UserButton = () => {
   const setToken = useSetRecoilState(tokenState);
   const queryClient = useQueryClient();
 
-  const { fullName } = userInfo || {};
+  const { full_name } = userInfo?.[0] || {};
 
   const popoverContent = (
     <div className="w-80 rounded-sm overflow-hidden">
       <div className="bg-[#1e3b57] flex items-center gap-3 px-4 py-3">
         <img src={ImgUser} alt="user" className="w-10 h-10" />
-        <span className="font-semibold text-white">{fullName}</span>
+        <span className="font-semibold text-white">{full_name}</span>
       </div>
       <div className="px-4 py-6">
         <Button
@@ -52,7 +52,7 @@ const UserButton = () => {
         >
           <div className="h-full flex items-center gap-2">
             <img src={ImgUser} alt="user" className="w-8 h-8" />
-            <span className="hidden lg:block font-semibold">{fullName}</span>
+            <span className="hidden lg:block font-semibold">{full_name}</span>
           </div>
         </button>
       </div>
