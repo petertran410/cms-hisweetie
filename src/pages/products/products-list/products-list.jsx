@@ -12,6 +12,7 @@ import { FaCheck } from 'react-icons/fa6';
 import Action from './action';
 import TableFilter from './filter';
 import ImportProduct from './import-product';
+import KiotvietSync from './kiotviet-sync';
 
 const ProductsList = () => {
   const { data: dataQuery = [], isLoading, error } = useQueryProductsList();
@@ -99,6 +100,7 @@ const ProductsList = () => {
       </Helmet>
 
       <div className="flex justify-end mb-5 gap-5">
+        <KiotvietSync />
         <ImportProduct />
         <CreateButton route="/products/create" />
       </div>
