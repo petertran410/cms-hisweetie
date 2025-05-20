@@ -12,12 +12,14 @@ import { FaCheck } from 'react-icons/fa6';
 import Action from './action';
 import TableFilter from './filter';
 import ImportProduct from './import-product';
+import SyncButton from '@/components/sync/sync-button';
 
 const ProductsList = () => {
   const { data: dataQuery = [], isLoading, error } = useQueryProductsList();
   const paramsURL = useGetParamsURL();
   const { page = 1 } = paramsURL || {};
   const queryClient = useQueryClient();
+  const { refetch } = useQueryProductsList();
 
   const columns = [
     {
@@ -61,7 +63,15 @@ const ProductsList = () => {
     },
     {
       title: 'Số lượng',
-      dataIndex: 'quantity'
+      dataIndex: 'quantity',
+      render: (quantity) => (
+        <div>
+          <p className="font-semibold">{quantity}</p>
+          {Number(quantity) === 0 && <Tag color="red">Out of Stock</Tag>}
+          {Number(quantity) < 10 && Number(quantity) > 0 && <Tag color="orange">Low Stock</Tag>}
+          {Number(quantity) >= 10 && <Tag color="green">In Stock</Tag>}
+        </div>
+      )
     },
     {
       title: 'SP nổi bật',
@@ -76,6 +86,16 @@ const ProductsList = () => {
     {
       title: 'Hành động',
       render: (_, record) => <Action item={record} />
+    },
+    {
+      title: 'Last Updated',
+      dataIndex: 'updatedDate',
+      render: (updatedDate) => <p>{dayjs(updatedDate).format('DD/MM/YYYY HH:mm')}</p>
+    },
+    {
+      title: 'KiotViet ID',
+      dataIndex: 'kiotviet_id',
+      render: (id) => id && <p className="text-gray-500 text-sm">{id}</p>
     }
   ];
 
@@ -99,6 +119,7 @@ const ProductsList = () => {
       </Helmet>
 
       <div className="flex justify-end mb-5 gap-5">
+        <SyncButton onSyncComplete={() => refetch()} />
         <ImportProduct />
         <CreateButton route="/products/create" />
       </div>

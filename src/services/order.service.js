@@ -33,7 +33,7 @@ export const useChangeOrderStatus = () => {
     mutationFn: (params) => {
       const { id, status } = params;
       return API.request({
-        url: `/api/product/order/${id}:${status}`,
+        url: `/api/product/order/${id}/status/${status}`,
         method: 'PATCH'
       })
         .then(() => {
