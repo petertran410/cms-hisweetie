@@ -63,15 +63,15 @@ const ProductsList = () => {
     },
     {
       title: 'Số lượng',
-      dataIndex: 'quantity'
-      // render: (quantity) => (
-      //   <div>
-      //     <p className="font-semibold">{quantity}</p>
-      //     {Number(quantity) === 0 && <Tag color="red">Out of Stock</Tag>}
-      //     {Number(quantity) < 10 && Number(quantity) > 0 && <Tag color="orange">Low Stock</Tag>}
-      //     {Number(quantity) >= 10 && <Tag color="green">In Stock</Tag>}
-      //   </div>
-      // )
+      dataIndex: 'quantity',
+      render: (quantity) => (
+        <div>
+          <p className="font-semibold">{quantity}</p>
+          {Number(quantity) === 0 && <Tag color="red">Out of Stock</Tag>}
+          {Number(quantity) < 10 && Number(quantity) > 0 && <Tag color="orange">Low Stock</Tag>}
+          {Number(quantity) >= 10 && <Tag color="green">In Stock</Tag>}
+        </div>
+      )
     },
     {
       title: 'SP nổi bật',
