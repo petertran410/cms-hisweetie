@@ -1,6 +1,6 @@
-// src/components/sync/sync-button.jsx
 import { useMutation } from '@tanstack/react-query';
 import { Button, message } from 'antd';
+import { SyncOutlined } from '@ant-design/icons';
 import { API } from '@/utils/API';
 
 const SyncButton = ({ onSyncComplete }) => {

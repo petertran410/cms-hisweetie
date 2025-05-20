@@ -5,7 +5,7 @@ import { TableStyle } from '@/styles/table.style';
 import { formatCurrency, useGetParamsURL } from '@/utils/helper';
 import { WEBSITE_NAME } from '@/utils/resource';
 import { useQueryClient } from '@tanstack/react-query';
-import { Table } from 'antd';
+import { Table, Tag } from 'antd';
 import { useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { FaCheck } from 'react-icons/fa6';
@@ -13,6 +13,7 @@ import Action from './action';
 import TableFilter from './filter';
 import ImportProduct from './import-product';
 import SyncButton from '@/components/sync/sync-button';
+import dayjs from 'dayjs';
 
 const ProductsList = () => {
   const { data: dataQuery = [], isLoading, error } = useQueryProductsList();
