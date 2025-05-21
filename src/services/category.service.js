@@ -27,7 +27,7 @@ export const useQueryCategoryListByParentId = (parentId) => {
     queryKey,
     queryFn: () =>
       API.request({
-        url: '/api/category/get-all',
+        url: '/api/category/v2/get-all',
         params: { pageSize: 1000, pageNumber: 0, parentId }
       })
   });

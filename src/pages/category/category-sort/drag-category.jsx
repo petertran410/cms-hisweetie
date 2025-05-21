@@ -18,9 +18,8 @@ const SortableItem = SortableElement(({ value }) => {
 const SortableList = SortableContainer(({ items }) => {
   return (
     <div className="flex flex-col gap-3">
-      {items.map((item, index) => (
-        <SortableItem key={`item-${index}`} index={index} value={{ item, index }} />
-      ))}
+      {Array.isArray(items) &&
+        items.map((item, index) => <SortableItem key={`item-${index}`} index={index} value={{ item, index }} />)}
     </div>
   );
 });
@@ -36,12 +35,20 @@ const DragCategory = ({ form }) => {
   };
 
   useEffect(() => {
-    if (typeof dataQuery !== 'undefined') {
-      setItems(dataQuery || []);
+    if (dataQuery) {
+      // Check if dataQuery is an object with content property (API response format)
+      if (dataQuery.content && Array.isArray(dataQuery.content)) {
+        setItems(dataQuery.content);
+      } else if (Array.isArray(dataQuery)) {
+        setItems(dataQuery);
+      } else {
+        // Fallback to empty array if data format is unexpected
+        setItems([]);
+      }
     }
-  }, [dataQuery]);
+  }, [dataQuery, setItems]);
 
-  return <SortableList items={items} onSortEnd={onSortEnd} />;
+  return <SortableList items={items || []} onSortEnd={onSortEnd} />;
 };
 
 export default DragCategory;
