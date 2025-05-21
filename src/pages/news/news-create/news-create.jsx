@@ -31,6 +31,10 @@ const NewsCreate = () => {
             return item.url;
           }
 
+          if (!item?.originFileObj) {
+            return null; // Skip if there's no file
+          }
+
           const formData = new FormData();
           formData.append('file', item?.originFileObj);
           return await API.request({

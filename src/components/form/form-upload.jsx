@@ -18,15 +18,39 @@ const FormUpload = (props) => {
   } = props;
   const [fileList, setFileList] = useState();
 
-  const onChange = useCallback(async (data) => {
-    const { file, fileList } = data;
+  const onChange = useCallback(
+    async (info) => {
+      // Ensure we have valid data to work with
+      if (!info) return;
 
-    if (file.size && Math.round(file.size / 1024) > 5120) {
-      showToast({ type: 'error', message: 'Kích cỡ file không được vượt quá 5 MB!' });
-      return;
-    }
-    setFileList(multiple ? fileList : [fileList[fileList.length - 1]]);
-  }, []);
+      const { file, fileList } = info;
+
+      // Check file size if file exists
+      if (file && file.size && Math.round(file.size / 1024) > 5120) {
+        showToast({ type: 'error', message: 'Kích cỡ file không được vượt quá 5 MB!' });
+        return;
+      }
+
+      // Ensure each file in fileList has a uid
+      const processedFileList = fileList.map((file) => {
+        // If file doesn't have a uid (which might cause the error), assign one
+        if (!file.uid) {
+          return { ...file, uid: `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` };
+        }
+        return file;
+      });
+
+      // Set the processed file list
+      setFileList(
+        multiple
+          ? processedFileList
+          : processedFileList.length > 0
+          ? [processedFileList[processedFileList.length - 1]]
+          : []
+      );
+    },
+    [multiple]
+  );
 
   return (
     <Form.Item
@@ -47,17 +71,41 @@ const FormUpload = (props) => {
         showUploadList
         beforeUpload={() => false}
         onChange={onChange}
+        onRemove={(file) => {
+          // If removing a file, make sure to properly update fileList state
+          if (fileList) {
+            const newFileList = fileList.filter((item) => item.uid !== file.uid);
+            setFileList(newFileList);
+          }
+          return true; // Allow removal
+        }}
         itemRender={(_, file, ___, { remove }) => {
+          // Safe-guard against undefined file
+          if (!file || !file.uid) {
+            console.warn('File without uid encountered:', file);
+            return null;
+          }
+
           if (file.url || (file.type && file.type.startsWith('image/'))) {
             return (
               <div className="mt-5 w-full flex gap-2 items-center">
                 <div className="w-1/4 overflow-hidden">
-                  <Image className="" src={file.url || URL.createObjectURL(file.originFileObj)} alt={file.name} />
+                  <Image
+                    className=""
+                    src={file.url || (file.originFileObj ? URL.createObjectURL(file.originFileObj) : '')}
+                    alt={file.name || 'image'}
+                  />
                 </div>
-                <p className="w-1/2 text-center font-semibold text-ellipsis">{file.name}</p>
                 {!disabled && (
                   <div className="w-1/4 flex justify-end items-center">
-                    <DeleteOutlined onClick={remove} style={{ color: 'red' }} />
+                    <DeleteOutlined
+                      onClick={() => {
+                        if (typeof remove === 'function') {
+                          remove(file);
+                        }
+                      }}
+                      style={{ color: 'red' }}
+                    />
                   </div>
                 )}
               </div>
@@ -68,9 +116,16 @@ const FormUpload = (props) => {
                 <div className="w-1/4 h-[50px] border border-solid overflow-hidden flex justify-center items-center ">
                   <FileAddOutlined />
                 </div>
-                <p className="w-1/2 text-center font-semibold text-ellipsis">{file.name}</p>
+                <p className="w-1/2 text-center font-semibold text-ellipsis">{file.name || `File-${file.uid}`}</p>
                 <div className="w-1/4 flex justify-end items-center">
-                  <DeleteOutlined onClick={remove} style={{ color: 'red' }} />
+                  <DeleteOutlined
+                    onClick={() => {
+                      if (typeof remove === 'function') {
+                        remove(file);
+                      }
+                    }}
+                    style={{ color: 'red' }}
+                  />
                 </div>
               </div>
             );
