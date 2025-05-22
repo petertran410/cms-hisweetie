@@ -15,6 +15,7 @@ const getMenuItem = (label, key, icon, children, type) => {
 
 export const getMenuList = (userRoles) => {
   const currentWebsite = localStorage.getItem('website') || 'lermao';
+
   const menuItemsSuperAdmin = [
     getMenuItem('Đơn hàng', 'orders', <FaMoneyBill />),
     getMenuItem('Sản phẩm', 'products', <FaProductHunt />),
@@ -30,6 +31,7 @@ export const getMenuList = (userRoles) => {
     getMenuItem('Sản phẩm', 'products', <FaProductHunt />),
     getMenuItem('Công thức', 'recipes', <FaAlignLeft />),
     getMenuItem('Danh mục', 'categories', <BiSolidCategory />),
+    getMenuItem('Người dùng', 'users', <FaUserFriends />), // Add this line
     getMenuItem('Tin tức', 'news', <FaNewspaper />),
     getMenuItem('Video', 'videos', <FaVideo />)
   ];

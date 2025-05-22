@@ -13,10 +13,14 @@ const Action = ({ item }) => {
   const [currentRole, setCurrentRole] = useState();
   const userInfo = useRecoilValue(userInfoAtom);
 
-  const isSuperAdmin = item?.email === userInfo?.email || item?.phone === userInfo?.phone;
+  // More robust check for current user
+  const isCurrentUser =
+    (item?.email && userInfo?.email && item.email === userInfo.email) ||
+    (item?.phone && userInfo?.phone && item.phone === userInfo.phone) ||
+    (item?.id && userInfo?.id && item.id === userInfo.id);
 
-  if (isSuperAdmin) {
-    return null;
+  if (isCurrentUser) {
+    return null; // Don't show action buttons for current user
   }
 
   return (
