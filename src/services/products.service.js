@@ -13,10 +13,9 @@ export const useQueryProductsList = () => {
     queryKey,
     queryFn: () => {
       const params = {
-        pageSize: 10,
+        pageSize: 50, // Increased from 10 to 50 to show more products
         pageNumber: Number(page) - 1,
         title: keyword
-        // Removed the hardcoded type: 'Trà' that was filtering out other products
       };
 
       // Add category filtering if present
@@ -32,11 +31,75 @@ export const useQueryProductsList = () => {
         params.productTypes = productTypes;
       }
 
+      console.log('Products search params:', params); // Debug log
+
       return API.request({
         url: '/api/product/search',
         params
       });
     }
+  });
+};
+
+// New hook to get all products in target categories (no pagination)
+export const useQueryAllTargetProducts = () => {
+  const queryKey = ['GET_ALL_TARGET_PRODUCTS'];
+  return useQuery({
+    queryKey,
+    queryFn: () => {
+      const params = {
+        pageSize: 1000, // Large number to get all products
+        pageNumber: 0,
+        categoryNames: 'Trà Phượng Hoàng,Lermao'
+      };
+
+      console.log('Getting all target products with params:', params);
+
+      return API.request({
+        url: '/api/product/search',
+        params
+      });
+    }
+  });
+};
+
+// New hook to get categories debug info
+export const useQueryCategoriesDebug = () => {
+  const queryKey = ['GET_CATEGORIES_DEBUG'];
+  return useQuery({
+    queryKey,
+    queryFn: () =>
+      API.request({
+        url: '/api/product/debug/categories-analysis'
+      }),
+    staleTime: 5 * 60 * 1000 // Cache for 5 minutes
+  });
+};
+
+// New hook to test search functionality
+export const useQuerySearchDebug = (categoryNames, pageSize = 50) => {
+  const queryKey = ['GET_SEARCH_DEBUG', categoryNames, pageSize];
+  return useQuery({
+    queryKey,
+    queryFn: () => {
+      const params = {
+        pageSize: pageSize.toString(),
+        includeTypes: 'true'
+      };
+
+      if (categoryNames) {
+        params.categoryNames = categoryNames;
+      }
+
+      console.log('Debug search params:', params);
+
+      return API.request({
+        url: '/api/product/debug/search-test',
+        params
+      });
+    },
+    enabled: !!categoryNames,
+    staleTime: 2 * 60 * 1000 // Cache for 2 minutes
   });
 };
 
