@@ -96,7 +96,7 @@ const ProductsCreate = () => {
             instruction,
             isFeatured,
             featuredThumbnail: isFeatured ? featuredImageUrl : null,
-            type: 'Hộp'
+            type: 'SAN_PHAM'
           };
 
           id ? updateMutate(data) : createMutate(data);
