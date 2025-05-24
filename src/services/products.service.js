@@ -50,7 +50,7 @@ export const useQueryAllTargetProducts = () => {
       const params = {
         pageSize: 1000, // Large number to get all products
         pageNumber: 0,
-        categoryNames: 'Trà Phượng Hoàng,Lermao'
+        categoryNames: 'Trà Phượng Hoàng, Lermao'
       };
 
       console.log('Getting all target products with params:', params);

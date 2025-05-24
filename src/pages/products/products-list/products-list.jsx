@@ -1,40 +1,45 @@
+// src/pages/products/products-list/products-list.jsx
 import { ErrorScreen } from '@/components/effect-screen';
 import { CreateButton, Pagination } from '@/components/table';
-import {
-  useQueryProductsList,
-  useQueryCategoriesDebug,
-  useQuerySearchDebug,
-  useQueryAllTargetProducts
-} from '@/services/products.service';
+import { useQueryProductsList } from '@/services/products.service';
 import { TableStyle } from '@/styles/table.style';
 import { formatCurrency, useGetParamsURL, useParamsURL } from '@/utils/helper';
 import { WEBSITE_NAME } from '@/utils/resource';
 import { useQueryClient } from '@tanstack/react-query';
-import { Table, Tag, Button, Card, Collapse, Alert, Space, Statistic } from 'antd';
+import { Table, Tag, Button, Card, Select, Space, Statistic } from 'antd';
 import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
-import { FaCheck, FaBug, FaEye, FaEyeSlash } from 'react-icons/fa6';
+import { FaCheck } from 'react-icons/fa6';
 import Action from './action';
 import TableFilter from './filter';
 import ImportProduct from './import-product';
 
-const { Panel } = Collapse;
-
 const ProductsList = () => {
   const { data: dataQuery = [], isLoading, error } = useQueryProductsList();
-  const { data: debugData, isLoading: debugLoading } = useQueryCategoriesDebug();
-  const { data: allTargetData, isLoading: allTargetLoading } = useQueryAllTargetProducts();
   const paramsURL = useGetParamsURL();
   const { setParamsURL } = useParamsURL();
-  const { page = 1, categoryNames } = paramsURL || {};
+  const { page = 1, categoryNames, productTypes } = paramsURL || {};
   const queryClient = useQueryClient();
-  const [showDebugInfo, setShowDebugInfo] = useState(false);
 
-  // Automatically apply category filter for "Trà Phượng Hoàng" and "Lermao" on first load
+  // Target categories and types
+  const TARGET_CATEGORIES = ['Trà Phượng Hoàng', 'Lermao'];
+  const TARGET_PRODUCT_TYPES = [
+    'Bột',
+    'hàng sãn xuất',
+    'Mứt Sốt',
+    'Siro',
+    'Topping',
+    'Khác (Lermao)',
+    'Khác (Trà Phượng Hoàng)'
+  ];
+
+  // Apply default filters on first load
   useEffect(() => {
     if (!categoryNames) {
-      // Set default categories to show only "Trà Phượng Hoàng" and "Lermao"
-      setParamsURL({ categoryNames: 'Lermao' });
+      setParamsURL({
+        categoryNames: TARGET_CATEGORIES.join(','),
+        productTypes: TARGET_PRODUCT_TYPES.join(',')
+      });
     }
   }, [categoryNames, setParamsURL]);
 
@@ -73,11 +78,14 @@ const ProductsList = () => {
     {
       title: 'Loại sản phẩm',
       dataIndex: 'type',
-      render: (type) => (
-        <Tag color="green" className="font-medium">
-          {type || 'Chưa có loại'}
-        </Tag>
-      ),
+      render: (type) => {
+        const isTargetType = TARGET_PRODUCT_TYPES.includes(type);
+        return (
+          <Tag color={isTargetType ? 'green' : 'default'} className="font-medium">
+            {type || 'Chưa có loại'}
+          </Tag>
+        );
+      },
       width: 150
     },
     {
@@ -87,11 +95,14 @@ const ProductsList = () => {
         if (Array.isArray(ofCategories) && ofCategories.length > 0) {
           return (
             <div className="flex flex-col gap-1">
-              {ofCategories.map((category) => (
-                <Tag key={category.id} color="blue">
-                  {category.name}
-                </Tag>
-              ))}
+              {ofCategories.map((category) => {
+                const isTargetCategory = TARGET_CATEGORIES.includes(category.name);
+                return (
+                  <Tag key={category.id} color={isTargetCategory ? 'blue' : 'default'}>
+                    {category.name}
+                  </Tag>
+                );
+              })}
             </div>
           );
         }
@@ -147,30 +158,45 @@ const ProductsList = () => {
     };
   }, [queryClient]);
 
-  const { content = [], totalElements } = dataQuery || {};
+  const { content = [], totalElements, availableTypes = [] } = dataQuery || {};
 
-  // Function to clear category filter
-  const clearCategoryFilter = () => {
-    setParamsURL({ categoryNames: '' });
+  // Filter management functions
+  const handleCategoryChange = (selectedCategories) => {
+    setParamsURL({
+      categoryNames: selectedCategories.length > 0 ? selectedCategories.join(',') : undefined,
+      page: 1
+    });
   };
 
-  // Function to show all products
-  const showAllProducts = () => {
-    setParamsURL({ categoryNames: undefined });
+  const handleProductTypeChange = (selectedTypes) => {
+    setParamsURL({
+      productTypes: selectedTypes.length > 0 ? selectedTypes.join(',') : undefined,
+      page: 1
+    });
   };
 
-  // Get unique types from current products
-  const getUniqueTypes = (products) => {
-    const types = products.map((p) => p.type).filter((type) => type);
-    return [...new Set(types)].sort();
+  const resetToTargetFilters = () => {
+    setParamsURL({
+      categoryNames: TARGET_CATEGORIES.join(','),
+      productTypes: TARGET_PRODUCT_TYPES.join(','),
+      page: 1
+    });
   };
 
-  const currentTypes = getUniqueTypes(content);
-  const allTargetTypes = allTargetData?.content ? getUniqueTypes(allTargetData.content) : [];
+  const clearAllFilters = () => {
+    setParamsURL({
+      categoryNames: undefined,
+      productTypes: undefined,
+      page: 1
+    });
+  };
 
   if (error) {
     return <ErrorScreen message={error?.message} className="mt-20" />;
   }
+
+  const currentCategories = categoryNames ? categoryNames.split(',') : [];
+  const currentProductTypes = productTypes ? productTypes.split(',') : [];
 
   return (
     <TableStyle>
@@ -178,139 +204,87 @@ const ProductsList = () => {
         <title>Danh sách sản phẩm | {WEBSITE_NAME}</title>
       </Helmet>
 
-      {/* Debug Information Panel */}
+      {/* Quick Actions */}
       <Card className="mb-4" size="small">
         <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Button
-              icon={showDebugInfo ? <FaEyeSlash /> : <FaBug />}
-              onClick={() => setShowDebugInfo(!showDebugInfo)}
-              type={showDebugInfo ? 'default' : 'primary'}
-              size="small"
-            >
-              {showDebugInfo ? 'Ẩn thông tin debug' : 'Hiện thông tin debug'}
-            </Button>
+          <Space>
+            <Statistic title="Sản phẩm hiện tại" value={content.length} prefix="📦" valueStyle={{ fontSize: '16px' }} />
+            <Statistic title="Tổng cộng" value={totalElements} prefix="📊" valueStyle={{ fontSize: '16px' }} />
+          </Space>
 
-            <Space>
-              <Statistic title="Hiện tại" value={content.length} prefix="📦" valueStyle={{ fontSize: '16px' }} />
-              <Statistic title="Tổng cộng" value={totalElements} prefix="📊" valueStyle={{ fontSize: '16px' }} />
-              {allTargetData?.totalElements && (
-                <Statistic
-                  title="Tất cả Target"
-                  value={allTargetData.totalElements}
-                  prefix="🎯"
-                  valueStyle={{ fontSize: '16px' }}
-                />
-              )}
-            </Space>
+          <Space>
+            <Button onClick={resetToTargetFilters} type="primary">
+              Hiện sản phẩm mục tiêu
+            </Button>
+            <Button onClick={clearAllFilters}>Xóa tất cả bộ lọc</Button>
+          </Space>
+        </div>
+
+        {/* Filter Controls */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Danh mục:</label>
+            <Select
+              mode="multiple"
+              style={{ width: '100%' }}
+              placeholder="Chọn danh mục"
+              value={currentCategories}
+              onChange={handleCategoryChange}
+              options={TARGET_CATEGORIES.map((cat) => ({ label: cat, value: cat }))}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Loại sản phẩm:</label>
+            <Select
+              mode="multiple"
+              style={{ width: '100%' }}
+              placeholder="Chọn loại sản phẩm"
+              value={currentProductTypes}
+              onChange={handleProductTypeChange}
+              options={[
+                ...TARGET_PRODUCT_TYPES.map((type) => ({ label: type, value: type })),
+                ...availableTypes
+                  .filter((type) => !TARGET_PRODUCT_TYPES.includes(type))
+                  .map((type) => ({ label: type, value: type }))
+              ]}
+            />
           </div>
         </div>
 
-        {showDebugInfo && (
-          <Collapse className="mt-4" size="small">
-            <Panel header="🔍 Thông tin Debug" key="1">
-              {debugLoading ? (
-                <div>Đang tải thông tin debug...</div>
-              ) : debugData ? (
-                <div className="space-y-4">
-                  <Alert
-                    message="Tóm tắt Database"
-                    description={
-                      <div>
-                        <p>
-                          <strong>Tổng số categories:</strong> {debugData.summary?.totalCategories}
-                        </p>
-                        <p>
-                          <strong>Tổng số products:</strong> {debugData.summary?.totalProducts}
-                        </p>
-                        <p>
-                          <strong>Target categories tìm thấy:</strong> {debugData.summary?.targetCategoriesFound}
-                        </p>
-                        <p>
-                          <strong>Products trong target categories:</strong>{' '}
-                          {debugData.summary?.productsInTargetCategories}
-                        </p>
-                        <p>
-                          <strong>Số loại sản phẩm:</strong> {debugData.summary?.totalProductTypes}
-                        </p>
-                      </div>
-                    }
-                    type="info"
-                    showIcon
-                  />
-
-                  <div>
-                    <h4>🏷️ Target Categories:</h4>
-                    {debugData.targetCategories?.map((cat) => (
-                      <Tag key={cat.id} color="blue" className="mb-1">
-                        {cat.name} ({cat.productCount} products)
-                      </Tag>
-                    ))}
-                  </div>
-
-                  <div>
-                    <h4>📋 Loại sản phẩm trong Target Categories:</h4>
-                    {debugData.productTypesInTargetCategories &&
-                      Object.entries(debugData.productTypesInTargetCategories).map(([type, info]) => (
-                        <div key={type} className="mb-2">
-                          <Tag color="green" className="mb-1">
-                            {type}: {info.count} sản phẩm
-                          </Tag>
-                          <div className="text-xs text-gray-600 ml-2">Categories: {info.categories.join(', ')}</div>
-                        </div>
-                      ))}
-                  </div>
-
-                  <div>
-                    <h4>🔄 So sánh Types:</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <strong>Types hiện tại ({currentTypes.length}):</strong>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {currentTypes.map((type) => (
-                            <Tag key={type} size="small" color="orange">
-                              {type}
-                            </Tag>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <strong>All Target Types ({allTargetTypes.length}):</strong>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {allTargetTypes.map((type) => (
-                            <Tag key={type} size="small" color="purple">
-                              {type}
-                            </Tag>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div>Không thể tải thông tin debug</div>
-              )}
-            </Panel>
-          </Collapse>
+        {/* Current Filters Display */}
+        {(currentCategories.length > 0 || currentProductTypes.length > 0) && (
+          <div className="mt-4 p-3 bg-gray-50 rounded">
+            <div className="text-sm font-medium mb-2">Bộ lọc hiện tại:</div>
+            {currentCategories.length > 0 && (
+              <div className="mb-2">
+                <span className="text-sm text-gray-600">Danh mục: </span>
+                {currentCategories.map((cat) => (
+                  <Tag key={cat} color="blue" className="mb-1">
+                    {cat}
+                  </Tag>
+                ))}
+              </div>
+            )}
+            {currentProductTypes.length > 0 && (
+              <div>
+                <span className="text-sm text-gray-600">Loại sản phẩm: </span>
+                {currentProductTypes.map((type) => (
+                  <Tag key={type} color="green" className="mb-1">
+                    {type}
+                  </Tag>
+                ))}
+              </div>
+            )}
+          </div>
         )}
       </Card>
 
       <div className="flex justify-between items-center mb-5">
-        <div className="flex gap-2">
-          {categoryNames && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Đang lọc theo:</span>
-              <Tag color="blue">{categoryNames.replace(',', ', ')}</Tag>
-              <Button size="small" onClick={clearCategoryFilter}>
-                Xóa bộ lọc
-              </Button>
-            </div>
-          )}
-          {!categoryNames && (
-            <Button size="small" onClick={() => setParamsURL({ categoryNames: 'Trà Phượng Hoàng,Lermao' })}>
-              Chỉ hiện Trà Phượng Hoàng & Lermao
-            </Button>
-          )}
+        <div>
+          <p className="text-sm text-gray-600">
+            Tìm thấy <span className="font-semibold">{totalElements}</span> sản phẩm
+          </p>
         </div>
         <div className="flex gap-5">
           <ImportProduct />
@@ -320,30 +294,6 @@ const ProductsList = () => {
 
       <TableFilter />
 
-      <div className="mb-4">
-        <p className="text-sm text-gray-600">
-          Tìm thấy <span className="font-semibold">{totalElements}</span> sản phẩm
-          {categoryNames && (
-            <span>
-              {' '}
-              trong danh mục: <span className="font-semibold">{categoryNames.replace(',', ', ')}</span>
-            </span>
-          )}
-        </p>
-
-        {/* Show current types */}
-        {currentTypes.length > 0 && (
-          <div className="mt-2">
-            <span className="text-sm text-gray-600">Loại sản phẩm hiện tại: </span>
-            {currentTypes.map((type) => (
-              <Tag key={type} size="small" color="green" className="mb-1">
-                {type}
-              </Tag>
-            ))}
-          </div>
-        )}
-      </div>
-
       <Table
         columns={columns}
         dataSource={content}
@@ -352,11 +302,10 @@ const ProductsList = () => {
         rowKey="id"
         scroll={{ x: 1200 }}
         locale={{
-          emptyText: categoryNames
-            ? `Không tìm thấy sản phẩm nào trong danh mục: ${categoryNames.replace(',', ', ')}`
-            : 'Không có sản phẩm nào'
+          emptyText: 'Không tìm thấy sản phẩm nào với bộ lọc hiện tại'
         }}
       />
+
       <div className="flex justify-end mt-10">
         <Pagination defaultPage={Number(page)} totalItems={totalElements} />
       </div>
