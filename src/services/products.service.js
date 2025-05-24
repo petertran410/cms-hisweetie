@@ -16,7 +16,7 @@ export const useQueryProductsList = () => {
         pageSize: 10,
         pageNumber: Number(page) - 1,
         title: keyword,
-        type: 'Thùng'
+        type: 'Trà'
       };
 
       // Add category filtering if present
