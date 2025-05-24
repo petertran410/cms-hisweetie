@@ -14,7 +14,7 @@ export const useQueryProductsList = () => {
     queryFn: () =>
       API.request({
         url: '/api/product/search',
-        params: { pageSize: 10, pageNumber: Number(page) - 1, title: keyword, type: 'Hộp' }
+        params: { pageSize: 10, pageNumber: Number(page) - 1, title: keyword, type: 'SAN_PHAM' }
       })
   });
 };
