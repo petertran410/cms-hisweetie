@@ -6,15 +6,43 @@ import { useNavigate } from 'react-router-dom';
 
 export const useQueryProductsList = () => {
   const paramsURL = useGetParamsURL();
-  const { page = 1, keyword } = paramsURL || {};
+  const { page = 1, keyword, categoryNames, categoryIds } = paramsURL || {};
 
-  const queryKey = ['GET_PRODUCTS_LIST', page, keyword];
+  const queryKey = ['GET_PRODUCTS_LIST', page, keyword, categoryNames, categoryIds];
+  return useQuery({
+    queryKey,
+    queryFn: () => {
+      const params = {
+        pageSize: 10,
+        pageNumber: Number(page) - 1,
+        title: keyword,
+        type: 'Thùng'
+      };
+
+      // Add category filtering if present
+      if (categoryNames) {
+        params.categoryNames = categoryNames;
+      }
+      if (categoryIds) {
+        params.categoryIds = categoryIds;
+      }
+
+      return API.request({
+        url: '/api/product/search',
+        params
+      });
+    }
+  });
+};
+
+// New hook to get all categories for filtering
+export const useQueryCategoriesList = () => {
+  const queryKey = ['GET_CATEGORIES_LIST'];
   return useQuery({
     queryKey,
     queryFn: () =>
       API.request({
-        url: '/api/product/search',
-        params: { pageSize: 10, pageNumber: Number(page) - 1, title: keyword, type: 'Hộp' }
+        url: '/api/product/categories'
       })
   });
 };
@@ -51,7 +79,7 @@ export const useUpdateProducts = (id) => {
         params
       })
         .then(() => {
-          showToast({ type: 'success', message: 'Tạo sản phẩm thành công' });
+          showToast({ type: 'success', message: 'Cập nhật sản phẩm thành công' });
           queryClient.resetQueries({ queryKey: ['GET_PRODUCTS_LIST'] });
           navigate(-1);
         })

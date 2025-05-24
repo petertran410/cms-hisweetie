@@ -2,10 +2,10 @@ import { ErrorScreen } from '@/components/effect-screen';
 import { CreateButton, Pagination } from '@/components/table';
 import { useQueryProductsList } from '@/services/products.service';
 import { TableStyle } from '@/styles/table.style';
-import { formatCurrency, useGetParamsURL } from '@/utils/helper';
+import { formatCurrency, useGetParamsURL, useParamsURL } from '@/utils/helper';
 import { WEBSITE_NAME } from '@/utils/resource';
 import { useQueryClient } from '@tanstack/react-query';
-import { Table, Tag } from 'antd';
+import { Table, Tag, Button } from 'antd';
 import { useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { FaCheck } from 'react-icons/fa6';
@@ -13,13 +13,20 @@ import Action from './action';
 import TableFilter from './filter';
 import ImportProduct from './import-product';
 
-import dayjs from 'dayjs';
-
 const ProductsList = () => {
   const { data: dataQuery = [], isLoading, error } = useQueryProductsList();
   const paramsURL = useGetParamsURL();
-  const { page = 1 } = paramsURL || {};
+  const { setParamsURL } = useParamsURL();
+  const { page = 1, categoryNames } = paramsURL || {};
   const queryClient = useQueryClient();
+
+  // Automatically apply category filter for "Trà Phượng Hoàng" and "Lermao" on first load
+  useEffect(() => {
+    if (!categoryNames) {
+      // Set default categories to show only "Trà Phượng Hoàng" and "Lermao"
+      setParamsURL({ categoryNames: 'Trà Phượng Hoàng,Lermao' });
+    }
+  }, [categoryNames, setParamsURL]);
 
   const columns = [
     {
@@ -33,10 +40,21 @@ const ProductsList = () => {
       render: (text, record) => {
         return (
           <div className="flex items-center gap-3">
-            {Array.isArray(record?.imagesUrl) && (
+            {Array.isArray(record?.imagesUrl) && record.imagesUrl.length > 0 && (
               <img src={record.imagesUrl[0]} className="w-16 h-14 object-cover rounded-md" />
             )}
-            <p className="font-semibold">{text}</p>
+            <div className="flex-1">
+              <p className="font-semibold">{text}</p>
+              {record.ofCategories && record.ofCategories.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {record.ofCategories.map((category) => (
+                    <Tag key={category.id} size="small" color="blue">
+                      {category.name}
+                    </Tag>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         );
       }
@@ -46,9 +64,17 @@ const ProductsList = () => {
       dataIndex: 'ofCategories',
       render: (ofCategories) => {
         if (Array.isArray(ofCategories) && ofCategories.length > 0) {
-          return <p>{ofCategories[0].name}</p>;
+          return (
+            <div className="flex flex-col gap-1">
+              {ofCategories.map((category) => (
+                <Tag key={category.id} color="green">
+                  {category.name}
+                </Tag>
+              ))}
+            </div>
+          );
         }
-        return null;
+        return <Tag color="default">Chưa phân loại</Tag>;
       }
     },
     {
@@ -56,9 +82,9 @@ const ProductsList = () => {
       dataIndex: 'price',
       render: (price) => {
         if (!price) {
-          return null;
+          return <span className="text-gray-400">Chưa có giá</span>;
         }
-        return formatCurrency(price);
+        return <span className="font-semibold text-green-600">{formatCurrency(price)}</span>;
       }
     },
     {
@@ -67,9 +93,9 @@ const ProductsList = () => {
       render: (quantity) => (
         <div>
           <p className="font-semibold">{quantity}</p>
-          {Number(quantity) === 0 && <Tag color="red">Out of Stock</Tag>}
-          {Number(quantity) < 10 && Number(quantity) > 0 && <Tag color="orange">Low Stock</Tag>}
-          {Number(quantity) >= 10 && <Tag color="green">In Stock</Tag>}
+          {Number(quantity) === 0 && <Tag color="red">Hết hàng</Tag>}
+          {Number(quantity) < 10 && Number(quantity) > 0 && <Tag color="orange">Sắp hết</Tag>}
+          {Number(quantity) >= 10 && <Tag color="green">Còn hàng</Tag>}
         </div>
       )
     },
@@ -96,7 +122,16 @@ const ProductsList = () => {
   }, [queryClient]);
 
   const { content = [], totalElements } = dataQuery || {};
-  // const { totalItems, page } = pagination || {};
+
+  // Function to clear category filter
+  const clearCategoryFilter = () => {
+    setParamsURL({ categoryNames: '' });
+  };
+
+  // Function to show all products
+  const showAllProducts = () => {
+    setParamsURL({ categoryNames: undefined });
+  };
 
   if (error) {
     return <ErrorScreen message={error?.message} className="mt-20" />;
@@ -108,18 +143,54 @@ const ProductsList = () => {
         <title>Danh sách sản phẩm | {WEBSITE_NAME}</title>
       </Helmet>
 
-      <div className="flex justify-end mb-5 gap-5">
-        <ImportProduct />
-        <CreateButton route="/products/create" />
+      <div className="flex justify-between items-center mb-5">
+        <div className="flex gap-2">
+          {categoryNames && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Đang lọc theo:</span>
+              <Tag color="blue">{categoryNames.replace(',', ', ')}</Tag>
+              <Button size="small" onClick={clearCategoryFilter}>
+                Xóa bộ lọc
+              </Button>
+            </div>
+          )}
+          {!categoryNames && (
+            <Button size="small" onClick={() => setParamsURL({ categoryNames: 'Trà Phượng Hoàng,Lermao' })}>
+              Chỉ hiện Trà Phượng Hoàng & Lermao
+            </Button>
+          )}
+        </div>
+        <div className="flex gap-5">
+          <ImportProduct />
+          <CreateButton route="/products/create" />
+        </div>
       </div>
+
       <TableFilter />
+
+      <div className="mb-4">
+        <p className="text-sm text-gray-600">
+          Tìm thấy <span className="font-semibold">{totalElements}</span> sản phẩm
+          {categoryNames && (
+            <span>
+              {' '}
+              trong danh mục: <span className="font-semibold">{categoryNames.replace(',', ', ')}</span>
+            </span>
+          )}
+        </p>
+      </div>
+
       <Table
         columns={columns}
         dataSource={content}
         loading={isLoading}
         pagination={false}
         rowKey="id"
-        // scroll={{ x: 1500, scrollToFirstRowOnChange: true }}
+        locale={{
+          emptyText: categoryNames
+            ? `Không tìm thấy sản phẩm nào trong danh mục: ${categoryNames.replace(',', ', ')}`
+            : 'Không có sản phẩm nào'
+        }}
       />
       <div className="flex justify-end mt-10">
         <Pagination defaultPage={Number(page)} totalItems={totalElements} />
