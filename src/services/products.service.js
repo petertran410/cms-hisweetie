@@ -6,17 +6,17 @@ import { useNavigate } from 'react-router-dom';
 
 export const useQueryProductsList = () => {
   const paramsURL = useGetParamsURL();
-  const { page = 1, keyword, categoryNames, categoryIds } = paramsURL || {};
+  const { page = 1, keyword, categoryNames, categoryIds, productTypes } = paramsURL || {};
 
-  const queryKey = ['GET_PRODUCTS_LIST', page, keyword, categoryNames, categoryIds];
+  const queryKey = ['GET_PRODUCTS_LIST', page, keyword, categoryNames, categoryIds, productTypes];
   return useQuery({
     queryKey,
     queryFn: () => {
       const params = {
         pageSize: 10,
         pageNumber: Number(page) - 1,
-        title: keyword,
-        type: 'Trà'
+        title: keyword
+        // Removed the hardcoded type: 'Trà' that was filtering out other products
       };
 
       // Add category filtering if present
@@ -25,6 +25,11 @@ export const useQueryProductsList = () => {
       }
       if (categoryIds) {
         params.categoryIds = categoryIds;
+      }
+
+      // Add product types filtering if present (supports multiple types)
+      if (productTypes) {
+        params.productTypes = productTypes;
       }
 
       return API.request({
@@ -44,6 +49,24 @@ export const useQueryCategoriesList = () => {
       API.request({
         url: '/api/product/categories'
       })
+  });
+};
+
+// New hook to get product types for specific categories
+export const useQueryProductTypesByCategories = (categoryNames) => {
+  const queryKey = ['GET_PRODUCT_TYPES_BY_CATEGORIES', categoryNames];
+  return useQuery({
+    queryKey,
+    queryFn: () => {
+      if (!categoryNames || categoryNames.length === 0) {
+        return { types: [], totalTypes: 0 };
+      }
+      return API.request({
+        url: '/api/product/types-by-categories',
+        params: { categoryNames: categoryNames.join(',') }
+      });
+    },
+    enabled: !!categoryNames && categoryNames.length > 0
   });
 };
 
