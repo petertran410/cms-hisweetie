@@ -11,7 +11,11 @@ export const useMutateLogin = () => {
 
   return useMutation({
     mutationFn: async (params) => {
-      console.log('Login params:', params); // Debug log
+      if (!params.username || !params.password) {
+        throw new Error('Username and password are required');
+      }
+
+      console.log('Login params:', params);
 
       const response = await API.request({
         url: '/api/auth/login',
@@ -22,21 +26,39 @@ export const useMutateLogin = () => {
         }
       });
 
-      console.log('Login response:', response); // Debug log
+      if (!response || !response.token) {
+        throw new Error('Invalid response from server');
+      }
+
+      console.log('Login response:', response);
       return response;
     },
     onSuccess: (response) => {
       const token = response.token;
-      console.log('Setting token:', token); // Debug log
+      console.log('Setting token:', token);
       setToken(token);
       navigate('/');
     },
     onError: (error) => {
-      console.error('Login error:', error); // Debug log
-      showToast({
-        type: 'error',
-        message: 'Tài khoản hoặc mật khẩu không chính xác'
-      });
+      console.error('Login error:', error);
+
+      // More specific error messages
+      if (error.response?.status === 401) {
+        showToast({
+          type: 'error',
+          message: 'Tài khoản hoặc mật khẩu không chính xác'
+        });
+      } else if (error.response?.status === 500) {
+        showToast({
+          type: 'error',
+          message: 'Lỗi hệ thống. Vui lòng thử lại sau'
+        });
+      } else {
+        showToast({
+          type: 'error',
+          message: error.message || 'Đăng nhập thất bại'
+        });
+      }
     }
   });
 };

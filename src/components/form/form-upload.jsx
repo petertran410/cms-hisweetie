@@ -20,22 +20,24 @@ const FormUpload = (props) => {
 
   const onChange = useCallback(
     async (info) => {
-      // Ensure we have valid data to work with
       if (!info) return;
 
       const { file, fileList } = info;
 
-      // Check file size if file exists
+      // Check file size
       if (file && file.size && Math.round(file.size / 1024) > 5120) {
         showToast({ type: 'error', message: 'Kích cỡ file không được vượt quá 5 MB!' });
         return;
       }
 
-      // Ensure each file in fileList has a uid
-      const processedFileList = fileList.map((file) => {
-        // If file doesn't have a uid (which might cause the error), assign one
+      // Process fileList with better error handling
+      const processedFileList = (fileList || []).map((file, index) => {
+        // Ensure each file has a uid
         if (!file.uid) {
-          return { ...file, uid: `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` };
+          return {
+            ...file,
+            uid: `file-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`
+          };
         }
         return file;
       });

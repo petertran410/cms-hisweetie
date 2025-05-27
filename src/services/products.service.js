@@ -13,8 +13,12 @@ export const useQueryProductsList = () => {
     queryKey,
     queryFn: () =>
       API.request({
-        url: '/api/product/search',
-        params: { pageSize: 10, pageNumber: Number(page) - 1, title: keyword, type: 'Hộp' }
+        url: '/api/product/by-categories', // Changed from /api/product/search
+        params: {
+          pageSize: 10,
+          pageNumber: Number(page) - 1,
+          title: keyword
+        }
       })
   });
 };
