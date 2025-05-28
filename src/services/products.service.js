@@ -13,7 +13,7 @@ export const useQueryProductsList = () => {
     queryKey,
     queryFn: () =>
       API.request({
-        url: '/api/product/by-categories', // Changed from /api/product/search
+        url: '/api/product/by-categories',
         params: {
           pageSize: 10,
           pageNumber: Number(page) - 1,
