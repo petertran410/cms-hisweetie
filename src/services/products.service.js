@@ -4,10 +4,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { isEmpty } from 'lodash';
 import { useNavigate } from 'react-router-dom';
 
-/**
- * Main hook to get products from Lermao and Trà Phượng Hoàng categories
- * This is the primary hook used by the products listing page
- */
 export const useQueryProductsList = () => {
   const paramsURL = useGetParamsURL();
   const { page = 1, keyword } = paramsURL || {};
@@ -22,11 +18,11 @@ export const useQueryProductsList = () => {
         params: {
           pageSize: 10,
           pageNumber: Number(page) - 1,
-          title: keyword // Search by product title if keyword is provided
+          title: keyword
         }
       }),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000 // 10 minutes
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000
   });
 };
 
@@ -47,7 +43,6 @@ export const useCreateProducts = () => {
     },
     onSuccess: () => {
       showToast({ type: 'success', message: 'Tạo sản phẩm thành công' });
-      // Invalidate the products list cache to refresh the data
       queryClient.invalidateQueries({ queryKey: ['GET_PRODUCTS_LIST'] });
       navigate(-1);
     },
@@ -57,9 +52,6 @@ export const useCreateProducts = () => {
   });
 };
 
-/**
- * Hook to update an existing product
- */
 export const useUpdateProducts = (id) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
