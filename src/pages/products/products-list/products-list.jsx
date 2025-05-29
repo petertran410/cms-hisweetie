@@ -1,5 +1,4 @@
-// Enhanced Frontend Category Display
-// Update src/pages/products/products-list/products-list.jsx
+// Updated src/pages/products/products-list/products-list.jsx
 
 import { ErrorScreen } from '@/components/effect-screen';
 import { CreateButton, Pagination } from '@/components/table';
@@ -8,10 +7,10 @@ import { TableStyle } from '@/styles/table.style';
 import { formatCurrency, useGetParamsURL } from '@/utils/helper';
 import { WEBSITE_NAME } from '@/utils/resource';
 import { useQueryClient } from '@tanstack/react-query';
-import { Table, Tag, Button, Card, Statistic, Space, Tooltip } from 'antd';
+import { Table, Tag, Button, Card, Statistic, Space, Tooltip, Alert } from 'antd';
 import { useEffect } from 'react';
 import { Helmet } from 'react-helmet';
-import { FaCheck, FaSync, FaInfoCircle } from 'react-icons/fa';
+import { FaCheck, FaSync, FaInfoCircle, FaExclamationTriangle, FaTools } from 'react-icons/fa';
 import Action from './action';
 import TableFilter from './filter';
 import ImportProduct from './import-product';
@@ -38,25 +37,23 @@ const ProductsList = () => {
       'Mứt Sốt': { color: 'orange', parent: 'Lermao' },
       Siro: { color: 'purple', parent: 'Lermao' },
       'hàng sản xuất': { color: 'cyan', parent: 'Lermao' },
-      Lermao: { color: 'blue', parent: null },
 
       // Trà Phượng Hoàng subcategories
       OEM: { color: 'magenta', parent: 'Trà Phượng Hoàng' },
-      SHANCHA: { color: 'red', parent: 'Trà Phượng Hoàng' },
-      'Trà Phượng Hoàng': { color: 'magenta', parent: null }
+      SHANCHA: { color: 'red', parent: 'Trà Phượng Hoàng' }
     };
 
     return (
       <div className="flex flex-wrap gap-1">
         {ofCategories.map((category, index) => {
           const categoryName = category.name || category.displayName;
-          const mapping = categoryMapping[categoryName] || { color: 'default', parent: null };
+          const mapping = categoryMapping[categoryName] || { color: 'default', parent: 'Unknown' };
 
           return (
-            <Tooltip key={index} title={mapping.parent ? `${categoryName} (thuộc ${mapping.parent})` : categoryName}>
+            <Tooltip key={index} title={`${categoryName} (thuộc ${mapping.parent})`}>
               <Tag color={mapping.color} className="mb-1 cursor-help">
                 {categoryName}
-                {mapping.parent && <span className="text-xs opacity-75 ml-1">({mapping.parent})</span>}
+                <span className="text-xs opacity-75 ml-1">({mapping.parent})</span>
               </Tag>
             </Tooltip>
           );
@@ -99,10 +96,10 @@ const ProductsList = () => {
       }
     },
     {
-      title: 'Danh mục',
+      title: 'Danh mục con',
       dataIndex: 'ofCategories',
       width: 200,
-      render: renderCategoryTags // Use enhanced category display
+      render: renderCategoryTags
     },
     {
       title: 'Giá sản phẩm',
@@ -165,8 +162,6 @@ const ProductsList = () => {
   const handleSync = () => {
     syncProducts({
       // You can add sync parameters here if needed
-      // mode: 'INCREMENTAL',
-      // since: lastSyncDate
     });
   };
 
@@ -174,11 +169,39 @@ const ProductsList = () => {
     return <ErrorScreen message={error?.message} className="mt-20" />;
   }
 
+  // Check if we have products but they might be in parent categories
+  const hasParentCategoryIssue = categoryInfo?.productsInParentCategories > 0 && totalElements === 0;
+
   return (
     <TableStyle>
       <Helmet>
-        <title>Danh sách sản phẩm - Lermao & Trà Phượng Hoàng | {WEBSITE_NAME}</title>
+        <title>Danh sách sản phẩm - Danh mục con Lermao & Trà Phượng Hoàng | {WEBSITE_NAME}</title>
       </Helmet>
+
+      {/* Category Assignment Issue Alert */}
+      {hasParentCategoryIssue && (
+        <Alert
+          message="Phát hiện vấn đề phân loại sản phẩm"
+          description={
+            <div>
+              <p>
+                Có {categoryInfo.productsInParentCategories} sản phẩm được gán vào danh mục cha thay vì danh mục con cụ
+                thể.
+              </p>
+              <p className="mt-2">
+                <strong>Giải pháp:</strong> Liên hệ quản trị viên để chạy API sửa lỗi phân loại sản phẩm.
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                API: <code>POST /api/product/fix/category-assignments</code>
+              </p>
+            </div>
+          }
+          type="warning"
+          icon={<FaExclamationTriangle />}
+          showIcon
+          className="mb-6"
+        />
+      )}
 
       {/* Sync Status Card */}
       {syncStatus && (
@@ -213,19 +236,17 @@ const ProductsList = () => {
       <Card className="mb-6" size="small">
         <div className="space-y-3">
           <div className="flex items-center gap-4 text-sm">
-            <span className="font-medium">Danh mục hiển thị:</span>
+            <span className="font-medium">Hiển thị sản phẩm từ danh mục con:</span>
             <div className="flex gap-2">
-              <Tag color="blue">Lermao ({categoryInfo?.targetParentIds?.includes(2205381) ? '✓' : '✗'})</Tag>
-              <Tag color="magenta">
-                Trà Phượng Hoàng ({categoryInfo?.targetParentIds?.includes(2205374) ? '✓' : '✗'})
-              </Tag>
+              <Tag color="blue">Lermao</Tag>
+              <Tag color="magenta">Trà Phượng Hoàng</Tag>
             </div>
           </div>
 
           <div className="text-sm text-gray-600">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <span className="font-medium text-blue-600">Lermao bao gồm:</span>
+                <span className="font-medium text-blue-600">Danh mục con Lermao:</span>
                 <div className="flex flex-wrap gap-1 mt-1">
                   <Tag size="small" color="blue">
                     Bột
@@ -245,7 +266,7 @@ const ProductsList = () => {
                 </div>
               </div>
               <div>
-                <span className="font-medium text-magenta-600">Trà Phượng Hoàng bao gồm:</span>
+                <span className="font-medium text-magenta-600">Danh mục con Trà Phượng Hoàng:</span>
                 <div className="flex flex-wrap gap-1 mt-1">
                   <Tag size="small" color="magenta">
                     OEM
@@ -256,9 +277,35 @@ const ProductsList = () => {
                 </div>
               </div>
             </div>
-            <p className="mt-2">
-              Tổng cộng <strong>{categoryInfo?.totalCategoriesSearched || 0}</strong> danh mục được tìm kiếm
-            </p>
+            <div className="mt-3 p-3 bg-yellow-50 rounded border-l-4 border-yellow-400">
+              <div className="flex items-start">
+                <FaInfoCircle className="text-yellow-600 mt-0.5 mr-2" />
+                <div>
+                  <p className="font-medium text-yellow-800">Lưu ý quan trọng:</p>
+                  <p className="text-sm text-yellow-700">
+                    Chỉ hiển thị sản phẩm được phân vào <strong>danh mục con cụ thể</strong>. Sản phẩm được gán trực
+                    tiếp vào danh mục cha sẽ không hiển thị.
+                  </p>
+                </div>
+              </div>
+            </div>
+            {categoryInfo && (
+              <p className="mt-2">
+                Tìm kiếm trong <strong>{categoryInfo.totalCategoriesSearched || 0}</strong> danh mục con
+                {categoryInfo.productsInSubcategories !== undefined && (
+                  <span>
+                    {' '}
+                    • <strong>{categoryInfo.productsInSubcategories}</strong> sản phẩm trong danh mục con
+                  </span>
+                )}
+                {categoryInfo.productsInParentCategories > 0 && (
+                  <span className="text-orange-600">
+                    {' '}
+                    • <strong>{categoryInfo.productsInParentCategories}</strong> sản phẩm cần phân loại lại
+                  </span>
+                )}
+              </p>
+            )}
           </div>
         </div>
       </Card>
@@ -271,9 +318,9 @@ const ProductsList = () => {
         </div>
 
         <div className="text-sm text-gray-600">
-          <Tooltip title="Sản phẩm được lọc theo danh mục Lermao và Trà Phượng Hoàng cùng tất cả danh mục con">
+          <Tooltip title="Chỉ hiển thị sản phẩm từ danh mục con, không bao gồm sản phẩm gán trực tiếp vào danh mục cha">
             <span className="cursor-help">
-              Sản phẩm từ <strong>Lermao</strong> và <strong>Trà Phượng Hoàng</strong> ℹ️
+              Sản phẩm từ <strong>danh mục con</strong> của Lermao và Trà Phượng Hoàng ℹ️
             </span>
           </Tooltip>
         </div>
@@ -294,17 +341,36 @@ const ProductsList = () => {
           emptyText:
             content.length === 0 && !isLoading ? (
               <div className="text-center py-8">
-                <p>Chưa có sản phẩm nào từ Lermao và Trà Phượng Hoàng.</p>
-                <p className="text-sm text-gray-500 mt-2">Hãy thử đồng bộ từ KiotViet để lấy sản phẩm mới nhất.</p>
-                <Button
-                  type="primary"
-                  onClick={handleSync}
-                  className="mt-3"
-                  loading={isSyncing}
-                  disabled={!syncStatus?.kiotVietConfigured}
-                >
-                  Đồng bộ ngay
-                </Button>
+                {hasParentCategoryIssue ? (
+                  <div>
+                    <FaTools className="text-4xl text-orange-500 mx-auto mb-4" />
+                    <p className="text-lg font-medium">Sản phẩm cần được phân loại lại</p>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Có {categoryInfo.productsInParentCategories} sản phẩm được gán vào danh mục cha.
+                    </p>
+                    <p className="text-sm text-gray-500">Cần chuyển chúng vào danh mục con cụ thể để hiển thị.</p>
+                    <div className="mt-4 p-3 bg-gray-50 rounded">
+                      <p className="text-xs text-gray-600">
+                        <strong>Giải pháp kỹ thuật:</strong> Chạy API{' '}
+                        <code>POST /api/product/fix/category-assignments</code>
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <p>Chưa có sản phẩm nào trong các danh mục con.</p>
+                    <p className="text-sm text-gray-500 mt-2">Hãy thử đồng bộ từ KiotViet để lấy sản phẩm mới nhất.</p>
+                    <Button
+                      type="primary"
+                      onClick={handleSync}
+                      className="mt-3"
+                      loading={isSyncing}
+                      disabled={!syncStatus?.kiotVietConfigured}
+                    >
+                      Đồng bộ ngay
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               'Không có dữ liệu'
@@ -316,7 +382,7 @@ const ProductsList = () => {
       {totalElements > 0 && (
         <div className="flex justify-between items-center mt-6">
           <div className="text-sm text-gray-600">
-            Tổng cộng: <strong>{totalElements}</strong> sản phẩm
+            Tổng cộng: <strong>{totalElements}</strong> sản phẩm trong danh mục con
           </div>
           <Pagination defaultPage={Number(page)} totalItems={totalElements} />
         </div>
