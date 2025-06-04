@@ -7,6 +7,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+Dockerfile
+docker-compose.yml
+deploy-fe-synology.sh
+
 node_modules
 dist
 dist-ssr
