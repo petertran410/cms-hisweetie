@@ -9,7 +9,7 @@ lerna-debug.log*
 
 Dockerfile
 docker-compose.yml
-deploy-fe-synology.sh
+deploy-cms-synology.sh
 
 node_modules
 dist

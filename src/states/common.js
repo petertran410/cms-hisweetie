@@ -20,6 +20,7 @@ export const tokenState = selector({
       Cookies.remove(CK_JWT_TOKEN);
       return;
     }
+
     Cookies.set(CK_JWT_TOKEN, newValue, { expires: 60, secure: true });
   }
 });
