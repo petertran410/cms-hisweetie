@@ -1,264 +1,241 @@
-import { API } from '@/utils/API';
-import { showToast, useGetParamsURL } from '@/utils/helper';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { isEmpty } from 'lodash';
-import { useNavigate } from 'react-router-dom';
+// src/services/products.service.js - CMS services for React + Vite
 
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { API } from '../utils/API';
+import { useGetParamsURL } from '../utils/helper';
+
+/**
+ * Get products list for CMS (includes all products, both visible and hidden)
+ */
 export const useQueryProductsList = () => {
-  const paramsURL = useGetParamsURL();
-  const { page = 1, keyword } = paramsURL || {};
-
+  const params = useGetParamsURL();
+  const { page = 1, keyword } = params;
   const queryKey = ['GET_PRODUCTS_LIST', page, keyword];
 
   return useQuery({
     queryKey,
-    queryFn: () =>
-      API.request({
-        url: '/api/product/by-categories',
+    queryFn: () => {
+      return API.request({
+        url: '/api/product/admin/all', // Use admin endpoint to get all products
         params: {
+          pageNumber: page - 1,
           pageSize: 10,
-          pageNumber: Number(page) - 1,
-          title: keyword
+          ...(keyword && { title: keyword })
         }
-      }),
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000
+      });
+    }
   });
 };
 
 /**
- * Hook to create a new product
+ * Get single product details
  */
-export const useCreateProducts = () => {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
+export const useQueryProductDetail = (id, options = {}) => {
+  return useQuery({
+    queryKey: ['GET_PRODUCT_DETAIL', id],
+    queryFn: () => {
+      return API.request({
+        url: `/api/product/${id}`
+      });
+    },
+    enabled: !!id,
+    ...options
+  });
+};
 
+/**
+ * Create new product
+ */
+export const useCreateProduct = () => {
   return useMutation({
-    mutationFn: (params) => {
+    mutationFn: (data) => {
       return API.request({
         url: '/api/product',
         method: 'POST',
-        params
+        data
       });
-    },
-    onSuccess: () => {
-      showToast({ type: 'success', message: 'Tạo sản phẩm thành công' });
-      queryClient.invalidateQueries({ queryKey: ['GET_PRODUCTS_LIST'] });
-      navigate(-1);
-    },
-    onError: (error) => {
-      showToast({ type: 'error', message: `Thao tác thất bại. ${error.message}` });
-    }
-  });
-};
-
-export const useUpdateProducts = (id) => {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (params) => {
-      return API.request({
-        url: `/api/product/${id}`,
-        method: 'PATCH',
-        params
-      });
-    },
-    onSuccess: () => {
-      showToast({ type: 'success', message: 'Cập nhật sản phẩm thành công' });
-      // Invalidate both the list and detail cache
-      queryClient.invalidateQueries({ queryKey: ['GET_PRODUCTS_LIST'] });
-      queryClient.invalidateQueries({ queryKey: ['GET_PRODUCTS_DETAIL', id] });
-      navigate(-1);
-    },
-    onError: (error) => {
-      showToast({ type: 'error', message: `Thao tác thất bại. ${error.message}` });
     }
   });
 };
 
 /**
- * Hook to delete a product
+ * Update existing product
  */
-export const useDeleteProducts = () => {
-  const queryClient = useQueryClient();
-
+export const useUpdateProduct = () => {
   return useMutation({
-    mutationFn: (params) => {
-      const { id } = params;
+    mutationFn: ({ id, ...data }) => {
+      return API.request({
+        url: `/api/product/${id}`,
+        method: 'PATCH',
+        data
+      });
+    }
+  });
+};
+
+/**
+ * Delete product
+ */
+export const useDeleteProduct = () => {
+  return useMutation({
+    mutationFn: (id) => {
       return API.request({
         url: `/api/product/${id}`,
         method: 'DELETE'
       });
-    },
-    onSuccess: () => {
-      showToast({ type: 'success', message: 'Xoá sản phẩm thành công' });
-      // Invalidate the products list cache to refresh the data
-      queryClient.invalidateQueries({ queryKey: ['GET_PRODUCTS_LIST'] });
-    },
-    onError: (error) => {
-      showToast({ type: 'error', message: `Thao tác thất bại. ${error.message}` });
     }
   });
 };
 
 /**
- * Hook to get product details by ID
+ * Toggle single product visibility - NEW FEATURE
  */
-export const useQueryProductsDetail = (id) => {
-  const queryKey = ['GET_PRODUCTS_DETAIL', id];
-  const queryClient = useQueryClient();
-  const dataClient = queryClient.getQueryData(queryKey);
-
-  const { data, isLoading, error } = useQuery({
-    queryKey,
-    queryFn: () =>
-      API.request({
-        url: `/api/product/get-by-id/${id}`
-      }),
-    enabled: !!id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000 // 10 minutes
+export const useToggleProductVisibility = () => {
+  return useMutation({
+    mutationFn: (productId) => {
+      return API.request({
+        url: `/api/product/${productId}/toggle-visibility`,
+        method: 'PATCH'
+      });
+    }
   });
-
-  // Return cached data if available
-  if (!isEmpty(dataClient)) {
-    return { data: dataClient, isLoading: false, error: null };
-  }
-
-  return { data, isLoading, error };
 };
 
 /**
- * Advanced hook to get products from specific hierarchical categories
- * This is used for more advanced filtering scenarios
+ * Bulk toggle product visibility - NEW FEATURE
  */
-export const useQueryProductsByHierarchicalCategories = (searchParams = {}) => {
-  const paramsURL = useGetParamsURL();
-  const { page = 1, keyword } = paramsURL || {};
+export const useBulkToggleVisibility = () => {
+  return useMutation({
+    mutationFn: ({ productIds, isVisible }) => {
+      return API.request({
+        url: '/api/product/bulk-toggle-visibility',
+        method: 'PATCH',
+        data: {
+          productIds,
+          isVisible
+        }
+      });
+    }
+  });
+};
 
-  // Merge URL params with provided search params
-  const finalParams = {
-    pageSize: 10,
-    pageNumber: Number(page) - 1,
-    title: keyword,
-    ...searchParams
-  };
+/**
+ * Get product visibility statistics - NEW FEATURE
+ */
+export const useQueryVisibilityStats = () => {
+  return useQuery({
+    queryKey: ['GET_VISIBILITY_STATS'],
+    queryFn: () => {
+      return API.request({
+        url: '/api/product/visibility-stats'
+      });
+    },
+    staleTime: 5 * 60 * 1000 // 5 minutes
+  });
+};
 
-  const queryKey = ['GET_PRODUCTS_HIERARCHICAL', finalParams];
+/**
+ * Search products with advanced filters including visibility
+ */
+export const useQueryProductsSearch = (filters = {}) => {
+  const queryKey = ['SEARCH_PRODUCTS', filters];
 
   return useQuery({
     queryKey,
-    queryFn: () =>
-      API.request({
-        url: '/api/product/by-hierarchical-categories',
-        params: finalParams
-      }),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000 // 10 minutes
+    queryFn: () => {
+      return API.request({
+        url: '/api/product/admin/all',
+        params: {
+          pageNumber: 0,
+          pageSize: 100,
+          ...filters
+        }
+      });
+    },
+    enabled: Object.keys(filters).length > 0
   });
 };
 
 /**
- * Hook to get category hierarchy information
- */
-export const useQueryCategoryHierarchyInfo = (categoryIds) => {
-  const queryKey = ['GET_CATEGORY_HIERARCHY_INFO', categoryIds];
-
-  return useQuery({
-    queryKey,
-    queryFn: () =>
-      API.request({
-        url: '/api/product/categories/hierarchy-info',
-        params: categoryIds ? { categoryIds } : {}
-      }),
-    staleTime: 10 * 60 * 1000, // 10 minutes - category structure doesn't change often
-    cacheTime: 30 * 60 * 1000 // 30 minutes
-  });
-};
-
-/**
- * Hook to sync products from KiotViet
+ * Sync products from external source (KiotViet)
  */
 export const useSyncProducts = () => {
-  const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: (syncParams = {}) => {
+    mutationFn: (params = {}) => {
       return API.request({
-        url: '/api/product/sync/target-categories',
+        url: '/api/product/kiotviet/clean-and-sync',
         method: 'POST',
-        params: syncParams
-      });
-    },
-    onSuccess: (data) => {
-      const message = data.success
-        ? `Đồng bộ thành công ${data.totalSynced} sản phẩm từ Lermao và Trà Phượng Hoàng`
-        : `Đồng bộ hoàn tất với ${data.errors?.length || 0} lỗi`;
-
-      showToast({
-        type: data.success ? 'success' : 'warning',
-        message,
-        duration: 10000 // Show for 10 seconds
-      });
-
-      // Invalidate products cache to refresh the listing
-      queryClient.invalidateQueries({ queryKey: ['GET_PRODUCTS_LIST'] });
-      queryClient.invalidateQueries({ queryKey: ['GET_PRODUCTS_HIERARCHICAL'] });
-    },
-    onError: (error) => {
-      showToast({
-        type: 'error',
-        message: `Đồng bộ thất bại: ${error.message}`,
-        duration: 10000
+        data: params
       });
     }
   });
 };
 
 /**
- * Hook to test KiotViet connection
- */
-export const useTestKiotVietConnection = () => {
-  return useMutation({
-    mutationFn: () => {
-      return API.request({
-        url: '/api/product/sync/test-connection',
-        method: 'GET'
-      });
-    },
-    onSuccess: (data) => {
-      showToast({
-        type: data.success ? 'success' : 'error',
-        message: data.message,
-        duration: 5000
-      });
-    },
-    onError: (error) => {
-      showToast({
-        type: 'error',
-        message: `Kiểm tra kết nối thất bại: ${error.message}`,
-        duration: 5000
-      });
-    }
-  });
-};
-
-/**
- * Hook to get sync status
+ * Get sync status
  */
 export const useQuerySyncStatus = () => {
-  const queryKey = ['GET_SYNC_STATUS'];
-
   return useQuery({
-    queryKey,
-    queryFn: () =>
-      API.request({
-        url: '/api/product/sync/status',
-        method: 'GET'
-      }),
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    cacheTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 5 * 60 * 1000 // Refetch every 5 minutes
+    queryKey: ['GET_SYNC_STATUS'],
+    queryFn: () => {
+      return API.request({
+        url: '/api/product/kiotviet/sync-status'
+      });
+    },
+    refetchInterval: 5000, // Refetch every 5 seconds
+    refetchIntervalInBackground: false
+  });
+};
+
+/**
+ * Export products data
+ */
+export const useExportProducts = () => {
+  return useMutation({
+    mutationFn: (params = {}) => {
+      return API.request({
+        url: '/api/product/export',
+        method: 'GET',
+        params,
+        responseType: 'blob'
+      });
+    }
+  });
+};
+
+/**
+ * Import products data
+ */
+export const useImportProducts = () => {
+  return useMutation({
+    mutationFn: (formData) => {
+      return API.request({
+        url: '/api/product/import',
+        method: 'POST',
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+    }
+  });
+};
+
+/**
+ * Get featured products (for dashboard preview)
+ */
+export const useQueryFeaturedProducts = (limit = 8) => {
+  return useQuery({
+    queryKey: ['GET_FEATURED_PRODUCTS', limit],
+    queryFn: () => {
+      return API.request({
+        url: '/api/product/admin/all',
+        params: {
+          pageNumber: 0,
+          pageSize: limit
+          // Get both visible and hidden featured products for admin dashboard
+        }
+      });
+    }
   });
 };
