@@ -1,3 +1,4 @@
+// src/layouts/components/helper.jsx - UPDATED
 import { BiSolidCategory } from 'react-icons/bi';
 import { FaFileAlt, FaFileArchive, FaUserFriends, FaVideo } from 'react-icons/fa';
 import { FaAlignLeft, FaMoneyBill, FaNewspaper, FaProductHunt } from 'react-icons/fa6';
@@ -31,7 +32,7 @@ export const getMenuList = (userRoles) => {
     getMenuItem('Sản phẩm', 'products', <FaProductHunt />),
     getMenuItem('Công thức', 'recipes', <FaAlignLeft />),
     getMenuItem('Danh mục', 'categories', <BiSolidCategory />),
-    getMenuItem('Người dùng', 'users', <FaUserFriends />), // Add this line
+    getMenuItem('Người dùng', 'users', <FaUserFriends />),
     getMenuItem('Tin tức', 'news', <FaNewspaper />),
     getMenuItem('Video', 'videos', <FaVideo />)
   ];
@@ -43,7 +44,8 @@ export const getMenuList = (userRoles) => {
     return [
       ...menuItemsSuperAdmin,
       getMenuItem('Việc làm', 'recruitment', <FaFileAlt />),
-      getMenuItem('Bài viết văn hoá', 'blog-culture', <FaFileArchive />)
+      getMenuItem('Bài viết văn hoá', 'blog-culture', <FaFileArchive />),
+      getMenuItem('Quản lý trang', 'pages', <FaFilePen />) // THÊM MENU PAGES
     ];
   } else {
     if (currentWebsite === 'lermao') {
@@ -52,7 +54,8 @@ export const getMenuList = (userRoles) => {
     return [
       ...menuItemsAdmin,
       getMenuItem('Việc làm', 'recruitment', <FaFileAlt />),
-      getMenuItem('Bài viết văn hoá', 'blog-culture', <FaFileArchive />)
+      getMenuItem('Bài viết văn hoá', 'blog-culture', <FaFileArchive />),
+      getMenuItem('Quản lý trang', 'pages', <FaFilePen />) // THÊM MENU PAGES
     ];
   }
 };
@@ -117,6 +120,70 @@ export const MENU_ROUTES = [
     ],
     section: 'Cập nhật sản phẩm'
   },
+
+  // =================================
+  // PAGES ROUTES - THÊM MỚI
+  // =================================
+  {
+    key: 'pages',
+    route: '/pages',
+    breadcrumb: [
+      {
+        title: 'Quản lý trang',
+        route: '/pages'
+      }
+    ],
+    section: 'Danh sách trang'
+  },
+  {
+    key: 'pages/create',
+    route: '/pages/create',
+    breadcrumb: [
+      {
+        title: 'Quản lý trang',
+        route: '/pages'
+      },
+      {
+        title: 'Tạo trang mới',
+        route: '/pages/create'
+      }
+    ],
+    section: 'Tạo trang mới'
+  },
+  {
+    key: 'pages/:id/edit',
+    route: '/pages/:id/edit',
+    breadcrumb: [
+      {
+        title: 'Quản lý trang',
+        route: '/pages'
+      },
+      {
+        title: 'Cập nhật trang',
+        route: '/pages/:id/edit'
+      }
+    ],
+    section: 'Cập nhật trang'
+  },
+  {
+    key: 'pages/:id/detail',
+    route: '/pages/:id/detail',
+    breadcrumb: [
+      {
+        title: 'Quản lý trang',
+        route: '/pages'
+      },
+      {
+        title: 'Chi tiết trang',
+        route: '/pages/:id/detail'
+      }
+    ],
+    section: 'Chi tiết trang'
+  },
+
+  // =================================
+  // EXISTING ROUTES (giữ nguyên)
+  // =================================
   {
     key: 'recruitment',
     route: '/recruitment',
@@ -174,6 +241,32 @@ export const MENU_ROUTES = [
     section: 'Tạo việc làm'
   },
   {
+    key: 'recipes',
+    route: '/recipes',
+    breadcrumb: [
+      {
+        title: 'Công thức',
+        route: '/recipes'
+      }
+    ],
+    section: 'Danh sách công thức'
+  },
+  {
+    key: 'recipes/create',
+    route: '/recipes/create',
+    breadcrumb: [
+      {
+        title: 'Công thức',
+        route: '/recipes'
+      },
+      {
+        title: 'Tạo công thức',
+        route: '/recipes/create'
+      }
+    ],
+    section: 'Tạo công thức'
+  },
+  {
     key: 'recipes/:id/edit',
     route: '/recipes/:id/edit',
     breadcrumb: [
@@ -210,7 +303,6 @@ export const MENU_ROUTES = [
     ],
     section: 'Danh sách sticker'
   },
-
   {
     key: 'categories',
     route: '/categories',
@@ -282,7 +374,6 @@ export const MENU_ROUTES = [
     ],
     section: 'Chi tiết danh mục'
   },
-
   {
     key: 'users',
     route: '/users',
@@ -339,7 +430,6 @@ export const MENU_ROUTES = [
     ],
     section: 'Chi tiết người dùng'
   },
-
   {
     key: 'videos',
     route: '/videos',
@@ -381,7 +471,6 @@ export const MENU_ROUTES = [
     ],
     section: 'Cập nhật video'
   },
-
   {
     key: 'news',
     route: '/news',
@@ -438,7 +527,6 @@ export const MENU_ROUTES = [
     ],
     section: 'Chi tiết tin tức'
   },
-
   {
     key: 'blog-culture',
     route: '/blog-culture',
@@ -479,60 +567,6 @@ export const MENU_ROUTES = [
       }
     ],
     section: 'Cập nhật bài viết'
-  },
-
-  ///
-  {
-    key: 'products',
-    route: '/products',
-    breadcrumb: [
-      {
-        title: 'Sản phẩm',
-        route: '/products'
-      }
-    ],
-    section: 'Danh sách sản phẩm'
-  },
-  {
-    key: 'products/create',
-    route: '/products/create',
-    breadcrumb: [
-      {
-        title: 'Sản phẩm',
-        route: '/products'
-      },
-      {
-        title: 'Tạo sản phẩm',
-        route: '/products/create'
-      }
-    ],
-    section: 'Tạo sản phẩm'
-  },
-  {
-    key: 'recipes',
-    route: '/recipes',
-    breadcrumb: [
-      {
-        title: 'Công thức',
-        route: '/recipes'
-      }
-    ],
-    section: 'Danh sách công thức'
-  },
-  {
-    key: 'recipes/create',
-    route: '/recipes/create',
-    breadcrumb: [
-      {
-        title: 'Công thức',
-        route: '/recipes'
-      },
-      {
-        title: 'Tạo công thức',
-        route: '/recipes/create'
-      }
-    ],
-    section: 'Tạo công thức'
   },
   {
     key: 'feedbacks',

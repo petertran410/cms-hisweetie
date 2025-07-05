@@ -1,3 +1,4 @@
+// src/routes/index.jsx - UPDATED
 import { ErrorScreen } from '@/components/effect-screen';
 import MainLayout from '@/layouts/main';
 import NotFound404 from '@/pages/404';
@@ -8,6 +9,7 @@ import Dashboard from '@/pages/dashboard';
 import Login from '@/pages/login';
 import { NewsCreate, NewsList } from '@/pages/news';
 import { AllOrder } from '@/pages/order';
+import { PagesCreate, PagesList, PagesDetail } from '@/pages/pages'; // THÊM PAGES IMPORTS
 import { ProductsCreate, ProductsList } from '@/pages/products';
 import { RecipeCreate, RecipeList } from '@/pages/recipe';
 import { RecruitmentCreate, RecruitmentList } from '@/pages/recruitment';
@@ -26,9 +28,6 @@ const AppRoute = () => {
 
           <Route path="orders">
             <Route path="" element={<AllOrder />} />
-            {/* <Route path="create" element={<UserCreate />} />
-            <Route path="edit/:id" element={<UserCreate />} />
-            <Route path="detail/:id/*" element={<UserDetail />} /> */}
           </Route>
 
           <Route path="categories">
@@ -36,7 +35,6 @@ const AppRoute = () => {
             <Route path="sort" element={<CategorySort />} />
             <Route path="create" element={<CategoryCreate />} />
             <Route path=":id/edit" element={<CategoryCreate />} />
-            {/* <Route path="detail/:id/*" element={<UserDetail />} /> */}
           </Route>
 
           <Route path="news">
@@ -53,6 +51,14 @@ const AppRoute = () => {
             <Route path=":id/detail" element={<BlogCultureCreate />} />
           </Route>
 
+          {/* THÊM PAGES ROUTES */}
+          <Route path="pages">
+            <Route path="" element={<PagesList />} />
+            <Route path="create" element={<PagesCreate />} />
+            <Route path=":id/edit" element={<PagesCreate />} />
+            <Route path=":id/detail" element={<PagesDetail />} />
+          </Route>
+
           <Route path="recruitment">
             <Route path="" element={<RecruitmentList />} />
             <Route path="create" element={<RecruitmentCreate />} />
@@ -65,7 +71,6 @@ const AppRoute = () => {
             <Route path="" element={<UserList />} />
             <Route path="create" element={<UserCreate />} />
             <Route path=":id/edit" element={<UserCreate />} />
-            {/* <Route path="detail/:id/*" element={<UserDetail />} /> */}
           </Route>
 
           <Route path="videos">
@@ -78,13 +83,12 @@ const AppRoute = () => {
             <Route path="" element={<ProductsList />} />
             <Route path="create" element={<ProductsCreate />} />
             <Route path=":id/edit" element={<ProductsCreate />} />
-            {/* <Route path="detail/:id/*" element={<UserDetail />} /> */}
           </Route>
+
           <Route path="recipes">
             <Route path="" element={<RecipeList />} />
             <Route path="create" element={<RecipeCreate />} />
             <Route path=":id/edit" element={<RecipeCreate />} />
-            {/* <Route path="detail/:id/*" element={<UserDetail />} /> */}
           </Route>
 
           <Route path="*" element={<NotFound404 />} />
