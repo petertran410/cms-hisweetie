@@ -2,7 +2,7 @@
 import { API } from '../utils/API';
 import { showToast, useGetParamsURL } from '../utils/helper';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { isEmpty } from 'lodash';
+import { isEmpty } from 'lodash-es';
 import { useNavigate } from 'react-router-dom';
 
 // =================================

@@ -1,4 +1,4 @@
-// src/pages/pages/pages-list/pages-list.jsx
+// src/pages/pages/pages-list/pages-list.jsx - FIXED
 import { ErrorScreen } from '@/components/effect-screen';
 import { CreateButton, Pagination } from '@/components/table';
 import { useQueryPagesList } from '@/services/pages.service';
@@ -142,7 +142,19 @@ const PagesList = () => {
         </TableStyle>
 
         {/* Phân trang */}
-        <Pagination current={Number(page)} total={totalElements} pageSize={10} />
+        <div className="flex justify-end mt-4">
+          <Pagination
+            current={Number(page)}
+            total={totalElements}
+            pageSize={10}
+            showSizeChanger={false}
+            onChange={(newPage) => {
+              const searchParams = new URLSearchParams(window.location.search);
+              searchParams.set('page', newPage.toString());
+              navigate(`/pages?${searchParams.toString()}`);
+            }}
+          />
+        </div>
       </div>
     </>
   );

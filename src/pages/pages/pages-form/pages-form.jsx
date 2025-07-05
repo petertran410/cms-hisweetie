@@ -1,7 +1,7 @@
-// src/pages/pages/pages-form/pages-form.jsx
-import { ButtonSave, FileUploadSingle } from '@/components/form';
+// src/pages/pages/pages-form/pages-form.jsx - FIXED
+import { ButtonBack } from '@/components/button';
 import { WEBSITE_NAME } from '@/utils/resource';
-import { Form, Input, Select, Switch, InputNumber, Card, Row, Col, Divider, Alert } from 'antd';
+import { Form, Input, Select, Switch, InputNumber, Card, Row, Col, Button, Alert } from 'antd';
 import { Helmet } from 'react-helmet';
 import { useParams } from 'react-router-dom';
 import { useCreatePages, useUpdatePages, useQueryPagesDetail, useQueryParentPagesList } from '@/services/pages.service';
@@ -104,123 +104,132 @@ const PagesForm = () => {
   };
 
   return (
-    <>
+    <div className="w-full md:w-[60%] lg:w-[50%] 2xl:w-[45%] mx-auto">
       <Helmet>
         <title>
           {isEdit ? 'Cập nhật trang' : 'Tạo trang mới'} - {WEBSITE_NAME}
         </title>
       </Helmet>
 
-      <div className="max-w-4xl mx-auto">
-        <Card title={isEdit ? 'Cập nhật trang' : 'Tạo trang mới'} loading={isEdit && loadingDetail}>
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleSubmit}
-            initialValues={{
-              is_active: true,
-              is_main_page: false,
-              display_order: 0
-            }}
-          >
-            {/* Thông tin cơ bản */}
-            <Card size="small" title="Thông tin cơ bản" className="mb-4">
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item
-                    label="Tiêu đề trang"
-                    name="title"
-                    rules={[{ required: true, message: 'Vui lòng nhập tiêu đề' }]}
-                  >
-                    <Input placeholder="Ví dụ: Chính Sách Bảo Mật" onChange={handleTitleChange} />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item
-                    label="Slug (URL)"
-                    name="slug"
-                    rules={[
-                      { required: true, message: 'Vui lòng nhập slug' },
-                      {
-                        pattern: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-                        message: 'Slug chỉ được chứa chữ thường, số và dấu gạch ngang'
-                      }
-                    ]}
-                  >
-                    <Input placeholder="chinh-sach-bao-mat" />
-                  </Form.Item>
-                </Col>
-              </Row>
+      <Card title={isEdit ? 'Cập nhật trang' : 'Tạo trang mới'} loading={isEdit && loadingDetail} className="mt-10">
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          initialValues={{
+            is_active: true,
+            is_main_page: false,
+            display_order: 0
+          }}
+        >
+          {/* Thông tin cơ bản */}
+          <Card size="small" title="Thông tin cơ bản" className="mb-4">
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label="Tiêu đề trang"
+                  name="title"
+                  rules={[{ required: true, message: 'Vui lòng nhập tiêu đề' }]}
+                >
+                  <Input placeholder="Ví dụ: Chính Sách Bảo Mật" onChange={handleTitleChange} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label="Slug (URL)"
+                  name="slug"
+                  rules={[
+                    { required: true, message: 'Vui lòng nhập slug' },
+                    {
+                      pattern: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+                      message: 'Slug chỉ được chứa chữ thường, số và dấu gạch ngang'
+                    }
+                  ]}
+                >
+                  <Input placeholder="chinh-sach-bao-mat" />
+                </Form.Item>
+              </Col>
+            </Row>
 
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item label="Trang cha" name="parent_id">
-                    <Select placeholder="Chọn trang cha (nếu có)" allowClear>
-                      {parentPages.map((page) => (
-                        <Option key={page.id} value={page.id}>
-                          {page.title}
-                        </Option>
-                      ))}
-                    </Select>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item label="Trang cha" name="parent_id">
+                  <Select placeholder="Chọn trang cha (nếu có)" allowClear>
+                    {parentPages.map((page) => (
+                      <Option key={page.id} value={page.id}>
+                        {page.title}
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col span={6}>
+                <Form.Item label="Thứ tự hiển thị" name="display_order">
+                  <InputNumber min={0} style={{ width: '100%' }} placeholder="0" />
+                </Form.Item>
+              </Col>
+              <Col span={6}>
+                <div className="space-y-4">
+                  <Form.Item label="Hiển thị" name="is_active" valuePropName="checked">
+                    <Switch />
                   </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <Form.Item label="Thứ tự hiển thị" name="display_order">
-                    <InputNumber min={0} style={{ width: '100%' }} placeholder="0" />
+
+                  <Form.Item label="Trang chính" name="is_main_page" valuePropName="checked">
+                    <Switch />
                   </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <div className="space-y-4">
-                    <Form.Item label="Hiển thị" name="is_active" valuePropName="checked">
-                      <Switch />
-                    </Form.Item>
+                </div>
+              </Col>
+            </Row>
+          </Card>
 
-                    <Form.Item label="Trang chính" name="is_main_page" valuePropName="checked">
-                      <Switch />
-                    </Form.Item>
-                  </div>
-                </Col>
-              </Row>
-            </Card>
+          {/* SEO */}
+          <Card size="small" title="Thông tin SEO" className="mb-4">
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item label="Meta Title (SEO)" name="meta_title">
+                  <Input placeholder="Tiêu đề cho Google Search" />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item label="Meta Description (SEO)" name="meta_description">
+                  <TextArea rows={3} placeholder="Mô tả ngắn gọn về trang này (dùng cho Google)" />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Card>
 
-            {/* SEO */}
-            <Card size="small" title="Thông tin SEO" className="mb-4">
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Form.Item label="Meta Title (SEO)" name="meta_title">
-                    <Input placeholder="Tiêu đề cho Google Search" />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item label="Meta Description (SEO)" name="meta_description">
-                    <TextArea rows={3} placeholder="Mô tả ngắn gọn về trang này (dùng cho Google)" />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </Card>
+          {/* Nội dung */}
+          <Card size="small" title="Nội dung trang" className="mb-4">
+            <Alert
+              message="Hướng dẫn"
+              description="Bạn có thể sử dụng HTML để định dạng nội dung. Nội dung này sẽ hiển thị trên website."
+              type="info"
+              className="mb-4"
+            />
 
-            {/* Nội dung */}
-            <Card size="small" title="Nội dung trang" className="mb-4">
-              <Alert
-                message="Hướng dẫn"
-                description="Bạn có thể sử dụng HTML để định dạng nội dung. Nội dung này sẽ hiển thị trên website."
-                type="info"
-                className="mb-4"
-              />
+            <TextArea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              rows={15}
+              placeholder="Nhập nội dung HTML cho trang..."
+            />
+          </Card>
 
-              <TextArea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                rows={15}
-                placeholder="Nhập nội dung HTML cho trang..."
-              />
-            </Card>
+          {/* Buttons */}
+          <div className="flex items-center gap-8 mt-20 justify-center">
+            <div className="hidden md:block">
+              <ButtonBack route="/pages" />
+            </div>
 
-            <ButtonSave loading={creating || updating} />
-          </Form>
-        </Card>
-      </div>
-    </>
+            <Form.Item className="mb-0">
+              <Button type="primary" htmlType="submit" size="large" className="px-10" loading={creating || updating}>
+                <span className="font-semibold">{isEdit ? 'Cập nhật' : 'Tạo mới'}</span>
+              </Button>
+            </Form.Item>
+          </div>
+        </Form>
+      </Card>
+    </div>
   );
 };
 

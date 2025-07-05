@@ -1,7 +1,7 @@
 // src/layouts/components/helper.jsx - UPDATED
 import { BiSolidCategory } from 'react-icons/bi';
 import { FaFileAlt, FaFileArchive, FaUserFriends, FaVideo } from 'react-icons/fa';
-import { FaAlignLeft, FaMoneyBill, FaNewspaper, FaProductHunt } from 'react-icons/fa6';
+import { FaAlignLeft, FaMoneyBill, FaNewspaper, FaProductHunt, FaFilePen } from 'react-icons/fa6';
 import { useLocation } from 'react-router-dom';
 
 const getMenuItem = (label, key, icon, children, type) => {
