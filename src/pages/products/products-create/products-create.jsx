@@ -3,7 +3,7 @@ import { ErrorScreen, LoadingScreen } from '@/components/effect-screen';
 import { FormSelectQuery } from '@/components/form';
 import Editor from '@/components/form/editor';
 import FormItemUpload from '@/components/form/form-upload';
-import { useCreateProducts, useQueryProductsDetail, useUpdateProducts } from '@/services/products.service';
+import { useCreateProducts, useQueryProductDetail, useUpdateProducts } from '@/services/products.service';
 import { API } from '@/utils/API';
 import { formatCurrency, showToast } from '@/utils/helper';
 import { WEBSITE_NAME } from '@/utils/resource';
@@ -17,7 +17,7 @@ const ProductsCreate = () => {
   const [form] = Form.useForm();
   const { isPending: loadingCreate, mutate: createMutate } = useCreateProducts();
   const { isPending: loadingUpdate, mutate: updateMutate } = useUpdateProducts(id);
-  const { isLoading: loadingDetail, data: productsDetail, error: errorDetail } = useQueryProductsDetail(id);
+  const { isLoading: loadingDetail, data: productsDetail, error: errorDetail } = useQueryProductDetail(id);
   const [currentPrice, setCurrentPrice] = useState(0);
   const [isFeaturedProduct, setIsFeaturedProduct] = useState(false);
 

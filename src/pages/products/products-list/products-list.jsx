@@ -1,16 +1,21 @@
-// Updated src/pages/products/products-list/products-list.jsx
+// src/pages/products/products-list/products-list.jsx - UPDATED với cột Hiển thị
 
 import { ErrorScreen } from '@/components/effect-screen';
 import { CreateButton, Pagination } from '@/components/table';
-import { useQueryProductsList, useSyncProducts, useQuerySyncStatus } from '@/services/products.service';
+import {
+  useQueryProductsList,
+  useSyncProducts,
+  useQuerySyncStatus,
+  useToggleProductVisibility
+} from '@/services/products.service';
 import { TableStyle } from '@/styles/table.style';
 import { formatCurrency, useGetParamsURL } from '@/utils/helper';
 import { WEBSITE_NAME } from '@/utils/resource';
 import { useQueryClient } from '@tanstack/react-query';
-import { Table, Tag, Button, Card, Statistic, Space, Tooltip, Alert } from 'antd';
-import { useEffect } from 'react';
+import { Table, Tag, Button, Card, Statistic, Space, Tooltip, Alert, Switch, message } from 'antd';
+import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
-import { FaCheck, FaSync, FaInfoCircle, FaExclamationTriangle, FaTools } from 'react-icons/fa';
+import { FaCheck, FaSync, FaInfoCircle, FaExclamationTriangle, FaTools, FaEye, FaEyeSlash } from 'react-icons/fa';
 import Action from './action';
 import TableFilter from './filter';
 import ImportProduct from './import-product';
@@ -19,9 +24,11 @@ const ProductsList = () => {
   const { data: dataQuery = [], isLoading, error } = useQueryProductsList();
   const { data: syncStatus } = useQuerySyncStatus();
   const { mutate: syncProducts, isPending: isSyncing } = useSyncProducts();
+  const { mutate: toggleVisibility, isPending: isToggling } = useToggleProductVisibility();
   const paramsURL = useGetParamsURL();
   const { page = 1 } = paramsURL || {};
   const queryClient = useQueryClient();
+  const [togglingIds, setTogglingIds] = useState(new Set()); // Track which products are being toggled
 
   // Enhanced category display function
   const renderCategoryTags = (ofCategories) => {
@@ -29,66 +36,122 @@ const ProductsList = () => {
       return <Tag color="default">Chưa phân loại</Tag>;
     }
 
-    // Define category mapping for better display
     const categoryMapping = {
-      // Lermao subcategories
-      Bột: { color: 'blue', parent: 'Lermao' },
-      Topping: { color: 'green', parent: 'Lermao' },
-      'Mứt Sốt': { color: 'orange', parent: 'Lermao' },
-      Siro: { color: 'purple', parent: 'Lermao' },
-      'hàng sản xuất': { color: 'cyan', parent: 'Lermao' },
-
-      // Trà Phượng Hoàng subcategories
-      OEM: { color: 'magenta', parent: 'Trà Phượng Hoàng' },
-      SHANCHA: { color: 'red', parent: 'Trà Phượng Hoàng' }
+      'nguyen-lieu-pha-che-lermao': 'Nguyên liệu Lermao',
+      'tra-phuong-hoang': 'Trà Phượng Hoàng',
+      'may-moc-thiet-bi': 'Máy móc thiết bị'
     };
 
-    return (
-      <div className="flex flex-wrap gap-1">
-        {ofCategories.map((category, index) => {
-          const categoryName = category.name || category.displayName;
-          const mapping = categoryMapping[categoryName] || { color: 'default', parent: 'Unknown' };
-
-          return (
-            <Tooltip key={index} title={`${categoryName} (thuộc ${mapping.parent})`}>
-              <Tag color={mapping.color} className="mb-1 cursor-help">
-                {categoryName}
-                <span className="text-xs opacity-75 ml-1">({mapping.parent})</span>
-              </Tag>
-            </Tooltip>
-          );
-        })}
-      </div>
-    );
+    return ofCategories.slice(0, 2).map((category, index) => (
+      <Tag key={index} color="blue" className="text-xs mb-1">
+        {categoryMapping[category] || category}
+      </Tag>
+    ));
   };
+
+  // ✅ NEW: Handle visibility toggle
+  const handleVisibilityToggle = async (productId, currentVisibility, productTitle) => {
+    try {
+      setTogglingIds((prev) => new Set([...prev, productId]));
+
+      await toggleVisibility(
+        { productId },
+        {
+          onSuccess: (response) => {
+            message.success(
+              <span>
+                <FaCheck className="inline mr-1" />
+                {response.message || `Sản phẩm "${productTitle}" đã được ${!currentVisibility ? 'hiển thị' : 'ẩn'}`}
+              </span>
+            );
+            // Refresh data
+            queryClient.invalidateQueries(['GET_PRODUCTS_LIST']);
+          },
+          onError: (error) => {
+            message.error(
+              <span>
+                <FaExclamationTriangle className="inline mr-1" />
+                {error.message || 'Có lỗi xảy ra khi cập nhật trạng thái hiển thị'}
+              </span>
+            );
+          },
+          onSettled: () => {
+            setTogglingIds((prev) => {
+              const newSet = new Set(prev);
+              newSet.delete(productId);
+              return newSet;
+            });
+          }
+        }
+      );
+    } catch (error) {
+      console.error('Toggle visibility error:', error);
+      setTogglingIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(productId);
+        return newSet;
+      });
+    }
+  };
+
+  const { content = [], totalElements = 0, statistics = {} } = dataQuery || {};
 
   const columns = [
     {
-      title: 'ID',
-      dataIndex: 'id',
+      title: 'STT',
+      key: 'index',
+      width: 60,
+      align: 'center',
+      render: (_, __, index) => <span className="text-gray-600">{index + 1}</span>
+    },
+    {
+      title: 'Hình ảnh',
+      dataIndex: 'imagesUrl',
+      key: 'image',
       width: 80,
-      render: (text) => <p className="font-semibold">{text}</p>
+      align: 'center',
+      render: (imagesUrl, record) => {
+        const imageUrl = Array.isArray(imagesUrl) && imagesUrl.length > 0 ? imagesUrl[0] : null;
+
+        return imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={record.title || 'Product'}
+            className="w-12 h-12 object-cover rounded border"
+            onError={(e) => {
+              e.target.src = '/images/product-placeholder.webp';
+            }}
+          />
+        ) : (
+          <div className="w-12 h-12 bg-gray-200 rounded border flex items-center justify-center">
+            <FaTools className="text-gray-400 text-xs" />
+          </div>
+        );
+      }
     },
     {
       title: 'Tên sản phẩm',
-      dataIndex: 'title',
-      render: (text, record) => {
+      key: 'title',
+      width: 250,
+      render: (record) => {
+        const title = record.title || record.kiotViet?.name || 'Chưa có tên';
+        const isFromKiotViet = record.isFromKiotViet;
+
         return (
-          <div className="flex items-center gap-3">
-            {Array.isArray(record?.imagesUrl) && record.imagesUrl.length > 0 && (
-              <img
-                src={record.imagesUrl[0]}
-                className="w-16 h-14 object-cover rounded-md"
-                alt={text}
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                }}
-              />
-            )}
-            <div>
-              <p className="font-semibold">{text}</p>
-              {record.generalDescription && (
-                <p className="text-sm text-gray-500 truncate max-w-xs">{record.generalDescription}</p>
+          <div className="space-y-1">
+            <div className="font-medium text-gray-800 line-clamp-2">{title}</div>
+            <div className="flex gap-1">
+              {isFromKiotViet && (
+                <Tag color="orange" className="text-xs">
+                  <FaSync className="inline mr-1" />
+                  KiotViet
+                </Tag>
+              )}
+              {record.isFeatured && (
+                <Tag color="gold" className="text-xs">
+                  <FaCheck className="inline mr-1" />
+                  Nổi bật
+                </Tag>
               )}
             </div>
           </div>
@@ -96,198 +159,195 @@ const ProductsList = () => {
       }
     },
     {
-      title: 'Danh mục con',
+      title: 'Danh mục',
       dataIndex: 'ofCategories',
-      width: 200,
+      key: 'categories',
+      width: 180,
       render: renderCategoryTags
     },
     {
-      title: 'Giá sản phẩm',
-      dataIndex: 'price',
+      title: 'Giá',
+      key: 'price',
       width: 120,
-      render: (price) => {
-        if (!price || price === 0) {
-          return <Tag color="orange">Liên hệ</Tag>;
-        }
+      align: 'right',
+      render: (record) => {
+        const price = record.kiotViet?.price;
+        return price ? (
+          <span className="font-medium text-green-600">{formatCurrency(price)}</span>
+        ) : (
+          <span className="text-gray-500 text-sm">Chưa có giá</span>
+        );
+      }
+    },
+    // ✅ NEW: Cột Hiển thị với Switch
+    {
+      title: (
+        <div className="flex items-center gap-1">
+          <FaEye className="text-gray-500" />
+          <span>Hiển thị</span>
+        </div>
+      ),
+      key: 'visibility',
+      width: 100,
+      align: 'center',
+      render: (record) => {
+        const isVisible = record.isVisible ?? false;
+        const isCurrentlyToggling = togglingIds.has(record.id);
+
         return (
-          <div>
-            <p className="font-semibold text-green-600">{formatCurrency(price)}</p>
-          </div>
+          <Tooltip title={isVisible ? 'Ẩn khỏi trang web' : 'Hiển thị trên trang web'}>
+            <Switch
+              checked={isVisible}
+              loading={isCurrentlyToggling}
+              disabled={isCurrentlyToggling}
+              size="small"
+              checkedChildren={<FaEye />}
+              unCheckedChildren={<FaEyeSlash />}
+              onChange={() => handleVisibilityToggle(record.id, isVisible, record.title)}
+            />
+          </Tooltip>
         );
       }
     },
     {
-      title: 'Số lượng',
-      dataIndex: 'quantity',
-      width: 100,
-      render: (quantity) => (
-        <div>
-          <p className="font-semibold">{quantity || 0}</p>
-          {Number(quantity) === 0 && <Tag color="red">Hết hàng</Tag>}
-          {Number(quantity) < 10 && Number(quantity) > 0 && <Tag color="orange">Sắp hết</Tag>}
-          {Number(quantity) >= 10 && <Tag color="green">Còn hàng</Tag>}
-        </div>
-      )
-    },
-    {
-      title: 'SP nổi bật',
-      dataIndex: 'isFeatured',
-      width: 100,
-      render: (isFeatured) => {
-        if (isFeatured) {
-          return (
-            <Tooltip title="Sản phẩm nổi bật">
-              <FaCheck color="green" size={18} />
-            </Tooltip>
-          );
-        }
-        return null;
-      }
-    },
-    {
-      title: 'Hành động',
+      title: 'Thao tác',
+      key: 'actions',
       width: 120,
-      render: (_, record) => <Action item={record} />
+      align: 'center',
+      render: (record) => <Action item={record} />
     }
   ];
 
-  useEffect(() => {
-    return () => {
-      queryClient.resetQueries({ queryKey: ['GET_PRODUCTS_DETAIL'] });
-    };
-  }, [queryClient]);
+  // Enhanced sync info display
+  const renderSyncStatus = () => {
+    if (!syncStatus) return null;
 
-  const { content = [], totalElements, categoryInfo } = dataQuery || {};
+    const { lastSync, totalProducts, summary } = syncStatus;
+    const lastSyncDate = lastSync ? new Date(lastSync).toLocaleString('vi-VN') : 'Chưa đồng bộ';
 
-  const handleSync = () => {
-    syncProducts({
-      // You can add sync parameters here if needed
-    });
+    return (
+      <Alert
+        type="info"
+        showIcon
+        icon={<FaInfoCircle />}
+        message="Trạng thái đồng bộ KiotViet"
+        description={
+          <div className="space-y-2">
+            <div>Lần cuối: {lastSyncDate}</div>
+            <div className="flex gap-4 text-sm">
+              <span>Tổng: {totalProducts}</span>
+              <span>Đã đồng bộ: {summary?.synced || 0}</span>
+              <span>Lỗi: {summary?.failed || 0}</span>
+            </div>
+          </div>
+        }
+        action={
+          <Button type="primary" size="small" loading={isSyncing} onClick={() => syncProducts()} icon={<FaSync />}>
+            Đồng bộ ngay
+          </Button>
+        }
+        className="mb-4"
+      />
+    );
+  };
+
+  // ✅ NEW: Enhanced statistics with visibility info
+  const renderStatistics = () => {
+    const { total = 0, visible = 0, hidden = 0, featured = 0 } = statistics;
+
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <Card size="small">
+          <Statistic title="Tổng sản phẩm" value={total} prefix={<FaTools className="text-blue-500" />} />
+        </Card>
+        <Card size="small">
+          <Statistic
+            title="Đang hiển thị"
+            value={visible}
+            prefix={<FaEye className="text-green-500" />}
+            valueStyle={{ color: '#52c41a' }}
+          />
+        </Card>
+        <Card size="small">
+          <Statistic
+            title="Đang ẩn"
+            value={hidden}
+            prefix={<FaEyeSlash className="text-red-500" />}
+            valueStyle={{ color: '#ff4d4f' }}
+          />
+        </Card>
+        <Card size="small">
+          <Statistic
+            title="Sản phẩm nổi bật"
+            value={featured}
+            prefix={<FaCheck className="text-gold-500" />}
+            valueStyle={{ color: '#faad14' }}
+          />
+        </Card>
+      </div>
+    );
   };
 
   if (error) {
-    return <ErrorScreen message={error?.message} className="mt-20" />;
+    return (
+      <ErrorScreen
+        title="Lỗi tải danh sách sản phẩm"
+        description={error.message || 'Có lỗi xảy ra khi tải dữ liệu'}
+        actionText="Tải lại"
+        onAction={() => window.location.reload()}
+      />
+    );
   }
 
-  // Check if we have products but they might be in parent categories
-  const hasParentCategoryIssue = categoryInfo?.productsInParentCategories > 0 && totalElements === 0;
-
   return (
-    <TableStyle>
+    <>
       <Helmet>
-        <title>Danh sách sản phẩm | {WEBSITE_NAME}</title>
+        <title>Quản lý sản phẩm - {WEBSITE_NAME}</title>
       </Helmet>
 
-      {/* Category Assignment Issue Alert */}
-      {hasParentCategoryIssue && (
-        <Alert
-          message="Phát hiện vấn đề phân loại sản phẩm"
-          description={
-            <div>
-              <p>
-                Có {categoryInfo.productsInParentCategories} sản phẩm được gán vào danh mục cha thay vì danh mục con cụ
-                thể.
-              </p>
-              <p className="mt-2">
-                <strong>Giải pháp:</strong> Liên hệ quản trị viên để chạy API sửa lỗi phân loại sản phẩm.
-              </p>
-              <p className="text-sm text-gray-600 mt-1">
-                API: <code>POST /api/product/fix/category-assignments</code>
-              </p>
-            </div>
-          }
-          type="warning"
-          icon={<FaExclamationTriangle />}
-          showIcon
-          className="mb-6"
-        />
-      )}
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Quản lý sản phẩm</h1>
+            <p className="text-gray-600 mt-1">Quản lý tất cả sản phẩm và trạng thái hiển thị trên website</p>
+          </div>
+          <Space>
+            <ImportProduct />
+            <CreateButton route="products" />
+          </Space>
+        </div>
 
-      {/* Action Buttons */}
-      <div className="flex justify-between items-center mb-5">
-        <div className="flex gap-3">
-          <ImportProduct />
-          <CreateButton route="/products/create" />
+        {/* Sync Status */}
+        {renderSyncStatus()}
+
+        {/* Statistics */}
+        {renderStatistics()}
+
+        {/* Filters */}
+        <TableFilter />
+
+        {/* Table */}
+        <TableStyle>
+          <Table
+            columns={columns}
+            dataSource={content}
+            rowKey="id"
+            loading={isLoading}
+            pagination={false}
+            scroll={{ x: 1000 }}
+            size="middle"
+            bordered
+            className="shadow-sm"
+          />
+        </TableStyle>
+
+        {/* Pagination */}
+        <div className="flex justify-end">
+          <Pagination totalElements={totalElements} />
         </div>
       </div>
-
-      {/* Search Filter */}
-      <TableFilter />
-
-      {/* Products Table */}
-      <Table
-        columns={columns}
-        dataSource={content}
-        loading={isLoading || isSyncing}
-        pagination={false}
-        rowKey="id"
-        scroll={{ x: 1200 }}
-        locale={{
-          emptyText:
-            content.length === 0 && !isLoading ? (
-              <div className="text-center py-8">
-                {hasParentCategoryIssue ? (
-                  <div>
-                    <FaTools className="text-4xl text-orange-500 mx-auto mb-4" />
-                    <p className="text-lg font-medium">Sản phẩm cần được phân loại lại</p>
-                    <p className="text-sm text-gray-500 mt-2">
-                      Có {categoryInfo.productsInParentCategories} sản phẩm được gán vào danh mục cha.
-                    </p>
-                    <p className="text-sm text-gray-500">Cần chuyển chúng vào danh mục con cụ thể để hiển thị.</p>
-                    <div className="mt-4 p-3 bg-gray-50 rounded">
-                      <p className="text-xs text-gray-600">
-                        <strong>Giải pháp kỹ thuật:</strong> Chạy API{' '}
-                        <code>POST /api/product/fix/category-assignments</code>
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <p>Chưa có sản phẩm nào trong các danh mục con.</p>
-                    <p className="text-sm text-gray-500 mt-2">Hãy thử đồng bộ từ KiotViet để lấy sản phẩm mới nhất.</p>
-                    <Button
-                      type="primary"
-                      onClick={handleSync}
-                      className="mt-3"
-                      loading={isSyncing}
-                      disabled={!syncStatus?.kiotVietConfigured}
-                    >
-                      Đồng bộ ngay
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              'Không có dữ liệu'
-            )
-        }}
-      />
-
-      {/* Pagination */}
-      {totalElements > 0 && (
-        <div className="flex justify-between items-center mt-6">
-          <div className="text-sm text-gray-600">
-            Tổng cộng: <strong>{totalElements}</strong> sản phẩm trong danh mục con
-          </div>
-          <Pagination defaultPage={Number(page)} totalItems={totalElements} />
-        </div>
-      )}
-
-      {/* Loading overlay during sync */}
-      {isSyncing && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="text-center">
-            <div className="flex items-center gap-3">
-              <FaSync className="animate-spin" />
-              <span>Đang đồng bộ sản phẩm từ KiotViet...</span>
-            </div>
-            <p className="text-sm text-gray-600 mt-2">
-              Đang đồng bộ cả danh mục và sản phẩm. Vui lòng không đóng trang này.
-            </p>
-          </Card>
-        </div>
-      )}
-    </TableStyle>
+    </>
   );
 };
 
