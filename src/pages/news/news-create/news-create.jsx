@@ -1,11 +1,11 @@
 // src/pages/news/news-create/news-create.jsx - UPDATED với dropdown type
 import { ButtonBack } from '../../../components/button';
-import { FormItemUpload } from '../../../components/form';
+import FormUpload from '../../../components/form/form-upload.jsx';
 import { LoadingScreen, ErrorScreen } from '../../../components/effect-screen';
 import Editor from '../../../components/form/editor';
 import { useCreateNews, useQueryNewsDetail, useUpdateNews } from '@/services/news.service';
 import { NEWS_TYPE_OPTIONS, getNewsTypeLabel } from '@/utils/news-types.constants';
-import { WEBSITE_NAME } from '../../../utils/news-types.constants';
+import { WEBSITE_NAME } from '@/utils/resource';
 import { Button, Form, Input, Select } from 'antd';
 import { useCallback, useState } from 'react';
 import { Helmet } from 'react-helmet';
@@ -127,7 +127,7 @@ const NewsCreate = () => {
           />
         </Form.Item>
 
-        <FormItemUpload
+        <FormUpload
           disabled={isDetail}
           name="imagesUrl"
           label="Ảnh đại diện"
