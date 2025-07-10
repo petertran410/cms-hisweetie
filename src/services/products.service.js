@@ -1,8 +1,6 @@
 import { API } from '@/utils/API';
 import { showToast, useGetParamsURL } from '@/utils/helper';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { isEmpty } from 'lodash';
-import { useNavigate } from 'react-router-dom';
 
 export const useQueryProductsList = () => {
   const paramsURL = useGetParamsURL();
@@ -12,17 +10,32 @@ export const useQueryProductsList = () => {
 
   return useQuery({
     queryKey,
-    queryFn: () =>
-      API.request({
-        url: '/api/product/cms/get-all',
-        params: {
-          pageSize: 10,
-          pageNumber: Number(page) - 1,
-          title: keyword,
-          categoryId: categoryId || undefined,
-          is_visible: is_visible || undefined
-        }
-      })
+    queryFn: () => {
+      const apiParams = {
+        pageSize: 10,
+        pageNumber: Number(page) - 1,
+        includeHidden: true
+      };
+
+      if (keyword) {
+        apiParams.title = keyword;
+      }
+
+      if (categoryId) {
+        apiParams.categoryId = categoryId;
+      }
+
+      if (is_visible !== undefined && is_visible !== '') {
+        apiParams.is_visible = is_visible;
+      }
+
+      console.log('🔧 CMS API Params:', apiParams); // Debug log
+
+      return API.request({
+        url: '/api/product/search',
+        params: apiParams
+      });
+    }
   });
 };
 

@@ -1,5 +1,3 @@
-// src/pages/products/products-list/products-list.jsx - UPDATED với cột Hiển thị
-
 import { ErrorScreen } from '@/components/effect-screen';
 import { CreateButton, Pagination } from '@/components/table';
 import {
@@ -21,14 +19,24 @@ import TableFilter from './filter';
 import ImportProduct from './import-product';
 
 const ProductsList = () => {
-  const { data: dataQuery = [], isLoading, error } = useQueryProductsList();
+  const { data: dataQuery = {}, isLoading, error } = useQueryProductsList();
   const { data: syncStatus } = useQuerySyncStatus();
   const { mutate: syncProducts, isPending: isSyncing } = useSyncProducts();
   const { mutate: toggleVisibility, isPending: isToggling } = useToggleProductVisibility();
   const paramsURL = useGetParamsURL();
   const { page = 1 } = paramsURL || {};
   const queryClient = useQueryClient();
-  const [togglingIds, setTogglingIds] = useState(new Set()); // Track which products are being toggled
+  const [togglingIds, setTogglingIds] = useState(new Set());
+
+  // 🚨 FIXED: Extract data với fallback values
+  const { content = [], totalElements = 0, statistics = {}, pageNumber = 0, pageSize = 10 } = dataQuery || {};
+
+  console.log('🔧 CMS Data Debug:', {
+    totalData: dataQuery,
+    contentLength: content?.length,
+    totalElements,
+    statistics
+  }); // Debug log
 
   // Enhanced category display function
   const renderCategoryTags = (ofCategories) => {
@@ -49,7 +57,7 @@ const ProductsList = () => {
     ));
   };
 
-  // ✅ NEW: Handle visibility toggle
+  // 🚨 ENHANCED: Handle visibility toggle với better error handling
   const handleVisibilityToggle = async (productId, currentVisibility, productTitle) => {
     try {
       setTogglingIds((prev) => new Set([...prev, productId]));
@@ -64,7 +72,6 @@ const ProductsList = () => {
                 {response.message || `Sản phẩm "${productTitle}" đã được ${!currentVisibility ? 'hiển thị' : 'ẩn'}`}
               </span>
             );
-            // Refresh data
             queryClient.invalidateQueries(['GET_PRODUCTS_LIST']);
           },
           onError: (error) => {
@@ -94,15 +101,13 @@ const ProductsList = () => {
     }
   };
 
-  const { content = [], totalElements = 0, statistics = {} } = dataQuery || {};
-
   const columns = [
     {
       title: 'STT',
       key: 'index',
       width: 60,
       align: 'center',
-      render: (_, __, index) => <span className="text-gray-600">{index + 1}</span>
+      render: (_, __, index) => <span className="text-gray-600">{pageNumber * pageSize + index + 1}</span>
     },
     {
       title: 'Hình ảnh',
@@ -153,6 +158,10 @@ const ProductsList = () => {
                   Nổi bật
                 </Tag>
               )}
+              {/* 🚨 DEBUG: Hiển thị trạng thái visibility */}
+              <Tag color={record.isVisible ? 'green' : 'red'} className="text-xs">
+                {record.isVisible ? 'Hiển thị' : 'Ẩn'}
+              </Tag>
             </div>
           </div>
         );
@@ -179,7 +188,7 @@ const ProductsList = () => {
         );
       }
     },
-    // ✅ NEW: Cột Hiển thị với Switch
+    // ✅ Cột Hiển thị với Switch
     {
       title: (
         <div className="flex items-center gap-1">
@@ -191,7 +200,8 @@ const ProductsList = () => {
       width: 100,
       align: 'center',
       render: (record) => {
-        const isVisible = record.isVisible ?? false;
+        // 🚨 ENHANCED: Handle null/undefined values
+        const isVisible = record.isVisible === true; // Explicit check
         const isCurrentlyToggling = togglingIds.has(record.id);
 
         return (
@@ -251,9 +261,9 @@ const ProductsList = () => {
     );
   };
 
-  // ✅ NEW: Enhanced statistics with visibility info
+  // 🚨 ENHANCED: Statistics với fallback values
   const renderStatistics = () => {
-    const { total = 0, visible = 0, hidden = 0, featured = 0 } = statistics;
+    const { total = totalElements || 0, visible = 0, hidden = 0, featured = 0 } = statistics;
 
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -310,7 +320,9 @@ const ProductsList = () => {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Quản lý sản phẩm</h1>
-            <p className="text-gray-600 mt-1">Quản lý tất cả sản phẩm và trạng thái hiển thị trên website</p>
+            <p className="text-gray-600 mt-1">
+              Quản lý tất cả sản phẩm và trạng thái hiển thị trên website ({totalElements} sản phẩm)
+            </p>
           </div>
           <Space>
             <ImportProduct />
