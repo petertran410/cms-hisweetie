@@ -1,69 +1,51 @@
-import { ButtonBack } from '@/components/button';
-import { ErrorScreen, LoadingScreen } from '@/components/effect-screen';
-import Editor from '@/components/form/editor';
-import FormItemUpload from '@/components/form/form-upload';
+// src/pages/news/news-create/news-create.jsx - UPDATED với dropdown type
+import { ButtonBack } from '../../../components/button';
+import { FormItemUpload } from '../../../components/form';
+import { LoadingScreen, ErrorScreen } from '../../../components/effect-screen';
+import Editor from '@/components/editor';
 import { useCreateNews, useQueryNewsDetail, useUpdateNews } from '@/services/news.service';
-import { API } from '@/utils/API';
-import { getHtmlContentWithTOC, showToast, useFormType, useScrollTop } from '@/utils/helper';
-import { WEBSITE_NAME } from '@/utils/resource';
-import { Button, Form, Input } from 'antd';
+import { NEWS_TYPE_OPTIONS, getNewsTypeLabel } from '@/utils/news-types.constants';
+import { WEBSITE_NAME } from '@/utils/const';
+import { Button, Form, Input, Select } from 'antd';
 import { useCallback, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { Link, useParams } from 'react-router-dom';
+import { useScrollTop } from '@/utils/hooks';
 
 const NewsCreate = () => {
   const { id } = useParams();
-  const { isPending: loadingCreate, mutate: createMutate } = useCreateNews();
-  const { isPending: loadingUpdate, mutate: updateMutate } = useUpdateNews(id);
-  const { isLoading: loadingDetail, data: newsDetail, error: errorDetail } = useQueryNewsDetail(id);
-  const { isDetail } = useFormType();
+  const isDetail = window.location.pathname.includes('detail');
   const [hasTableOfContents, setHasTableOfContents] = useState(false);
+
+  const { mutate: createMutate, isPending: loadingCreate } = useCreateNews();
+  const { mutate: updateMutate, isPending: loadingUpdate } = useUpdateNews(id);
+  const { data: newsDetail, isLoading: loadingDetail, error: errorDetail } = useQueryNewsDetail(id);
 
   const onFinish = useCallback(
     (values) => {
-      const { title, htmlContent, description, imagesUrl } = values || {};
-      const fileData = imagesUrl?.fileList || imagesUrl || [];
-      const fileList = fileData?.[fileData.length - 1] ? [fileData?.[fileData.length - 1]] : [];
+      const { title, description, htmlContent, imagesUrl, type } = values;
+      const finalHtmlContent = hasTableOfContents ? `<toc></toc>${htmlContent}` : htmlContent;
 
-      Promise.all(
-        fileList.map(async (item) => {
-          if (item.url) {
-            return item.url;
-          }
+      const newsData = {
+        title,
+        description,
+        htmlContent: finalHtmlContent,
+        imagesUrl: imagesUrl?.map((i) => i.url) || [],
+        type: type || 'NEWS' // Default fallback
+      };
 
-          if (!item?.originFileObj) {
-            return null; // Skip if there's no file
-          }
-
-          const formData = new FormData();
-          formData.append('file', item?.originFileObj);
-          return await API.request({
-            url: '/api/file/upload',
-            method: 'POST',
-            params: formData,
-            isUpload: true,
-            headers: {
-              'X-Force-Signature': import.meta.env.VITE_API_KEY
-            }
-          });
-        })
-      )
-        .then((imagesUrl) => {
-          const data = {
-            title,
-            htmlContent: getHtmlContentWithTOC(htmlContent, hasTableOfContents),
-            description,
-            imagesUrl,
-            type: 'NEWS'
-          };
-          id ? updateMutate(data) : createMutate(data);
-        })
-        .catch((e) => {
-          showToast({ type: 'error', message: `Tải ảnh tin tức thất bại. ${e.message}` });
-        });
+      if (id) {
+        updateMutate(newsData);
+      } else {
+        createMutate(newsData);
+      }
     },
     [createMutate, updateMutate, id, hasTableOfContents]
   );
+
+  const handleError = useCallback((e) => {
+    console.error('Form submission error:', e);
+  }, []);
 
   useScrollTop();
 
@@ -75,7 +57,7 @@ const NewsCreate = () => {
     return <ErrorScreen message={errorDetail?.message} className="mt-20" />;
   }
 
-  const { title, description, htmlContent, imagesUrl } = newsDetail || {};
+  const { title, description, htmlContent, imagesUrl, type } = newsDetail || {};
 
   const initialImages = Array.isArray(imagesUrl) ? imagesUrl.map((i) => ({ name: '', url: i })) : undefined;
 
@@ -97,11 +79,15 @@ const NewsCreate = () => {
       </Helmet>
 
       <Form
-        name="loginForm"
+        name="newsForm"
         labelCol={{ span: 24 }}
         wrapperCol={{ span: 24 }}
-        initialValues={{ remember: true }}
+        initialValues={{
+          remember: true,
+          type: type || 'NEWS' // Set default type
+        }}
         onFinish={onFinish}
+        onFinishFailed={handleError}
         autoComplete="off"
         className="mt-10"
       >
@@ -111,7 +97,7 @@ const NewsCreate = () => {
           initialValue={title}
           rules={[{ required: true, message: 'Vui lòng nhập tiêu đề' }]}
         >
-          <Input className="py-2" disabled={isDetail} />
+          <Input className="py-2" disabled={isDetail} placeholder="Nhập tiêu đề bài viết" />
         </Form.Item>
 
         <Form.Item
@@ -120,7 +106,25 @@ const NewsCreate = () => {
           initialValue={description}
           rules={[{ required: true, message: 'Vui lòng nhập mô tả' }]}
         >
-          <Input className="py-2" disabled={isDetail} />
+          <Input.TextArea className="py-2" disabled={isDetail} placeholder="Nhập mô tả ngắn cho bài viết" rows={3} />
+        </Form.Item>
+
+        {/* THÊM MỚI: Dropdown chọn loại bài viết */}
+        <Form.Item
+          label={<p className="font-bold text-md">Loại bài viết</p>}
+          name="type"
+          initialValue={type || 'NEWS'}
+          rules={[{ required: true, message: 'Vui lòng chọn loại bài viết' }]}
+        >
+          <Select
+            placeholder="Chọn loại bài viết"
+            disabled={isDetail}
+            showSearch
+            optionFilterProp="children"
+            filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
+            options={NEWS_TYPE_OPTIONS}
+            className="h-10"
+          />
         </Form.Item>
 
         <FormItemUpload
@@ -130,6 +134,7 @@ const NewsCreate = () => {
           accept=".JPG, .JPEG, .PNG, .GIF, .BMP, .HEIC, .SVG"
           initialValue={initialImages}
           defaultFileList={defaultImages}
+          rules={[{ required: true, message: 'Vui lòng chọn ít nhất 1 ảnh đại diện' }]}
         />
 
         <Form.Item
@@ -138,12 +143,12 @@ const NewsCreate = () => {
           initialValue={htmlContent}
           rules={[{ required: true, message: 'Vui lòng nhập nội dung' }]}
         >
-          {/* <FormEditor defaultValue={htmlContent} disabled={isDetail} /> */}
           <Editor
             showCreateTableOfContents
             getCreateTableOfContents={(value) => setHasTableOfContents(value)}
             defaultValue={htmlContent}
             disabled={isDetail}
+            placeholder="Nhập nội dung chi tiết của bài viết..."
           />
         </Form.Item>
 
@@ -160,6 +165,7 @@ const NewsCreate = () => {
                 size="large"
                 className="px-10"
                 loading={loadingCreate || loadingUpdate}
+                disabled={loadingCreate || loadingUpdate}
               >
                 <span className="font-semibold">{id ? 'Cập nhật' : 'Tạo mới'}</span>
               </Button>
@@ -173,6 +179,15 @@ const NewsCreate = () => {
           )}
         </div>
       </Form>
+
+      {/* Hiển thị thông tin loại bài viết cho trang detail */}
+      {isDetail && type && (
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+          <p className="text-sm text-gray-600">
+            <span className="font-semibold">Loại bài viết:</span> {getNewsTypeLabel(type)}
+          </p>
+        </div>
+      )}
     </div>
   );
 };

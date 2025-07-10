@@ -1,3 +1,4 @@
+// src/services/news.service.js - UPDATED trong CMS
 import { API } from '@/utils/API';
 import { showToast, useGetParamsURL } from '@/utils/helper';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -6,22 +7,50 @@ import { useNavigate } from 'react-router-dom';
 
 export const useQueryNewsList = () => {
   const paramsURL = useGetParamsURL();
-  const { page = 1, keyword } = paramsURL || {};
+  const { page = 1, keyword, type } = paramsURL || {}; // THÊM type parameter
 
-  const queryKey = ['GET_NEWS_LIST', page, keyword];
+  const queryKey = ['GET_NEWS_LIST', page, keyword, type];
 
   return useQuery({
     queryKey,
     queryFn: () =>
       API.request({
         url: '/api/news/get-all',
-        params: { pageSize: 10, pageNumber: Number(page) - 1, title: keyword, type: 'NEWS' }
+        params: {
+          pageSize: 10,
+          pageNumber: Number(page) - 1,
+          title: keyword,
+          type: type || undefined // Chỉ gửi type nếu có value
+        }
       })
+  });
+};
+
+export const useQueryNewsListByType = (newsType) => {
+  const paramsURL = useGetParamsURL();
+  const { page = 1, keyword } = paramsURL || {};
+
+  const queryKey = ['GET_NEWS_LIST_BY_TYPE', newsType, page, keyword];
+
+  return useQuery({
+    queryKey,
+    queryFn: () =>
+      API.request({
+        url: '/api/news/get-all',
+        params: {
+          pageSize: 10,
+          pageNumber: Number(page) - 1,
+          title: keyword,
+          type: newsType
+        }
+      }),
+    enabled: !!newsType
   });
 };
 
 export const useCreateNews = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (params) => {
@@ -29,20 +58,22 @@ export const useCreateNews = () => {
         url: '/api/news',
         method: 'POST',
         params
-      })
-        .then(() => {
-          showToast({ type: 'success', message: 'Tạo tin tức thành công' });
-          navigate(-1);
-        })
-        .catch((e) => {
-          showToast({ type: 'error', message: `Thao tác thất bại. ${e.message}` });
-        });
+      });
+    },
+    onSuccess: () => {
+      showToast({ type: 'success', message: 'Tạo tin tức thành công' });
+      queryClient.invalidateQueries({ queryKey: ['GET_NEWS_LIST'] });
+      navigate('/news');
+    },
+    onError: (e) => {
+      showToast({ type: 'error', message: `Thao tác thất bại. ${e.message}` });
     }
   });
 };
 
 export const useUpdateNews = (id) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (params) => {
@@ -50,14 +81,16 @@ export const useUpdateNews = (id) => {
         url: `/api/news/${id}`,
         method: 'PATCH',
         params
-      })
-        .then(() => {
-          showToast({ type: 'success', message: 'Cập nhật tin tức thành công' });
-          navigate(-1);
-        })
-        .catch((e) => {
-          showToast({ type: 'error', message: `Thao tác thất bại. ${e.message}` });
-        });
+      });
+    },
+    onSuccess: () => {
+      showToast({ type: 'success', message: 'Cập nhật tin tức thành công' });
+      queryClient.invalidateQueries({ queryKey: ['GET_NEWS_LIST'] });
+      queryClient.invalidateQueries({ queryKey: ['GET_NEWS_DETAIL', id] });
+      navigate('/news');
+    },
+    onError: (e) => {
+      showToast({ type: 'error', message: `Thao tác thất bại. ${e.message}` });
     }
   });
 };
@@ -71,14 +104,14 @@ export const useDeleteNews = () => {
       return API.request({
         url: `/api/news/${id}`,
         method: 'DELETE'
-      })
-        .then(() => {
-          showToast({ type: 'success', message: 'Xoá tin tức thành công' });
-          queryClient.resetQueries({ queryKey: ['GET_NEWS_LIST'] });
-        })
-        .catch((e) => {
-          showToast({ type: 'error', message: `Thao tác thất bại. ${e.message}` });
-        });
+      });
+    },
+    onSuccess: () => {
+      showToast({ type: 'success', message: 'Xoá tin tức thành công' });
+      queryClient.invalidateQueries({ queryKey: ['GET_NEWS_LIST'] });
+    },
+    onError: (e) => {
+      showToast({ type: 'error', message: `Thao tác thất bại. ${e.message}` });
     }
   });
 };
@@ -98,4 +131,34 @@ export const useQueryNewsDetail = (id) => {
     return { data: dataClient, isLoading: false, error: null };
   }
   return { data, isLoading, error };
+};
+
+// THÊM MỚI: Hook để lấy thống kê các loại bài viết
+export const useQueryNewsStats = () => {
+  const queryKey = ['GET_NEWS_STATS'];
+
+  return useQuery({
+    queryKey,
+    queryFn: async () => {
+      const response = await API.request({
+        url: '/api/news/get-all',
+        params: { pageSize: 1000 } // Lấy tất cả để đếm
+      });
+
+      const { content = [] } = response || {};
+
+      // Đếm theo type
+      const stats = content.reduce((acc, item) => {
+        const type = item.type || 'UNKNOWN';
+        acc[type] = (acc[type] || 0) + 1;
+        return acc;
+      }, {});
+
+      return {
+        total: content.length,
+        byType: stats
+      };
+    },
+    staleTime: 5 * 60 * 1000 // 5 minutes cache
+  });
 };
