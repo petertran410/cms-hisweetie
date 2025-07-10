@@ -191,19 +191,24 @@ export const uploadFileCdn = (fileData) => {
 };
 
 export const useFormType = () => {
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname } = location;
+
+  const isCreate = pathname.includes('/create');
+  const isEdit = pathname.includes('/edit');
+  const isDetail = pathname.includes('/detail');
+
   return {
-    isCreate: !pathname.includes('/edit') && !pathname.includes('/detail'),
-    isUpdate: pathname.includes('/edit'),
-    isDetail: pathname.includes('/detail')
+    isCreate,
+    isEdit,
+    isDetail,
+    formType: isCreate ? 'create' : isEdit ? 'edit' : isDetail ? 'detail' : 'unknown'
   };
 };
 
 export const useScrollTop = () => {
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.scrollTo(0, 0);
-    }
+    window.scrollTo(0, 0);
   }, []);
 };
 
@@ -228,14 +233,16 @@ export const transformHtmlWithHeadingId = (html) => {
   return doc.documentElement.outerHTML;
 };
 
-export const getHtmlContentWithTOC = (html, hasTOC) => {
-  if (!hasTOC) {
-    return html.replace('<toc></toc>', '');
+export const getHtmlContentWithTOC = (htmlContent, hasTableOfContents) => {
+  if (!htmlContent) return '';
+
+  if (hasTableOfContents) {
+    // Thêm TOC marker vào đầu content
+    return htmlContent.startsWith('<toc></toc>') ? htmlContent : `<toc></toc>${htmlContent}`;
+  } else {
+    // Remove TOC marker nếu có
+    return htmlContent.replace('<toc></toc>', '');
   }
-  if (html.startsWith('<toc></toc>')) {
-    return transformHtmlWithHeadingId(html);
-  }
-  return `<toc></toc>${transformHtmlWithHeadingId(html)}`;
 };
 
 const attachMediaListener = (query, callback) => {
