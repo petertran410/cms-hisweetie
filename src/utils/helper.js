@@ -3,10 +3,137 @@ import queryString from 'query-string';
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { API } from './API';
+import { toast } from 'react-toastify';
 
-export const showToast = (config) => {
-  const { type = 'success', message, content, duration } = config;
-  notification[type]({ message, description: content, duration });
+// Convert timestamp to readable format
+export const convertTimestamp = (timestamp) => {
+  if (!timestamp) return '';
+
+  try {
+    const date = new Date(timestamp);
+
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return '';
+    }
+
+    // Format: DD/MM/YYYY HH:mm
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  } catch (error) {
+    console.error('Error converting timestamp:', error);
+    return '';
+  }
+};
+
+// Convert timestamp to date only (DD/MM/YYYY)
+export const convertTimestampToDate = (timestamp) => {
+  if (!timestamp) return '';
+
+  try {
+    const date = new Date(timestamp);
+
+    if (isNaN(date.getTime())) {
+      return '';
+    }
+
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+
+    return `${day}/${month}/${year}`;
+  } catch (error) {
+    console.error('Error converting timestamp to date:', error);
+    return '';
+  }
+};
+
+// Get current params from URL
+export const useGetParamsURL = () => {
+  if (typeof window === 'undefined') return {};
+
+  const searchParams = new URLSearchParams(window.location.search);
+  const params = {};
+
+  for (const [key, value] of searchParams.entries()) {
+    params[key] = value;
+  }
+
+  return params;
+};
+
+export const showToast = ({ type = 'success', message = '' }) => {
+  const toastOptions = {
+    position: 'top-right',
+    autoClose: 3000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true
+  };
+
+  switch (type) {
+    case 'success':
+      toast.success(message, toastOptions);
+      break;
+    case 'error':
+      toast.error(message, toastOptions);
+      break;
+    case 'warning':
+      toast.warning(message, toastOptions);
+      break;
+    case 'info':
+      toast.info(message, toastOptions);
+      break;
+    default:
+      toast(message, toastOptions);
+  }
+};
+
+export const formatNumber = (number) => {
+  if (!number && number !== 0) return '';
+  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+};
+
+export const convertSlugURL = (str) => {
+  if (!str) return '';
+
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+};
+
+export const truncateText = (text, maxLength = 100) => {
+  if (!text) return '';
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + '...';
+};
+
+// Validate email
+export const isValidEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+// Generate random string
+export const generateRandomString = (length = 10) => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
 };
 
 export const paramsToObject = (entries) => {
@@ -34,11 +161,6 @@ export const useRemoveParamURL = () => {
       });
       return new URLSearchParams(newParams);
     });
-};
-
-export const useGetParamsURL = () => {
-  const location = useLocation();
-  return queryString.parse(location.search);
 };
 
 export const useParamsURL = () => {

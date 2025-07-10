@@ -1,194 +1,264 @@
 // src/pages/news/news-create/news-create.jsx - UPDATED với dropdown type
-import { ButtonBack } from '../../../components/button';
-import FormUpload from '../../../components/form/form-upload.jsx';
-import { LoadingScreen, ErrorScreen } from '../../../components/effect-screen';
-import Editor from '../../../components/form/editor';
-import { useCreateNews, useQueryNewsDetail, useUpdateNews } from '@/services/news.service';
-import { NEWS_TYPE_OPTIONS, getNewsTypeLabel } from '@/utils/news-types.constants';
+import { useCreateNews } from '@/services/news.service';
+import { NEWS_TYPE_OPTIONS } from '@/utils/news-types.constants';
 import { WEBSITE_NAME } from '@/utils/resource';
-import { Button, Form, Input, Select } from 'antd';
-import { useCallback, useState } from 'react';
+import { Button, Col, Form, Input, Row, Select, Upload, message } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import { Helmet } from 'react-helmet';
-import { Link, useParams } from 'react-router-dom';
-import { useScrollTop } from '../../../utils/helper';
+import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+import { API } from '@/utils/API';
+
+const { TextArea } = Input;
 
 const NewsCreate = () => {
-  const { id } = useParams();
-  const isDetail = window.location.pathname.includes('detail');
-  const [hasTableOfContents, setHasTableOfContents] = useState(false);
+  const [form] = Form.useForm();
+  const navigate = useNavigate();
+  const { mutate: createMutate, isPending } = useCreateNews();
+  const [fileList, setFileList] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const [htmlContent, setHtmlContent] = useState('');
 
-  const { mutate: createMutate, isPending: loadingCreate } = useCreateNews();
-  const { mutate: updateMutate, isPending: loadingUpdate } = useUpdateNews(id);
-  const { data: newsDetail, isLoading: loadingDetail, error: errorDetail } = useQueryNewsDetail(id);
+  // Quill editor modules
+  const modules = {
+    toolbar: [
+      [{ header: [1, 2, 3, 4, 5, 6, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      [{ indent: '-1' }, { indent: '+1' }],
+      ['link', 'image'],
+      ['blockquote', 'code-block'],
+      [{ align: [] }],
+      ['clean']
+    ]
+  };
 
-  const onFinish = useCallback(
-    (values) => {
-      const { title, description, htmlContent, imagesUrl, type } = values;
-      const finalHtmlContent = hasTableOfContents ? `<toc></toc>${htmlContent}` : htmlContent;
+  const formats = [
+    'header',
+    'bold',
+    'italic',
+    'underline',
+    'strike',
+    'list',
+    'bullet',
+    'indent',
+    'link',
+    'image',
+    'blockquote',
+    'code-block',
+    'align'
+  ];
 
-      const newsData = {
-        title,
-        description,
-        htmlContent: finalHtmlContent,
-        imagesUrl: imagesUrl?.map((i) => i.url) || [],
-        type: type || 'NEWS' // Default fallback
+  // Handle image upload for the main featured images
+  const handleUpload = async ({ file, onSuccess, onError }) => {
+    try {
+      setUploading(true);
+      const response = await API.upload({ file });
+
+      if (response?.url) {
+        onSuccess(response, file);
+        message.success('Tải ảnh lên thành công!');
+      } else {
+        throw new Error('Upload failed');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      onError(error);
+      message.error('Tải ảnh lên thất bại!');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleChange = ({ fileList: newFileList }) => {
+    setFileList(newFileList);
+  };
+
+  const beforeUpload = (file) => {
+    const isImage = file.type.startsWith('image/');
+    if (!isImage) {
+      message.error('Chỉ được phép tải lên file ảnh!');
+      return false;
+    }
+
+    const isLt5M = file.size / 1024 / 1024 < 5;
+    if (!isLt5M) {
+      message.error('Ảnh phải nhỏ hơn 5MB!');
+      return false;
+    }
+
+    return true;
+  };
+
+  const onFinish = (values) => {
+    try {
+      // Prepare images URL array
+      const imagesUrl = fileList
+        .filter((file) => file.status === 'done' && file.response?.url)
+        .map((file) => file.response.url);
+
+      const submitData = {
+        ...values,
+        htmlContent: htmlContent,
+        imagesUrl: JSON.stringify(imagesUrl),
+        type: values.type // Đảm bảo type được bao gồm
       };
 
-      if (id) {
-        updateMutate(newsData);
-      } else {
-        createMutate(newsData);
-      }
-    },
-    [createMutate, updateMutate, id, hasTableOfContents]
+      createMutate(submitData);
+    } catch (error) {
+      console.error('Form submission error:', error);
+      message.error('Có lỗi xảy ra khi tạo tin tức!');
+    }
+  };
+
+  const uploadButton = (
+    <div>
+      <PlusOutlined />
+      <div style={{ marginTop: 8 }}>Tải ảnh lên</div>
+    </div>
   );
 
-  const handleError = useCallback((e) => {
-    console.error('Form submission error:', e);
-  }, []);
-
-  useScrollTop();
-
-  if (loadingDetail) {
-    return <LoadingScreen className="mt-20" />;
-  }
-
-  if (errorDetail) {
-    return <ErrorScreen message={errorDetail?.message} className="mt-20" />;
-  }
-
-  const { title, description, htmlContent, imagesUrl, type } = newsDetail || {};
-
-  const initialImages = Array.isArray(imagesUrl) ? imagesUrl.map((i) => ({ name: '', url: i })) : undefined;
-
-  const defaultImages = Array.isArray(imagesUrl)
-    ? imagesUrl.map((i) => ({
-        type: 'image/*',
-        url: i,
-        uid: i,
-        name: ''
-      }))
-    : undefined;
-
   return (
-    <div className="w-full md:w-[60%] lg:w-[50%] 2xl:w-[65%] mx-auto mb-10">
+    <>
       <Helmet>
-        <title>
-          {id ? 'Cập nhật' : 'Tạo'} tin tức | {WEBSITE_NAME}
-        </title>
+        <title>Tạo tin tức mới - {WEBSITE_NAME}</title>
       </Helmet>
 
-      <Form
-        name="newsForm"
-        labelCol={{ span: 24 }}
-        wrapperCol={{ span: 24 }}
-        initialValues={{
-          remember: true,
-          type: type || 'NEWS' // Set default type
-        }}
-        onFinish={onFinish}
-        onFinishFailed={handleError}
-        autoComplete="off"
-        className="mt-10"
-      >
-        <Form.Item
-          label={<p className="font-bold text-md">Tiêu đề</p>}
-          name="title"
-          initialValue={title}
-          rules={[{ required: true, message: 'Vui lòng nhập tiêu đề' }]}
-        >
-          <Input className="py-2" disabled={isDetail} placeholder="Nhập tiêu đề bài viết" />
-        </Form.Item>
-
-        <Form.Item
-          label={<p className="font-bold text-md">Mô tả</p>}
-          name="description"
-          initialValue={description}
-          rules={[{ required: true, message: 'Vui lòng nhập mô tả' }]}
-        >
-          <Input.TextArea className="py-2" disabled={isDetail} placeholder="Nhập mô tả ngắn cho bài viết" rows={3} />
-        </Form.Item>
-
-        {/* THÊM MỚI: Dropdown chọn loại bài viết */}
-        <Form.Item
-          label={<p className="font-bold text-md">Loại bài viết</p>}
-          name="type"
-          initialValue={type || 'NEWS'}
-          rules={[{ required: true, message: 'Vui lòng chọn loại bài viết' }]}
-        >
-          <Select
-            placeholder="Chọn loại bài viết"
-            disabled={isDetail}
-            showSearch
-            optionFilterProp="children"
-            filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
-            options={NEWS_TYPE_OPTIONS}
-            className="h-10"
-          />
-        </Form.Item>
-
-        <FormUpload
-          disabled={isDetail}
-          name="imagesUrl"
-          label="Ảnh đại diện"
-          accept=".JPG, .JPEG, .PNG, .GIF, .BMP, .HEIC, .SVG"
-          initialValue={initialImages}
-          defaultFileList={defaultImages}
-          rules={[{ required: true, message: 'Vui lòng chọn ít nhất 1 ảnh đại diện' }]}
-        />
-
-        <Form.Item
-          label={<p className="font-bold text-md">Nội dung</p>}
-          name="htmlContent"
-          initialValue={htmlContent}
-          rules={[{ required: true, message: 'Vui lòng nhập nội dung' }]}
-        >
-          <Editor
-            showCreateTableOfContents
-            getCreateTableOfContents={(value) => setHasTableOfContents(value)}
-            defaultValue={htmlContent}
-            disabled={isDetail}
-            placeholder="Nhập nội dung chi tiết của bài viết..."
-          />
-        </Form.Item>
-
-        <div className="flex items-center gap-8 mt-20 justify-center">
-          <div className="hidden md:block">
-            <ButtonBack route="/news" />
-          </div>
-
-          {!isDetail ? (
-            <Form.Item className="mb-0">
-              <Button
-                type="primary"
-                htmlType="submit"
-                size="large"
-                className="px-10"
-                loading={loadingCreate || loadingUpdate}
-                disabled={loadingCreate || loadingUpdate}
-              >
-                <span className="font-semibold">{id ? 'Cập nhật' : 'Tạo mới'}</span>
-              </Button>
-            </Form.Item>
-          ) : (
-            <Link to={`/news/${id}/edit`} onClick={() => window.scrollTo(0, 0)}>
-              <span className="font-semibold px-10 py-3 bg-blue-500 text-white rounded-md duration-200 hover:bg-blue-600">
-                Chỉnh sửa
-              </span>
-            </Link>
-          )}
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-800">Tạo tin tức mới</h1>
+          <Button onClick={() => navigate('/news')} className="bg-gray-500 hover:bg-gray-600">
+            Quay lại
+          </Button>
         </div>
-      </Form>
 
-      {/* Hiển thị thông tin loại bài viết cho trang detail */}
-      {isDetail && type && (
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <p className="text-sm text-gray-600">
-            <span className="font-semibold">Loại bài viết:</span> {getNewsTypeLabel(type)}
-          </p>
+        <div className="bg-white p-6 rounded-lg shadow-sm">
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={onFinish}
+            initialValues={{
+              type: 'NEWS' // Giá trị mặc định
+            }}
+          >
+            <Row gutter={[16, 0]}>
+              {/* Tiêu đề */}
+              <Col span={24}>
+                <Form.Item
+                  label="Tiêu đề"
+                  name="title"
+                  rules={[
+                    { required: true, message: 'Vui lòng nhập tiêu đề!' },
+                    { min: 10, message: 'Tiêu đề phải có ít nhất 10 ký tự!' },
+                    { max: 200, message: 'Tiêu đề không được vượt quá 200 ký tự!' }
+                  ]}
+                >
+                  <Input placeholder="Nhập tiêu đề bài viết..." size="large" />
+                </Form.Item>
+              </Col>
+
+              {/* Loại bài viết - DROPDOWN MỚI */}
+              <Col span={12}>
+                <Form.Item
+                  label="Loại bài viết"
+                  name="type"
+                  rules={[{ required: true, message: 'Vui lòng chọn loại bài viết!' }]}
+                >
+                  <Select
+                    placeholder="Chọn loại bài viết"
+                    size="large"
+                    options={NEWS_TYPE_OPTIONS}
+                    showSearch
+                    filterOption={(input, option) => option.label.toLowerCase().includes(input.toLowerCase())}
+                  />
+                </Form.Item>
+              </Col>
+
+              {/* Mô tả ngắn */}
+              <Col span={24}>
+                <Form.Item
+                  label="Mô tả ngắn"
+                  name="description"
+                  rules={[
+                    { required: true, message: 'Vui lòng nhập mô tả!' },
+                    { min: 50, message: 'Mô tả phải có ít nhất 50 ký tự!' },
+                    { max: 500, message: 'Mô tả không được vượt quá 500 ký tự!' }
+                  ]}
+                >
+                  <TextArea rows={3} placeholder="Nhập mô tả ngắn về bài viết..." showCount maxLength={500} />
+                </Form.Item>
+              </Col>
+
+              {/* Ảnh đại diện */}
+              <Col span={24}>
+                <Form.Item label="Ảnh đại diện">
+                  <Upload
+                    listType="picture-card"
+                    fileList={fileList}
+                    customRequest={handleUpload}
+                    onChange={handleChange}
+                    beforeUpload={beforeUpload}
+                    accept="image/*"
+                    multiple
+                  >
+                    {fileList.length >= 5 ? null : uploadButton}
+                  </Upload>
+                  <div className="text-gray-500 text-sm mt-2">
+                    • Tối đa 5 ảnh, mỗi ảnh nhỏ hơn 5MB
+                    <br />
+                    • Định dạng: JPG, PNG, WEBP
+                    <br />• Ảnh đầu tiên sẽ được sử dụng làm ảnh đại diện
+                  </div>
+                </Form.Item>
+              </Col>
+
+              {/* Nội dung HTML */}
+              <Col span={24}>
+                <Form.Item
+                  label="Nội dung bài viết"
+                  rules={[{ required: true, message: 'Vui lòng nhập nội dung bài viết!' }]}
+                >
+                  <div className="border border-gray-300 rounded-md">
+                    <ReactQuill
+                      theme="snow"
+                      value={htmlContent}
+                      onChange={setHtmlContent}
+                      modules={modules}
+                      formats={formats}
+                      placeholder="Nhập nội dung bài viết..."
+                      style={{ minHeight: '300px' }}
+                    />
+                  </div>
+                  {!htmlContent && <div className="text-red-500 text-sm mt-1">Vui lòng nhập nội dung bài viết!</div>}
+                </Form.Item>
+              </Col>
+
+              {/* Submit buttons */}
+              <Col span={24}>
+                <Form.Item>
+                  <div className="flex gap-3 justify-end">
+                    <Button size="large" onClick={() => navigate('/news')} disabled={isPending}>
+                      Hủy
+                    </Button>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      size="large"
+                      loading={isPending || uploading}
+                      disabled={!htmlContent}
+                    >
+                      Tạo tin tức
+                    </Button>
+                  </div>
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form>
         </div>
-      )}
-    </div>
+      </div>
+    </>
   );
 };
 
