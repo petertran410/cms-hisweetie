@@ -2,15 +2,15 @@
 import { ButtonBack } from '../../../components/button';
 import { FormItemUpload } from '../../../components/form';
 import { LoadingScreen, ErrorScreen } from '../../../components/effect-screen';
-import Editor from '@/components/editor';
+import Editor from '../../../components/form/editor';
 import { useCreateNews, useQueryNewsDetail, useUpdateNews } from '@/services/news.service';
 import { NEWS_TYPE_OPTIONS, getNewsTypeLabel } from '@/utils/news-types.constants';
-import { WEBSITE_NAME } from '@/utils/const';
+import { WEBSITE_NAME } from '../../../utils/news-types.constants';
 import { Button, Form, Input, Select } from 'antd';
 import { useCallback, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { Link, useParams } from 'react-router-dom';
-import { useScrollTop } from '@/utils/hooks';
+import { useScrollTop } from '../../../utils/helper';
 
 const NewsCreate = () => {
   const { id } = useParams();

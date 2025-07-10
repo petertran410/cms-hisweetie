@@ -1,9 +1,9 @@
 // src/pages/news/news-list/news-list.jsx - UPDATED với type labels
 import { TablePrimary } from '@/components/table';
 import { useQueryNewsList } from '@/services/news.service';
-import { getNewsTypeLabel, NEWS_TYPE_OPTIONS } from '@/utils/news-types.constants';
+import { getNewsTypeLabel, NEWS_TYPE_OPTIONS } from '../../../utils/news-types.constants';
 import { convertTimestamp } from '@/utils/helper';
-import { WEBSITE_NAME } from '@/utils/const';
+import { WEBSITE_NAME } from '../../../utils/helper';
 import { Tag, Select } from 'antd';
 import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
