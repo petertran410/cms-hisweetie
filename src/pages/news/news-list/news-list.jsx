@@ -1,16 +1,16 @@
-// src/pages/news/news-list/news-list.jsx - UPDATED với type labels
-import { TablePrimary } from '@/components/table';
+// src/pages/news/news-list/news-list.jsx - FIXED với TableAction component
+import TableAction from '../../../components/table/table-action';
 import { useQueryNewsList } from '@/services/news.service';
 import { getNewsTypeLabel, NEWS_TYPE_OPTIONS } from '../../../utils/news-types.constants';
 import { convertTimestamp } from '@/utils/helper';
 import { WEBSITE_NAME } from '@/utils/resource';
-import { Tag, Select } from 'antd';
+import { Tag, Select, Button } from 'antd';
 import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 import Action from './action';
 
 const NewsList = () => {
-  const { data, isLoading } = useQueryNewsList();
+  const { data, isLoading, error } = useQueryNewsList();
   const { content = [], totalElements = 0 } = data || {};
 
   // Mapping type colors cho tags
@@ -30,91 +30,48 @@ const NewsList = () => {
 
   const columns = [
     {
+      field: 'id',
       title: 'STT',
-      dataIndex: 'id',
-      key: 'id',
-      width: 60,
-      render: (_, __, index) => index + 1
+      width: '60px',
+      render: (item, index) => index + 1
     },
     {
+      field: 'title',
       title: 'Tiêu đề',
-      dataIndex: 'title',
-      key: 'title',
-      width: 300,
-      render: (title, record) => (
-        <Link
-          to={`/news/${record.id}/detail`}
-          className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
-        >
-          {title}
+      width: '300px',
+      render: (item) => (
+        <Link to={`/news/${item.id}/detail`} className="font-medium text-blue-600 hover:text-blue-800 hover:underline">
+          {item.title}
         </Link>
       )
     },
     {
+      field: 'description',
       title: 'Mô tả',
-      dataIndex: 'description',
-      key: 'description',
-      width: 250,
-      render: (description) => (
-        <div className="text-gray-600 text-sm line-clamp-2 max-w-xs">{description || 'Chưa có mô tả'}</div>
+      width: '250px',
+      render: (item) => (
+        <div className="text-gray-600 text-sm line-clamp-2 max-w-xs">{item.description || 'Chưa có mô tả'}</div>
       )
     },
     {
-      title: 'Loại bài viết', // THÊM MỚI
-      dataIndex: 'type',
-      key: 'type',
-      width: 150,
-      render: (type) => (
-        <Tag color={getTypeTagColor(type)} className="text-xs">
-          {getNewsTypeLabel(type)}
+      field: 'type',
+      title: 'Loại bài viết',
+      width: '150px',
+      render: (item) => (
+        <Tag color={getTypeTagColor(item.type)} className="text-xs">
+          {getNewsTypeLabel(item.type)}
         </Tag>
-      ),
-      // Thêm filter dropdown
-      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-        <div className="p-4">
-          <Select
-            placeholder="Chọn loại bài viết"
-            value={selectedKeys[0]}
-            onChange={(value) => {
-              setSelectedKeys(value ? [value] : []);
-            }}
-            onPressEnter={() => confirm()}
-            style={{ width: 200, marginBottom: 8, display: 'block' }}
-            allowClear
-            options={[{ value: '', label: 'Tất cả' }, ...NEWS_TYPE_OPTIONS]}
-          />
-          <div className="flex gap-2">
-            <button
-              onClick={() => confirm()}
-              className="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
-            >
-              Lọc
-            </button>
-            <button
-              onClick={() => {
-                clearFilters();
-                confirm();
-              }}
-              className="px-3 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600"
-            >
-              Xóa
-            </button>
-          </div>
-        </div>
-      ),
-      onFilter: (value, record) => {
-        if (!value) return true;
-        return record.type === value;
-      }
+      )
     },
     {
+      field: 'imagesUrl',
       title: 'Ảnh đại diện',
-      dataIndex: 'imagesUrl',
-      key: 'imagesUrl',
-      width: 100,
-      render: (imagesUrl) => {
+      width: '100px',
+      render: (item) => {
         const imageUrl =
-          Array.isArray(imagesUrl) && imagesUrl.length > 0 ? imagesUrl[0]?.replace('https://', 'http://') : null;
+          Array.isArray(item.imagesUrl) && item.imagesUrl.length > 0
+            ? item.imagesUrl[0]?.replace('https://', 'http://')
+            : null;
 
         return imageUrl ? (
           <img
@@ -133,70 +90,65 @@ const NewsList = () => {
       }
     },
     {
+      field: 'viewCount',
       title: 'Lượt xem',
-      dataIndex: 'viewCount',
-      key: 'viewCount',
-      width: 80,
-      sorter: (a, b) => (a.viewCount || 0) - (b.viewCount || 0),
-      render: (viewCount) => <span className="text-gray-600 text-sm">{viewCount || 0}</span>
+      width: '80px',
+      render: (item) => <span className="text-gray-600 text-sm">{item.viewCount || 0}</span>
     },
     {
+      field: 'createdDate',
       title: 'Ngày tạo',
-      dataIndex: 'createdDate',
-      key: 'createdDate',
-      width: 120,
-      sorter: (a, b) => new Date(a.createdDate) - new Date(b.createdDate),
-      render: (createdDate) => <span className="text-gray-600 text-sm">{convertTimestamp(createdDate)}</span>
+      width: '120px',
+      render: (item) => <span className="text-gray-600 text-sm">{convertTimestamp(item.createdDate)}</span>
     },
     {
+      field: 'action',
       title: 'Hành động',
-      key: 'action',
-      width: 120,
-      fixed: 'right',
-      render: (_, record) => <Action item={record} />
+      width: '120px',
+      render: (item) => <Action item={item} />
     }
   ];
 
   return (
-    <div>
+    <div className="p-6">
       <Helmet>
         <title>Quản lý tin tức | {WEBSITE_NAME}</title>
       </Helmet>
 
-      <TablePrimary
-        title="Danh sách tin tức"
-        data={content}
-        columns={columns}
-        loading={isLoading}
-        total={totalElements}
-        createRoute="/news/create"
-        createText="Tạo tin tức mới"
-        scroll={{ x: 1200 }}
-        rowKey="id"
-        // Thêm thống kê theo type
-        summary={() => {
-          if (!content.length) return null;
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Danh sách tin tức</h1>
+        <Link to="/news/create">
+          <Button type="primary" size="large">
+            Tạo tin tức mới
+          </Button>
+        </Link>
+      </div>
 
-          const typeCounts = content.reduce((acc, item) => {
-            const type = item.type || 'UNKNOWN';
-            acc[type] = (acc[type] || 0) + 1;
-            return acc;
-          }, {});
+      {/* Stats */}
+      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+        <h4 className="font-semibold mb-2 text-sm">Thống kê:</h4>
+        <div className="flex flex-wrap gap-2">
+          <Tag color="blue">Tổng cộng: {totalElements}</Tag>
+          {content.length > 0 &&
+            (() => {
+              const typeCounts = content.reduce((acc, item) => {
+                const type = item.type || 'UNKNOWN';
+                acc[type] = (acc[type] || 0) + 1;
+                return acc;
+              }, {});
 
-          return (
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-              <h4 className="font-semibold mb-2 text-sm">Thống kê theo loại bài viết:</h4>
-              <div className="flex flex-wrap gap-2">
-                {Object.entries(typeCounts).map(([type, count]) => (
-                  <Tag key={type} color={getTypeTagColor(type)} className="text-xs">
-                    {getNewsTypeLabel(type)}: {count}
-                  </Tag>
-                ))}
-              </div>
-            </div>
-          );
-        }}
-      />
+              return Object.entries(typeCounts).map(([type, count]) => (
+                <Tag key={type} color={getTypeTagColor(type)} className="text-xs">
+                  {getNewsTypeLabel(type)}: {count}
+                </Tag>
+              ));
+            })()}
+        </div>
+      </div>
+
+      {/* TableAction */}
+      <TableAction columns={columns} data={content} isLoading={isLoading} error={error} />
     </div>
   );
 };
