@@ -1,4 +1,4 @@
-// src/services/news.service.js - UPDATED trong CMS
+// src/services/news.service.js - UPDATED trong CMS - SỬA LỖI FILTER
 import { API } from '@/utils/API';
 import { showToast, useGetParamsURL } from '@/utils/helper';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -7,22 +7,71 @@ import { useNavigate } from 'react-router-dom';
 
 export const useQueryNewsList = () => {
   const paramsURL = useGetParamsURL();
-  const { page = 1, keyword, type } = paramsURL || {}; // THÊM type parameter
+  const { page = 1, keyword, type } = paramsURL || {};
 
   const queryKey = ['GET_NEWS_LIST', page, keyword, type];
 
   return useQuery({
     queryKey,
-    queryFn: () =>
-      API.request({
+    queryFn: async () => {
+      const response = await API.request({
         url: '/api/news/get-all',
         params: {
           pageSize: 10,
           pageNumber: Number(page) - 1,
           title: keyword,
-          type: type || undefined // Chỉ gửi type nếu có value
+          type: type || undefined
         }
-      })
+      });
+
+      // NÓU KHÔNG CÓ TYPE FILTER CỤ THỂ, LOẠI TRỪ VIDEO VÀ CULTURE
+      if (!type && response?.content) {
+        const filteredContent = response.content.filter((item) => item.type !== 'VIDEO' && item.type !== 'CULTURE');
+
+        return {
+          ...response,
+          content: filteredContent,
+          totalElements: filteredContent.length
+        };
+      }
+
+      return response;
+    }
+  });
+};
+
+// THÊM MỚI: Service riêng cho trang Tin Tức (loại trừ VIDEO và CULTURE)
+export const useQueryNewsListExcludeVideoAndCulture = () => {
+  const paramsURL = useGetParamsURL();
+  const { page = 1, keyword } = paramsURL || {};
+
+  const queryKey = ['GET_NEWS_LIST_EXCLUDE_VIDEO_CULTURE', page, keyword];
+
+  return useQuery({
+    queryKey,
+    queryFn: async () => {
+      const response = await API.request({
+        url: '/api/news/get-all',
+        params: {
+          pageSize: 10,
+          pageNumber: Number(page) - 1,
+          title: keyword
+        }
+      });
+
+      // Lọc ra VIDEO và CULTURE
+      if (response?.content) {
+        const filteredContent = response.content.filter((item) => item.type !== 'VIDEO' && item.type !== 'CULTURE');
+
+        return {
+          ...response,
+          content: filteredContent,
+          totalElements: filteredContent.length
+        };
+      }
+
+      return response;
+    }
   });
 };
 
@@ -63,6 +112,7 @@ export const useCreateNews = () => {
     onSuccess: () => {
       showToast({ type: 'success', message: 'Tạo tin tức thành công' });
       queryClient.invalidateQueries({ queryKey: ['GET_NEWS_LIST'] });
+      queryClient.invalidateQueries({ queryKey: ['GET_NEWS_LIST_EXCLUDE_VIDEO_CULTURE'] });
       navigate('/news');
     },
     onError: (e) => {
@@ -86,6 +136,7 @@ export const useUpdateNews = (id) => {
     onSuccess: () => {
       showToast({ type: 'success', message: 'Cập nhật tin tức thành công' });
       queryClient.invalidateQueries({ queryKey: ['GET_NEWS_LIST'] });
+      queryClient.invalidateQueries({ queryKey: ['GET_NEWS_LIST_EXCLUDE_VIDEO_CULTURE'] });
       queryClient.invalidateQueries({ queryKey: ['GET_NEWS_DETAIL', id] });
       navigate('/news');
     },
@@ -109,6 +160,7 @@ export const useDeleteNews = () => {
     onSuccess: () => {
       showToast({ type: 'success', message: 'Xoá tin tức thành công' });
       queryClient.invalidateQueries({ queryKey: ['GET_NEWS_LIST'] });
+      queryClient.invalidateQueries({ queryKey: ['GET_NEWS_LIST_EXCLUDE_VIDEO_CULTURE'] });
     },
     onError: (e) => {
       showToast({ type: 'error', message: `Thao tác thất bại. ${e.message}` });
@@ -142,7 +194,7 @@ export const useQueryNewsStats = () => {
     queryFn: async () => {
       const response = await API.request({
         url: '/api/news/get-all',
-        params: { pageSize: 1000 } // Lấy tất cả để đếm
+        params: { pageSize: 1000 }
       });
 
       const { content = [] } = response || {};
@@ -159,6 +211,6 @@ export const useQueryNewsStats = () => {
         byType: stats
       };
     },
-    staleTime: 5 * 60 * 1000 // 5 minutes cache
+    staleTime: 5 * 60 * 1000
   });
 };

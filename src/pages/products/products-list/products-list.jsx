@@ -175,7 +175,7 @@ const ProductsList = () => {
   return (
     <TableStyle>
       <Helmet>
-        <title>Danh sách sản phẩm - Danh mục con Lermao & Trà Phượng Hoàng | {WEBSITE_NAME}</title>
+        <title>Danh sách sản phẩm | {WEBSITE_NAME}</title>
       </Helmet>
 
       {/* Category Assignment Issue Alert */}
@@ -203,126 +203,11 @@ const ProductsList = () => {
         />
       )}
 
-      {/* Sync Status Card */}
-      {syncStatus && (
-        <Card className="mb-6" size="small">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Statistic title="Tổng sản phẩm" value={syncStatus.totalProducts || 0} prefix={<FaInfoCircle />} />
-              <Statistic
-                title="Trạng thái KiotViet"
-                value={syncStatus.kiotVietConfigured ? 'Đã kết nối' : 'Chưa kết nối'}
-                valueStyle={{
-                  color: syncStatus.kiotVietConfigured ? '#52c41a' : '#ff4d4f',
-                  fontSize: '14px'
-                }}
-              />
-            </div>
-            <Button
-              type="primary"
-              icon={<FaSync />}
-              loading={isSyncing}
-              onClick={handleSync}
-              disabled={!syncStatus.kiotVietConfigured}
-            >
-              {isSyncing ? 'Đang đồng bộ...' : 'Đồng bộ từ KiotViet'}
-            </Button>
-          </div>
-          {syncStatus.message && <p className="text-sm text-gray-600 mt-2">{syncStatus.message}</p>}
-        </Card>
-      )}
-
-      {/* Enhanced Category Info */}
-      <Card className="mb-6" size="small">
-        <div className="space-y-3">
-          <div className="flex items-center gap-4 text-sm">
-            <span className="font-medium">Hiển thị sản phẩm từ danh mục con:</span>
-            <div className="flex gap-2">
-              <Tag color="blue">Lermao</Tag>
-              <Tag color="magenta">Trà Phượng Hoàng</Tag>
-            </div>
-          </div>
-
-          <div className="text-sm text-gray-600">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <span className="font-medium text-blue-600">Danh mục con Lermao:</span>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  <Tag size="small" color="blue">
-                    Bột
-                  </Tag>
-                  <Tag size="small" color="green">
-                    Topping
-                  </Tag>
-                  <Tag size="small" color="orange">
-                    Mứt Sốt
-                  </Tag>
-                  <Tag size="small" color="purple">
-                    Siro
-                  </Tag>
-                  <Tag size="small" color="cyan">
-                    hàng sản xuất
-                  </Tag>
-                </div>
-              </div>
-              <div>
-                <span className="font-medium text-magenta-600">Danh mục con Trà Phượng Hoàng:</span>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  <Tag size="small" color="magenta">
-                    OEM
-                  </Tag>
-                  <Tag size="small" color="red">
-                    SHANCHA
-                  </Tag>
-                </div>
-              </div>
-            </div>
-            <div className="mt-3 p-3 bg-yellow-50 rounded border-l-4 border-yellow-400">
-              <div className="flex items-start">
-                <FaInfoCircle className="text-yellow-600 mt-0.5 mr-2" />
-                <div>
-                  <p className="font-medium text-yellow-800">Lưu ý quan trọng:</p>
-                  <p className="text-sm text-yellow-700">
-                    Chỉ hiển thị sản phẩm được phân vào <strong>danh mục con cụ thể</strong>. Sản phẩm được gán trực
-                    tiếp vào danh mục cha sẽ không hiển thị.
-                  </p>
-                </div>
-              </div>
-            </div>
-            {categoryInfo && (
-              <p className="mt-2">
-                Tìm kiếm trong <strong>{categoryInfo.totalCategoriesSearched || 0}</strong> danh mục con
-                {categoryInfo.productsInSubcategories !== undefined && (
-                  <span>
-                    {' '}
-                    • <strong>{categoryInfo.productsInSubcategories}</strong> sản phẩm trong danh mục con
-                  </span>
-                )}
-                {categoryInfo.productsInParentCategories > 0 && (
-                  <span className="text-orange-600">
-                    {' '}
-                    • <strong>{categoryInfo.productsInParentCategories}</strong> sản phẩm cần phân loại lại
-                  </span>
-                )}
-              </p>
-            )}
-          </div>
-        </div>
-      </Card>
-
       {/* Action Buttons */}
       <div className="flex justify-between items-center mb-5">
         <div className="flex gap-3">
           <ImportProduct />
           <CreateButton route="/products/create" />
-        </div>
-
-        <div className="text-sm text-gray-600">
-          <Tooltip title="Chỉ hiển thị sản phẩm từ danh mục con, không bao gồm sản phẩm gán trực tiếp vào danh mục cha">
-            <span className="cursor-help">
-              Sản phẩm từ <strong>danh mục con</strong> của Lermao và Trà Phượng Hoàng ℹ️
-            </span>
-          </Tooltip>
         </div>
       </div>
 
