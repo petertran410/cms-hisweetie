@@ -20,14 +20,22 @@ export const API = {
     });
 
     const { baseUrl = apiUrl, method = 'GET', url, params, headers, isUpload } = config;
+
+    // Get token fresh each time to avoid timing issues
     const token = Cookies.get(CK_JWT_TOKEN);
+
+    console.log('🔍 Token check:', {
+      hasToken: !!token,
+      tokenLength: token?.length || 0,
+      tokenPreview: token ? `${token.substring(0, 20)}...` : 'No token'
+    });
 
     const requestConfig = {
       url: `${baseUrl}${url}`,
       method,
       headers: {
         'Content-Type': isUpload ? 'multipart/form-data' : 'application/json',
-        Authorization: token ? `Bearer ${token}` : undefined,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...headers
       },
       data: method !== 'GET' ? params : undefined,
@@ -39,7 +47,8 @@ export const API = {
     console.log('🚀 Making API request:', {
       url: requestConfig.url,
       method: requestConfig.method,
-      hasToken: !!token
+      hasToken: !!token,
+      hasAuthHeader: !!requestConfig.headers.Authorization
     });
 
     return axios(requestConfig)
@@ -54,6 +63,14 @@ export const API = {
           message: e?.response?.data?.message || e.message,
           data: e?.response?.data
         });
+
+        // If 401, clear token and reload
+        if (e?.response?.status === 401) {
+          console.log('🚨 401 Unauthorized - Clearing token');
+          Cookies.remove(CK_JWT_TOKEN);
+          // Optional: redirect to login
+          // window.location.href = '/login';
+        }
 
         const error = e?.response?.data ? { message: e?.response?.data?.description } : e;
         return Promise.reject(error);
@@ -85,7 +102,7 @@ export const API = {
       method: 'POST',
       headers: {
         'Content-Type': 'multipart/form-data',
-        Authorization: token ? `Bearer ${token}` : undefined,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         'X-Force-Signature': import.meta.env.VITE_API_KEY,
         ...headers
       },

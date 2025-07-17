@@ -1,13 +1,16 @@
 import { API } from '@/utils/API';
 import { showToast } from '@/utils/helper';
 import { tokenState, userInfoAtom } from '@/states/common';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useSetRecoilState } from 'recoil';
+import Cookies from 'js-cookie';
+import { CK_JWT_TOKEN } from '@/states/common';
 
 export const useMutateLogin = () => {
   const navigate = useNavigate();
   const setToken = useSetRecoilState(tokenState);
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (params) => {
@@ -33,11 +36,24 @@ export const useMutateLogin = () => {
       console.log('Login response:', response);
       return response;
     },
-    onSuccess: (response) => {
+    onSuccess: async (response) => {
       const token = response.token;
       console.log('Setting token:', token);
+
+      // Set token in both Recoil state and cookie directly
       setToken(token);
-      navigate('/');
+      Cookies.set(CK_JWT_TOKEN, token, { expires: 60, secure: true });
+
+      // Wait a bit for cookie to be set
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Invalidate and refetch user info
+      queryClient.invalidateQueries({ queryKey: ['GET_USER_INFO'] });
+
+      // Navigate after a short delay to ensure everything is set
+      setTimeout(() => {
+        navigate('/');
+      }, 200);
     },
     onError: (error) => {
       console.error('Login error:', error);
@@ -69,6 +85,14 @@ export const useQueryUserInfo = () => {
   return useQuery({
     queryKey: ['GET_USER_INFO'],
     queryFn: async () => {
+      // Double check token exists before making request
+      const token = Cookies.get(CK_JWT_TOKEN);
+      console.log('🔍 UserInfo Query - Token check:', !!token);
+
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
       const response = await API.request({
         url: '/api/user',
         method: 'GET'
@@ -79,7 +103,15 @@ export const useQueryUserInfo = () => {
 
       return response;
     },
-    retry: false,
+    retry: (failureCount, error) => {
+      // Don't retry if it's a 401 (unauthorized) error
+      if (error?.response?.status === 401) {
+        return false;
+      }
+      // Retry other errors up to 2 times
+      return failureCount < 2;
+    },
+    enabled: !!Cookies.get(CK_JWT_TOKEN), // Only run when token exists
     staleTime: 5 * 60 * 1000 // 5 minutes
   });
 };
