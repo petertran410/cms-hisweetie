@@ -12,11 +12,14 @@ export const useQueryCategoryList = () => {
 
   return useQuery({
     queryKey,
-    queryFn: () =>
-      API.request({
+    queryFn: async () => {
+      const response = await API.request({
         url: '/api/category/v2/get-all',
         params: { pageSize: 10, pageNumber: page }
-      })
+      });
+
+      return response?.content || [];
+    }
   });
 };
 
@@ -25,11 +28,14 @@ export const useQueryCategoryListByParentId = (parentId) => {
 
   return useQuery({
     queryKey,
-    queryFn: () =>
-      API.request({
+    queryFn: async () => {
+      const response = await API.request({
         url: '/api/category/v2/get-all',
         params: { pageSize: 1000, pageNumber: 0, parentId }
-      })
+      });
+
+      return response?.content || [];
+    }
   });
 };
 

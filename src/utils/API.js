@@ -8,8 +8,20 @@ export const API = {
     const baseUrlDefault =
       websiteCode === 'dieptra' ? import.meta.env.VITE_DIEP_TRA_API_DOMAIN : import.meta.env.VITE_LERMAO_API_DOMAIN;
 
-    const { baseUrl = baseUrlDefault, method = 'GET', url, params, headers, isUpload } = config;
+    // Fallback nếu environment variable không được set
+    const fallbackUrl = 'https://api.gaulermao.com';
+    const apiUrl = baseUrlDefault || fallbackUrl;
+
+    console.log('🔍 API Request - Base URL:', apiUrl);
+    console.log('🔍 Environment:', {
+      websiteCode,
+      VITE_DIEP_TRA_API_DOMAIN: import.meta.env.VITE_DIEP_TRA_API_DOMAIN,
+      VITE_LERMAO_API_DOMAIN: import.meta.env.VITE_LERMAO_API_DOMAIN
+    });
+
+    const { baseUrl = apiUrl, method = 'GET', url, params, headers, isUpload } = config;
     const token = Cookies.get(CK_JWT_TOKEN);
+
     const requestConfig = {
       url: `${baseUrl}${url}`,
       method,
@@ -24,11 +36,25 @@ export const API = {
       timeoutErrorMessage: 'Hệ thống không phản hồi. Vui lòng thử lại sau!'
     };
 
+    console.log('🚀 Making API request:', {
+      url: requestConfig.url,
+      method: requestConfig.method,
+      hasToken: !!token
+    });
+
     return axios(requestConfig)
       .then((response) => {
+        console.log('✅ API Success:', response.status);
         return response.data;
       })
       .catch((e) => {
+        console.error('❌ API Error:', {
+          url: requestConfig.url,
+          status: e?.response?.status,
+          message: e?.response?.data?.message || e.message,
+          data: e?.response?.data
+        });
+
         const error = e?.response?.data ? { message: e?.response?.data?.description } : e;
         return Promise.reject(error);
       });
@@ -44,15 +70,18 @@ export const API = {
     }
 
     const formData = new FormData();
-
     formData.append('file', file);
 
     const websiteCode = localStorage.getItem('website');
     const baseUrlDefault =
       websiteCode === 'dieptra' ? import.meta.env.VITE_DIEP_TRA_API_DOMAIN : import.meta.env.VITE_LERMAO_API_DOMAIN;
 
+    // Fallback nếu environment variable không được set
+    const fallbackUrl = 'https://api.gaulermao.com';
+    const apiUrl = baseUrlDefault || fallbackUrl;
+
     const requestConfig = {
-      url: `${baseUrlDefault}${url}`,
+      url: `${apiUrl}${url}`,
       method: 'POST',
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -71,8 +100,7 @@ export const API = {
         return response.data;
       })
       .catch((e) => {
-        console.log('ducnh e', e);
-
+        console.error('❌ Upload Error:', e);
         return Promise.reject(e?.response?.data || e);
       });
   }
