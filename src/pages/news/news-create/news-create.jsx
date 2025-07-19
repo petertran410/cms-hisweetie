@@ -11,6 +11,7 @@ import { Button, Form, Input, Select } from 'antd';
 import { useCallback, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { Link, useParams } from 'react-router-dom';
+import GuideGetLink from './guide-get-link'; // THÊM MỚI
 
 const NewsCreate = () => {
   const { id } = useParams();
@@ -22,7 +23,7 @@ const NewsCreate = () => {
 
   const onFinish = useCallback(
     (values) => {
-      const { title, htmlContent, description, imagesUrl, type } = values || {};
+      const { title, htmlContent, description, imagesUrl, type, embedUrl } = values || {}; // THÊM embedUrl
       const fileData = imagesUrl?.fileList || imagesUrl || [];
       const fileList = fileData?.[fileData.length - 1] ? [fileData?.[fileData.length - 1]] : [];
 
@@ -33,7 +34,7 @@ const NewsCreate = () => {
           }
 
           if (!item?.originFileObj) {
-            return null; // Skip if there's no file
+            return null;
           }
 
           const formData = new FormData();
@@ -55,7 +56,8 @@ const NewsCreate = () => {
             htmlContent: getHtmlContentWithTOC(htmlContent, hasTableOfContents),
             description,
             imagesUrl,
-            type // THÊM type vào data
+            type,
+            embedUrl: embedUrl?.trim() || null // THÊM embedUrl
           };
           id ? updateMutate(data) : createMutate(data);
         })
@@ -76,7 +78,7 @@ const NewsCreate = () => {
     return <ErrorScreen message={errorDetail?.message} className="mt-20" />;
   }
 
-  const { title, description, htmlContent, imagesUrl, type } = newsDetail || {};
+  const { title, description, htmlContent, imagesUrl, type, embedUrl } = newsDetail || {}; // THÊM embedUrl
 
   const initialImages = Array.isArray(imagesUrl) ? imagesUrl.map((i) => ({ name: '', url: i })) : undefined;
 
@@ -115,7 +117,6 @@ const NewsCreate = () => {
           <Input className="py-2" disabled={isDetail} />
         </Form.Item>
 
-        {/* THÊM DROPDOWN LOẠI BÀI VIẾT */}
         <Form.Item
           label={<p className="font-bold text-md">Loại bài viết</p>}
           name="type"
@@ -137,6 +138,23 @@ const NewsCreate = () => {
           initialValue={initialImages}
           defaultFileList={defaultImages}
         />
+
+        {/* THÊM MỚI: Video embed field */}
+        <Form.Item
+          label={<p className="font-bold text-md">Link video nhúng (tùy chọn)</p>}
+          name="embedUrl"
+          initialValue={embedUrl}
+        >
+          <Input.TextArea
+            rows={4}
+            className="py-2"
+            placeholder="Mẫu: https://www.youtube.com/embed/4letvWcz-ic?si=vn0hTIJto8GLbiRl"
+            disabled={isDetail}
+          />
+        </Form.Item>
+
+        {/* THÊM MỚI: Guide component */}
+        {!isDetail && <GuideGetLink />}
 
         <Form.Item
           label={<p className="font-bold text-md">Nội dung</p>}
