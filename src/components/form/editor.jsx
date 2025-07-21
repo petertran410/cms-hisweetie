@@ -34,9 +34,12 @@ import 'reactjs-tiptap-editor/style.css';
 
 const extensions = [
   BaseKit.configure({
+    // Show placeholder
     placeholder: {
       showOnlyCurrent: true
     },
+
+    // Character count
     characterCount: {
       limit: 50_000
     }
@@ -44,6 +47,7 @@ const extensions = [
   History,
   SearchAndReplace,
   Clear,
+  // FontFamily,
   Heading.configure({ spacer: true }),
   FontSize,
   Bold,
@@ -58,167 +62,13 @@ const extensions = [
   Indent,
   LineHeight,
   Link,
-
-  // 🚀 CRITICAL: Enhanced Image extension với ALT text dialog
   Image.configure({
-    // 🎯 UPLOAD FUNCTION: Existing upload logic preserved
     upload: (file) => {
       return uploadFileCdn({ file }).then((url) => {
         return url;
       });
-    },
-
-    // 🚀 CRITICAL: Enable ALT text attributes
-    HTMLAttributes: {
-      class: 'content-image'
-    },
-
-    // 🎯 ALLOW ALT ATTRIBUTE: Essential để preserve ALT text
-    allowBase64: false,
-
-    // 🚀 ENHANCED: Custom addAttributes để support ALT input
-    addAttributes() {
-      return {
-        ...this.parent?.(),
-        alt: {
-          default: null,
-          parseHTML: (element) => element.getAttribute('alt'),
-          renderHTML: (attributes) => {
-            if (!attributes.alt) {
-              return {};
-            }
-            return {
-              alt: attributes.alt,
-              title: attributes.alt // Also set title for better UX
-            };
-          }
-        },
-        title: {
-          default: null,
-          parseHTML: (element) => element.getAttribute('title'),
-          renderHTML: (attributes) => {
-            if (!attributes.title) {
-              return {};
-            }
-            return {
-              title: attributes.title
-            };
-          }
-        }
-      };
-    },
-
-    // 🚀 SENIOR APPROACH: Custom commands để handle ALT text editing
-    addCommands() {
-      return {
-        ...this.parent?.(),
-
-        // 🎯 COMMAND: Set ALT text cho image
-        setImageAlt:
-          (alt) =>
-          ({ tr, dispatch, state }) => {
-            const { selection } = state;
-            const node = state.doc.nodeAt(selection.from);
-
-            if (node && node.type.name === 'image') {
-              if (dispatch) {
-                tr.setNodeMarkup(selection.from, undefined, {
-                  ...node.attrs,
-                  alt: alt,
-                  title: alt
-                });
-              }
-              return true;
-            }
-            return false;
-          }
-      };
-    },
-
-    // 🚀 CRITICAL: Custom node view với ALT editing functionality
-    addNodeView() {
-      return ({ node, updateAttributes, getPos, editor }) => {
-        const container = document.createElement('div');
-        container.className = 'image-node-view';
-        container.style.position = 'relative';
-        container.style.display = 'inline-block';
-
-        const img = document.createElement('img');
-        img.src = node.attrs.src;
-        img.alt = node.attrs.alt || '';
-        img.title = node.attrs.title || node.attrs.alt || '';
-        img.className = 'content-image';
-        img.style.maxWidth = '100%';
-        img.style.height = 'auto';
-        img.style.display = 'block';
-
-        // 🎯 EDIT BUTTON: Visible ALT edit button
-        const editButton = document.createElement('button');
-        editButton.innerHTML = '✏️ ALT';
-        editButton.className = 'alt-edit-btn';
-        editButton.style.position = 'absolute';
-        editButton.style.top = '8px';
-        editButton.style.right = '8px';
-        editButton.style.background = 'rgba(0, 0, 0, 0.7)';
-        editButton.style.color = 'white';
-        editButton.style.border = 'none';
-        editButton.style.borderRadius = '4px';
-        editButton.style.padding = '4px 8px';
-        editButton.style.fontSize = '12px';
-        editButton.style.cursor = 'pointer';
-        editButton.style.opacity = '0';
-        editButton.style.transition = 'opacity 0.3s ease';
-
-        // 🚀 HOVER EFFECTS: Show/hide edit button
-        container.addEventListener('mouseenter', () => {
-          editButton.style.opacity = '1';
-        });
-
-        container.addEventListener('mouseleave', () => {
-          editButton.style.opacity = '0';
-        });
-
-        // 🎯 CLICK HANDLER: ALT text input dialog
-        const handleAltEdit = () => {
-          const currentAlt = node.attrs.alt || '';
-          const newAlt = prompt('Nhập mô tả hình ảnh (ALT text):', currentAlt);
-
-          if (newAlt !== null) {
-            // User didn't cancel
-            updateAttributes({
-              alt: newAlt.trim(),
-              title: newAlt.trim()
-            });
-          }
-        };
-
-        // 🚀 EVENT LISTENERS: Multiple ways to trigger ALT editing
-        editButton.addEventListener('click', handleAltEdit);
-        img.addEventListener('dblclick', handleAltEdit);
-
-        // 🎯 ASSEMBLY: Build the node view
-        container.appendChild(img);
-        container.appendChild(editButton);
-
-        return {
-          dom: container,
-          update: (updatedNode) => {
-            if (updatedNode.type !== node.type) return false;
-
-            // 🚀 UPDATE ATTRIBUTES: Sync changes
-            img.src = updatedNode.attrs.src;
-            img.alt = updatedNode.attrs.alt || '';
-            img.title = updatedNode.attrs.title || updatedNode.attrs.alt || '';
-
-            // Update node reference
-            node = updatedNode;
-            return true;
-          }
-        };
-      };
     }
   }),
-
   Blockquote,
   SlashCommand,
   HorizontalRule,
