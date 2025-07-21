@@ -1,6 +1,6 @@
 import { uploadFileCdn } from '@/utils/helper';
 import { Checkbox, Modal, Tooltip } from 'antd';
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useState, useRef } from 'react';
 import { FaQuestionCircle } from 'react-icons/fa';
 import RichTextEditor, {
   BaseKit,
@@ -31,6 +31,21 @@ import RichTextEditor, {
   Underline
 } from 'reactjs-tiptap-editor';
 import 'reactjs-tiptap-editor/style.css';
+import FigureImage from '@/extensions/FigureImage';
+import ImageCaptionModal from '@/components/modals/ImageCaptionModal';
+
+// Tạo extension FigureImage mới
+const customFigureImage = FigureImage.configure({
+  uploadImage: async (file) => {
+    try {
+      const url = await uploadFileCdn({ file });
+      return url;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      return null;
+    }
+  }
+});
 
 const extensions = [
   BaseKit.configure({
@@ -66,6 +81,7 @@ const extensions = [
       rel: 'noopener'
     }
   }),
+  // Vẫn giữ lại extension Image để tương thích ngược
   Image.configure({
     upload: (file) => {
       return uploadFileCdn({ file }).then((url) => {
@@ -85,6 +101,14 @@ const extensions = [
       submit: 'Chèn ảnh'
     }
   }),
+  // Thêm extension FigureImage mới
+  customFigureImage,
+  Blockquote,
+  SlashCommand,
+  HorizontalRule,
+  Code.configure({
+    toolbar: false
+  }),
   CodeBlock.configure({ defaultTheme: 'dracula' }),
   Table
 ];
@@ -96,6 +120,12 @@ const Editor = (props) => {
   const [showModalHtml, setShowModalHtml] = useState(false);
   const [key, setKey] = useState(0);
   const [createTableOfContents, setCreateTableOfContents] = useState(false);
+
+  // Thêm state cho modal caption
+  const [showImageCaptionModal, setShowImageCaptionModal] = useState(false);
+  const [selectedImageNode, setSelectedImageNode] = useState(null);
+  const [selectedImagePos, setSelectedImagePos] = useState(null);
+  const editorRef = useRef(null);
 
   const onChangeContent = (value) => {
     setContent(value);
@@ -114,6 +144,76 @@ const Editor = (props) => {
       getCreateTableOfContents(createTableOfContents);
     }
   }, [getCreateTableOfContents, createTableOfContents]);
+
+  // Xử lý sự kiện chỉnh sửa hình ảnh
+  useEffect(() => {
+    const handleEditFigureImage = (event) => {
+      const { node, pos } = event.detail;
+      setSelectedImageNode(node);
+      setSelectedImagePos(pos);
+      setShowImageCaptionModal(true);
+    };
+
+    window.addEventListener('editFigureImage', handleEditFigureImage);
+
+    return () => {
+      window.removeEventListener('editFigureImage', handleEditFigureImage);
+    };
+  }, []);
+
+  // Xử lý khi user lưu thông tin caption
+  const handleSaveImageCaption = (values) => {
+    if (editorRef.current && selectedImageNode && selectedImagePos !== null) {
+      const { editor } = editorRef.current;
+
+      editor
+        .chain()
+        .focus()
+        .updateFigureImage({
+          alt: values.alt,
+          caption: values.caption
+        })
+        .run();
+
+      setShowImageCaptionModal(false);
+      setSelectedImageNode(null);
+      setSelectedImagePos(null);
+    }
+  };
+
+  // Thêm button vào toolbar để chèn hình ảnh có caption
+  const customMenuItems = [
+    {
+      name: 'insertFigureImage',
+      tooltip: 'Chèn hình ảnh có chú thích',
+      display: 'Hình + Chú thích',
+      icon: '🖼️',
+      action: async () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+
+        input.onchange = async (event) => {
+          const file = event.target.files[0];
+          if (file) {
+            try {
+              const url = await uploadFileCdn({ file });
+
+              if (url) {
+                // Mở modal để nhập caption sau khi upload thành công
+                setSelectedImageNode({ attrs: { src: url } });
+                setShowImageCaptionModal(true);
+              }
+            } catch (error) {
+              console.error('Error uploading image:', error);
+            }
+          }
+        };
+
+        input.click();
+      }
+    }
+  ];
 
   locale.setLang('vi');
 
@@ -135,6 +235,7 @@ const Editor = (props) => {
         </div>
       )}
       <RichTextEditor
+        ref={editorRef}
         disabled={disabled}
         dark={false}
         output="html"
@@ -142,6 +243,7 @@ const Editor = (props) => {
         onChangeContent={onChangeContent}
         extensions={extensions}
         minHeight={600}
+        customMenuItems={customMenuItems}
       />
 
       <div className="absolute bottom-3 right-3 z-30">
@@ -183,6 +285,50 @@ const Editor = (props) => {
           />
         </div>
       </Modal>
+
+      {/* Modal chỉnh sửa caption */}
+      <ImageCaptionModal
+        visible={showImageCaptionModal}
+        onCancel={() => {
+          setShowImageCaptionModal(false);
+          setSelectedImageNode(null);
+        }}
+        onSave={(values) => {
+          if (selectedImageNode && selectedImageNode.attrs && selectedImageNode.attrs.src) {
+            // Nếu đang tạo mới (upload) thì chèn vào editor
+            if (selectedImagePos === null) {
+              if (editorRef.current) {
+                const { editor } = editorRef.current;
+
+                editor
+                  .chain()
+                  .focus()
+                  .insertFigureImage({
+                    src: selectedImageNode.attrs.src,
+                    alt: values.alt,
+                    caption: values.caption
+                  })
+                  .run();
+              }
+            } else {
+              // Nếu đang cập nhật caption cho hình ảnh đã có
+              handleSaveImageCaption(values);
+            }
+          }
+
+          setShowImageCaptionModal(false);
+          setSelectedImageNode(null);
+          setSelectedImagePos(null);
+        }}
+        initialValues={
+          selectedImageNode
+            ? {
+                alt: selectedImageNode.attrs?.alt || '',
+                caption: selectedImageNode.attrs?.caption || ''
+              }
+            : {}
+        }
+      />
     </div>
   );
 };
