@@ -61,19 +61,29 @@ const extensions = [
   TextAlign.configure({ types: ['heading', 'paragraph'], spacer: true }),
   Indent,
   LineHeight,
-  Link,
+  Link.configure({
+    HTMLAttributes: {
+      rel: 'noopener'
+    }
+  }),
   Image.configure({
     upload: (file) => {
       return uploadFileCdn({ file }).then((url) => {
         return url;
       });
+    },
+    allowBase64: true,
+    inline: false,
+    HTMLAttributes: {},
+    uploadWithAlt: true,
+    interfaceLanguage: {
+      uploadImage: 'Tải ảnh lên',
+      uploadViaURL: 'Tải từ URL',
+      enterImageURL: 'Nhập URL hình ảnh',
+      enterImageAlt: 'Nhập mô tả hình ảnh (alt text)',
+      cancel: 'Hủy',
+      submit: 'Chèn ảnh'
     }
-  }),
-  Blockquote,
-  SlashCommand,
-  HorizontalRule,
-  Code.configure({
-    toolbar: false
   }),
   CodeBlock.configure({ defaultTheme: 'dracula' }),
   Table
