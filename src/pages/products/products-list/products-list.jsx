@@ -113,7 +113,22 @@ const ProductsList = () => {
       width: 80,
       align: 'center',
       render: (imagesUrl, record) => {
-        const imageUrl = Array.isArray(imagesUrl) && imagesUrl.length > 0 ? imagesUrl[0] : null;
+        let imageUrl = null;
+
+        if (Array.isArray(imagesUrl) && imagesUrl.length > 0) {
+          imageUrl = imagesUrl[0];
+        } else if (record.kiotViet && record.kiotViet.images) {
+          if (Array.isArray(record.kiotViet.images) && record.kiotViet.images.length > 0) {
+            const firstImage = record.kiotViet.images[0];
+            if (typeof firstImage === 'string') {
+              imageUrl = firstImage;
+            } else if (firstImage && typeof firstImage === 'object' && firstImage.Image) {
+              imageUrl = firstImage.Image;
+            }
+          }
+        } else if (record.featuredThumbnail) {
+          imageUrl = record.featuredThumbnail;
+        }
 
         return imageUrl ? (
           <img
