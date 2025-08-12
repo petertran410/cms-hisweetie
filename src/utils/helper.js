@@ -1,23 +1,18 @@
-import { notification } from 'antd';
-import queryString from 'query-string';
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { API } from './API';
 import { toast } from 'react-toastify';
 
-// Convert timestamp to readable format
 export const convertTimestamp = (timestamp) => {
   if (!timestamp) return '';
 
   try {
     const date = new Date(timestamp);
 
-    // Check if date is valid
     if (isNaN(date.getTime())) {
       return '';
     }
 
-    // Format: DD/MM/YYYY HH:mm
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const year = date.getFullYear();
@@ -31,7 +26,6 @@ export const convertTimestamp = (timestamp) => {
   }
 };
 
-// Convert timestamp to date only (DD/MM/YYYY)
 export const convertTimestampToDate = (timestamp) => {
   if (!timestamp) return '';
 
@@ -53,7 +47,6 @@ export const convertTimestampToDate = (timestamp) => {
   }
 };
 
-// Get current params from URL
 export const useGetParamsURL = () => {
   if (typeof window === 'undefined') return {};
 
@@ -120,13 +113,11 @@ export const truncateText = (text, maxLength = 100) => {
   return text.substring(0, maxLength) + '...';
 };
 
-// Validate email
 export const isValidEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 };
 
-// Generate random string
 export const generateRandomString = (length = 10) => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';

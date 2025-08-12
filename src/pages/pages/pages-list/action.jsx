@@ -1,4 +1,3 @@
-// src/pages/pages/pages-list/action.jsx
 import { TableAction } from '@/components/table';
 import { useDeletePages } from '@/services/pages.service';
 import { memo } from 'react';

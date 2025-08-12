@@ -8,7 +8,6 @@ export const API = {
     const baseUrlDefault =
       websiteCode === 'dieptra' ? import.meta.env.VITE_DIEP_TRA_API_DOMAIN : import.meta.env.VITE_LERMAO_API_DOMAIN;
 
-    // Fallback nếu environment variable không được set
     const fallbackUrl = 'https://api.gaulermao.com';
     const apiUrl = baseUrlDefault || fallbackUrl;
 
@@ -21,7 +20,6 @@ export const API = {
 
     const { baseUrl = apiUrl, method = 'GET', url, params, headers, isUpload } = config;
 
-    // Get token fresh each time to avoid timing issues
     const token = Cookies.get(CK_JWT_TOKEN);
 
     console.log('🔍 Token check:', {
