@@ -66,8 +66,7 @@ export const API = {
         if (e?.response?.status === 401) {
           console.log('🚨 401 Unauthorized - Clearing token');
           Cookies.remove(CK_JWT_TOKEN);
-          // Optional: redirect to login
-          // window.location.href = '/login';
+          window.location.href = '/login';
         }
 
         const error = e?.response?.data ? { message: e?.response?.data?.description } : e;

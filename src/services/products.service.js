@@ -162,7 +162,7 @@ export const useSyncProducts = () => {
   return useMutation({
     mutationFn: () =>
       API.request({
-        url: '/api/product/kiotviet/sync',
+        url: '/api/product/kiotviet/sync/products',
         method: 'POST'
       }),
     onSuccess: (data) => {
@@ -210,7 +210,7 @@ export const useTestKiotVietConnection = () => {
 export const useQuerySyncStatus = () => {
   return useQuery({
     queryKey: ['GET_SYNC_STATUS'],
-    queryFn: () => API.request({ url: '/api/product/kiotviet/sync-status' }),
+    queryFn: () => API.request({ url: '/api/product/kiotviet/sync/status' }),
     staleTime: 30000
   });
 };
