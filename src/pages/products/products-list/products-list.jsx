@@ -28,7 +28,6 @@ const ProductsList = () => {
   const queryClient = useQueryClient();
   const [togglingIds, setTogglingIds] = useState(new Set());
 
-  // 🚨 FIXED: Extract data với fallback values
   const { content = [], totalElements = 0, statistics = {}, pageNumber = 0, pageSize = 10 } = dataQuery || {};
 
   console.log('🔧 CMS Data Debug:', {
@@ -36,9 +35,8 @@ const ProductsList = () => {
     contentLength: content?.length,
     totalElements,
     statistics
-  }); // Debug log
+  });
 
-  // Enhanced category display function
   const renderCategoryTags = (ofCategories) => {
     if (!Array.isArray(ofCategories) || ofCategories.length === 0) {
       return <Tag color="default">Chưa phân loại</Tag>;
@@ -57,7 +55,6 @@ const ProductsList = () => {
     ));
   };
 
-  // 🚨 ENHANCED: Handle visibility toggle với better error handling
   const handleVisibilityToggle = async (productId, currentVisibility, productTitle) => {
     try {
       setTogglingIds((prev) => new Set([...prev, productId]));
@@ -158,7 +155,6 @@ const ProductsList = () => {
                   Nổi bật
                 </Tag>
               )}
-              {/* 🚨 DEBUG: Hiển thị trạng thái visibility */}
               <Tag color={record.isVisible ? 'green' : 'red'} className="text-xs">
                 {record.isVisible ? 'Hiển thị' : 'Ẩn'}
               </Tag>
@@ -188,7 +184,6 @@ const ProductsList = () => {
         );
       }
     },
-    // ✅ Cột Hiển thị với Switch
     {
       title: (
         <div className="flex items-center gap-1">
@@ -200,8 +195,7 @@ const ProductsList = () => {
       width: 100,
       align: 'center',
       render: (record) => {
-        // 🚨 ENHANCED: Handle null/undefined values
-        const isVisible = record.isVisible === true; // Explicit check
+        const isVisible = record.isVisible === true;
         const isCurrentlyToggling = togglingIds.has(record.id);
 
         return (
@@ -228,7 +222,6 @@ const ProductsList = () => {
     }
   ];
 
-  // Enhanced sync info display
   const renderSyncStatus = () => {
     if (!syncStatus) return null;
 
@@ -261,7 +254,6 @@ const ProductsList = () => {
     );
   };
 
-  // 🚨 ENHANCED: Statistics với fallback values
   const renderStatistics = () => {
     const { total = totalElements || 0, visible = 0, hidden = 0, featured = 0 } = statistics;
 
@@ -330,16 +322,12 @@ const ProductsList = () => {
           </Space>
         </div>
 
-        {/* Sync Status */}
         {renderSyncStatus()}
 
-        {/* Statistics */}
         {renderStatistics()}
 
-        {/* Filters */}
         <TableFilter />
 
-        {/* Table */}
         <TableStyle>
           <Table
             columns={columns}
@@ -354,9 +342,8 @@ const ProductsList = () => {
           />
         </TableStyle>
 
-        {/* Pagination */}
         <div className="flex justify-end">
-          <Pagination totalElements={totalElements} />
+          <Pagination defaultPage={Number(page)} totalItems={totalElements} />
         </div>
       </div>
     </>

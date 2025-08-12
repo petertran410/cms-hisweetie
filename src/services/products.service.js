@@ -1,10 +1,16 @@
 import { API } from '@/utils/API';
-import { showToast, useGetParamsURL } from '@/utils/helper';
+import { showToast } from '@/utils/helper';
+import { useSearchParams } from 'react-router-dom';
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const useQueryProductsList = () => {
-  const paramsURL = useGetParamsURL();
-  const { page = 1, keyword, categoryId, is_visible } = paramsURL || {};
+  const [searchParams] = useSearchParams();
+
+  const page = searchParams.get('page') || '1';
+  const keyword = searchParams.get('keyword');
+  const categoryId = searchParams.get('categoryId');
+  const is_visible = searchParams.get('is_visible');
 
   const queryKey = ['GET_PRODUCTS_LIST', page, keyword, categoryId, is_visible];
 
@@ -29,10 +35,8 @@ export const useQueryProductsList = () => {
         apiParams.is_visible = is_visible;
       }
 
-      console.log('🔧 CMS API Params:', apiParams); // Debug log
-
       return API.request({
-        url: '/api/product/search',
+        url: '/api/product/cms/get-all',
         params: apiParams
       });
     }
