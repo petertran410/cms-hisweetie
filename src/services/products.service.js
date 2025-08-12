@@ -18,7 +18,7 @@ export const useQueryProductsList = () => {
     queryKey,
     queryFn: () => {
       const apiParams = {
-        pageSize: Number(pageSize),
+        pageSize: 10,
         pageNumber: Number(page) - 1,
         includeHidden: true
       };
