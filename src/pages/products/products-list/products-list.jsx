@@ -37,23 +37,28 @@ const ProductsList = () => {
     statistics
   });
 
-  const renderCategoryTags = (ofCategories) => {
-    if (!Array.isArray(ofCategories) || ofCategories.length === 0) {
-      return <Tag color="default">Chưa phân loại</Tag>;
-    }
+  // const renderCategoryTags = (ofCategories) => {
+  //   if (!Array.isArray(ofCategories) || ofCategories.length === 0) {
+  //     return <Tag color="default">Chưa phân loại</Tag>;
+  //   }
 
-    const categoryMapping = {
-      'nguyen-lieu-pha-che-lermao': 'Nguyên liệu Lermao',
-      'tra-phuong-hoang': 'Trà Phượng Hoàng',
-      'may-moc-thiet-bi': 'Máy móc thiết bị'
-    };
+  //   const categoryMapping = {
+  //     'nguyen-lieu-pha-che-lermao': 'Nguyên liệu Lermao',
+  //     'tra-phuong-hoang': 'Trà Phượng Hoàng',
+  //     'may-moc-thiet-bi': 'Máy móc thiết bị'
+  //   };
 
-    return ofCategories.slice(0, 2).map((category, index) => (
-      <Tag key={index} color="blue" className="text-xs mb-1">
-        {categoryMapping[category] || category}
-      </Tag>
-    ));
-  };
+  //   return ofCategories.slice(0, 2).map((category, index) => (
+  //     <Tag key={index} color="blue" className="text-xs mb-1">
+  //       {categoryMapping[category] || category}
+  //     </Tag>
+  //   ));
+  // };
+
+  // const renderCategoryTags = dataQuery.map((category) => {
+  //   console.log(category);
+  // });
+  console.log(dataQuery.content);
 
   const handleVisibilityToggle = async (productId, currentVisibility, productTitle) => {
     try {
@@ -183,7 +188,7 @@ const ProductsList = () => {
       dataIndex: 'ofCategories',
       key: 'categories',
       width: 180,
-      render: renderCategoryTags
+      render: 'null'
     },
     {
       title: 'Giá',
