@@ -12,7 +12,6 @@ const NewsList = () => {
   const { data, isLoading, error } = useQueryNewsList();
   const { content = [], totalElements = 0, totalPages = 0, number: currentPage = 0 } = data || {};
 
-  // Mapping type colors cho tags
   const getTypeTagColor = (type) => {
     const colorMap = {
       NEWS: 'blue',
@@ -143,7 +142,6 @@ const NewsList = () => {
         </Link>
       </div>
 
-      {/* Stats */}
       <div className="mb-6 p-4 bg-gray-50 rounded-lg">
         <h4 className="font-semibold mb-2 text-sm">Thống kê:</h4>
         <div className="flex flex-wrap gap-2">
@@ -165,7 +163,6 @@ const NewsList = () => {
         </div>
       </div>
 
-      {/* Table */}
       <div className="bg-white rounded-lg shadow">
         <Table
           columns={columns}
@@ -179,7 +176,6 @@ const NewsList = () => {
         />
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex justify-end mt-4">
           <Pagination
