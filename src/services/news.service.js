@@ -24,27 +24,33 @@ export const useQueryNewsList = () => {
       });
 
       if (!type && response?.content) {
-        const filteredContent = response.content.filter((item) => {
-          const itemType = item.type?.toUpperCase();
-          return itemType !== 'CULTURE' && itemType !== 'VIDEO' && itemType !== 'VĂN HÓA';
+        const allContent = response?.content || [];
+
+        const filteredContent = allContent.filter((item) => {
+          return item.type !== 'CULTURE' && item.type !== 'VIDEO';
         });
+
+        const statisticsByType = filteredContent.reduce((acc, item) => {
+          const itemType = item.type || 'UNKNOWN';
+          acc[itemType] = (acc[itemType] || 0) + 1;
+          return acc;
+        }, {});
 
         const pageSize = 10;
         const currentPage = Number(page) - 1;
-        const startIndex = currentPage * pageSize;
-        const endIndex = startIndex + pageSize;
-        const paginatedContent = filteredContent.slice(startIndex, endIndex);
+        const start = currentPage * pageSize;
+        const end = start + pageSize;
+        const pageContent = filteredContent.slice(start, end);
 
         return {
-          content: paginatedContent,
-          totalElements: filteredContent.length,
+          content: pageContent, // ✅ Current page items
+          totalElements: filteredContent.length, // ✅ Total filtered count
           totalPages: Math.ceil(filteredContent.length / pageSize),
           number: currentPage,
           size: pageSize,
-          pageable: {
-            pageNumber: currentPage,
-            pageSize: pageSize
-          }
+          // ✅ ADD FULL STATISTICS
+          allFilteredContent: filteredContent, // ✅ All filtered data for statistics
+          statisticsByType: statisticsByType // ✅ Statistics by type
         };
       }
 

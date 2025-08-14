@@ -10,7 +10,39 @@ import Action from './action';
 const NewsList = () => {
   const navigate = useNavigate();
   const { data, isLoading, error } = useQueryNewsList();
-  const { content = [], totalElements = 0, totalPages = 0, number: currentPage = 0 } = data || {};
+  const {
+    content = [],
+    totalElements = 0,
+    totalPages = 0,
+    number: currentPage = 0,
+    allFilteredContent = [],
+    statisticsByType = {}
+  } = data || {};
+
+  const displayStatistics = () => {
+    if (Object.keys(statisticsByType).length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="font-medium text-gray-700">Thống kê:</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Tag color="blue" className="text-xs">
+            Tổng cộng: {totalElements}
+          </Tag>
+
+          {Object.entries(statisticsByType).map(([type, count]) => (
+            <Tag key={type} color={getTypeTagColor(type)} className="text-xs">
+              {getNewsTypeLabel(type)}: {count}
+            </Tag>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   const getTypeTagColor = (type) => {
     const colorMap = {
@@ -132,7 +164,6 @@ const NewsList = () => {
         <title>Quản lý tin tức | {WEBSITE_NAME}</title>
       </Helmet>
 
-      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Danh sách tin tức</h1>
         <Link to="/news/create">
@@ -142,26 +173,7 @@ const NewsList = () => {
         </Link>
       </div>
 
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-        <h4 className="font-semibold mb-2 text-sm">Thống kê:</h4>
-        <div className="flex flex-wrap gap-2">
-          <Tag color="blue">Tổng cộng: {totalElements}</Tag>
-          {content.length > 0 &&
-            (() => {
-              const typeCounts = content.reduce((acc, item) => {
-                const type = item.type || 'UNKNOWN';
-                acc[type] = (acc[type] || 0) + 1;
-                return acc;
-              }, {});
-
-              return Object.entries(typeCounts).map(([type, count]) => (
-                <Tag key={type} color={getTypeTagColor(type)} className="text-xs">
-                  {getNewsTypeLabel(type)}: {count}
-                </Tag>
-              ));
-            })()}
-        </div>
-      </div>
+      <div className="mb-6 p-4 bg-gray-50 rounded-lg">{displayStatistics()}</div>
 
       <div className="bg-white rounded-lg shadow">
         <Table
