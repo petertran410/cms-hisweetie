@@ -16,13 +16,37 @@ export const useQueryNewsList = () => {
       const response = await API.request({
         url: '/api/news/get-all',
         params: {
-          pageSize: 10,
-          pageNumber: Number(page) - 1,
+          pageSize: 100,
+          pageNumber: 0,
           title: keyword,
-          type: type || undefined,
-          excludeTypes: !type ? 'CULTURE,VIDEO' : undefined
+          type: type || undefined
         }
       });
+
+      if (!type && response?.content) {
+        const filteredContent = response.content.filter((item) => {
+          const itemType = item.type?.toUpperCase();
+          return itemType !== 'CULTURE' && itemType !== 'VIDEO' && itemType !== 'VĂN HÓA';
+        });
+
+        const pageSize = 10;
+        const currentPage = Number(page) - 1;
+        const startIndex = currentPage * pageSize;
+        const endIndex = startIndex + pageSize;
+        const paginatedContent = filteredContent.slice(startIndex, endIndex);
+
+        return {
+          content: paginatedContent,
+          totalElements: filteredContent.length,
+          totalPages: Math.ceil(filteredContent.length / pageSize),
+          number: currentPage,
+          size: pageSize,
+          pageable: {
+            pageNumber: currentPage,
+            pageSize: pageSize
+          }
+        };
+      }
 
       return response;
     }
