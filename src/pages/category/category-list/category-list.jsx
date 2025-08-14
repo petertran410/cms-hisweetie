@@ -5,7 +5,7 @@ import { TableStyle } from '@/styles/table.style';
 import { useGetParamsURL } from '@/utils/helper';
 import { WEBSITE_NAME } from '@/utils/resource';
 import { useQueryClient } from '@tanstack/react-query';
-import { Table } from 'antd';
+import { Pagination, Table } from 'antd';
 import { useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { GoSortAsc } from 'react-icons/go';
@@ -17,6 +17,8 @@ const CategoryList = () => {
   const paramsURL = useGetParamsURL();
   const { page = 1 } = paramsURL || {};
   const queryClient = useQueryClient();
+  const { content = [], totalElements = 0 } = data || {};
+  console.log(data);
 
   const columns = [
     {
@@ -39,7 +41,9 @@ const CategoryList = () => {
     {
       title: 'Danh mục cha',
       dataIndex: 'parentName',
-      render: (text, record) => <p className="font-semibold">{text}</p>
+      render: (text, record) => {
+        return <p className="font-semibold">{record.name}</p>;
+      }
     },
     {
       title: 'Thứ tự hiển thị',
@@ -62,7 +66,7 @@ const CategoryList = () => {
     return <ErrorScreen message={error?.message} className="mt-20" />;
   }
 
-  const dataTransform = data?.map((i) => {
+  const dataTransform = content?.map((i) => {
     const { children, ...rest } = i;
     return rest;
   });
@@ -83,11 +87,12 @@ const CategoryList = () => {
 
         <CreateButton route="/categories/create" />
       </div>
-      {/* <TableFilter /> */}
+
       <Table columns={columns} dataSource={dataTransform} loading={isLoading} pagination={false} rowKey="id" />
-      {/* <div className="flex justify-end mt-10">
-        <Pagination defaultPage={Number(page)} totalItems={30} />
-      </div> */}
+
+      <div className="flex justify-end mt-10">
+        <Pagination defaultPage={Number(page)} totalItems={totalElements} />
+      </div>
     </TableStyle>
   );
 };

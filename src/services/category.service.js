@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 
 export const useQueryCategoryList = () => {
   const paramsURL = useGetParamsURL();
-  const { page } = paramsURL || {};
+  const { page = 1 } = paramsURL || {};
 
   const queryKey = ['GET_CATEGORY_LIST', page];
 
@@ -15,10 +15,13 @@ export const useQueryCategoryList = () => {
     queryFn: async () => {
       const response = await API.request({
         url: '/api/category/v2/get-all',
-        params: { pageSize: 10, pageNumber: page }
+        params: {
+          pageSize: 10,
+          pageNumber: Number(page) - 1
+        }
       });
 
-      return response?.content || [];
+      return response;
     }
   });
 };
