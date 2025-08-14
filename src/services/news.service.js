@@ -1,4 +1,3 @@
-// src/services/news.service.js - UPDATED trong CMS - SỬA LỖI FILTER
 import { API } from '@/utils/API';
 import { showToast, useGetParamsURL } from '@/utils/helper';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -20,27 +19,16 @@ export const useQueryNewsList = () => {
           pageSize: 10,
           pageNumber: Number(page) - 1,
           title: keyword,
-          type: type || undefined
+          type: type || undefined,
+          excludeTypes: !type ? 'CULTURE,VIDEO' : undefined
         }
       });
-
-      // NÓU KHÔNG CÓ TYPE FILTER CỤ THỂ, LOẠI TRỪ VIDEO VÀ CULTURE
-      if (!type && response?.content) {
-        const filteredContent = response.content.filter((item) => item.type !== 'VIDEO' && item.type !== 'CULTURE');
-
-        return {
-          ...response,
-          content: filteredContent,
-          totalElements: filteredContent.length
-        };
-      }
 
       return response;
     }
   });
 };
 
-// THÊM MỚI: Service riêng cho trang Tin Tức (loại trừ VIDEO và CULTURE)
 export const useQueryNewsListExcludeVideoAndCulture = () => {
   const paramsURL = useGetParamsURL();
   const { page = 1, keyword } = paramsURL || {};
