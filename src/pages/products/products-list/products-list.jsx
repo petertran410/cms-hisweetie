@@ -126,7 +126,7 @@ const ProductsList = () => {
       key: 'title',
       width: 250,
       render: (record) => {
-        const title = record.title || record.kiotViet?.name || 'Chưa có tên';
+        const title = record.title || 'Chưa có tên';
         const isFromKiotViet = record.isFromKiotViet;
 
         return (

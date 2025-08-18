@@ -26,9 +26,8 @@ const ProductsCreate = () => {
     description,
     imagesUrl,
     price,
-    quantity,
     ofCategories,
-    generalDescription,
+    general_description,
     instruction,
     isFeatured,
     featuredThumbnail,
@@ -37,19 +36,8 @@ const ProductsCreate = () => {
 
   const onFinish = useCallback(
     (values) => {
-      const {
-        title,
-        price,
-        quantity,
-        categoryId,
-        description,
-        imagesUrl,
-        generalDescription,
-        instruction,
-        isFeatured,
-        featuredThumbnail,
-        kiotViet
-      } = values || {};
+      const { title, price, categoryId, description, imagesUrl, instruction, isFeatured, featuredThumbnail, kiotViet } =
+        values || {};
       const fileList = Array.isArray(imagesUrl) ? imagesUrl : imagesUrl?.fileList || [];
       const featuredFileList = Array.isArray(featuredThumbnail) ? featuredThumbnail : featuredThumbnail?.fileList || [];
 
@@ -93,7 +81,7 @@ const ProductsCreate = () => {
             // categoryIds: categoryId?.value ? [categoryId.value] : [],
             description,
             imagesUrl,
-            generalDescription,
+            general_description,
             instruction,
             isFeatured,
             featuredThumbnail: isFeatured ? featuredImageUrl : null
@@ -134,10 +122,25 @@ const ProductsCreate = () => {
 
   const arrayImageUrl = kiotViet.images;
 
+  const featureImageUrl = imagesUrl;
+
   const initialImages = Array.isArray(arrayImageUrl) ? arrayImageUrl.map((i) => ({ name: '', url: i })) : undefined;
+
+  const initialFeatureImages = Array.isArray(featureImageUrl)
+    ? featureImageUrl.map((i) => ({ name: '', url: i }))
+    : undefined;
 
   const defaultImages = Array.isArray(arrayImageUrl)
     ? arrayImageUrl.map((i) => ({
+        type: 'image/*',
+        url: i,
+        uid: i,
+        name: ''
+      }))
+    : undefined;
+
+  const defaultFeatureImages = Array.isArray(initialFeatureImages)
+    ? initialFeatureImages.map((i) => ({
         type: 'image/*',
         url: i,
         uid: i,
@@ -171,7 +174,7 @@ const ProductsCreate = () => {
         <Form.Item
           label={<p className="font-bold text-md">Tên sản phẩm</p>}
           name="title"
-          initialValue={kiotViet.name}
+          initialValue={title}
           rules={[{ required: true, message: 'Vui lòng nhập tên sản phẩm' }]}
           className="mb-10"
         >
@@ -180,9 +183,9 @@ const ProductsCreate = () => {
 
         <Form.Item
           label={<p className="font-bold text-md">Mô tả chung</p>}
-          name="generalDescription"
-          initialValue={kiotViet.kiotviet_description}
-          rules={[{ required: true, message: 'Vui lòng nhập mô tả chung' }]}
+          name="general_description"
+          initialValue={general_description}
+          rules={[{ required: false, message: 'Vui lòng nhập mô tả chung' }]}
           className="mb-10"
         >
           <Input.TextArea rows={2} className="py-2" />
