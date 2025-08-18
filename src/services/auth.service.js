@@ -85,9 +85,7 @@ export const useQueryUserInfo = () => {
   return useQuery({
     queryKey: ['GET_USER_INFO'],
     queryFn: async () => {
-      // Double check token exists before making request
       const token = Cookies.get(CK_JWT_TOKEN);
-      console.log('🔍 UserInfo Query - Token check:', !!token);
 
       if (!token) {
         throw new Error('No authentication token found');

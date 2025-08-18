@@ -30,15 +30,6 @@ const ProductsList = () => {
 
   const { content = [], totalElements = 0, statistics = {}, pageNumber = 0, pageSize = 10 } = dataQuery || {};
 
-  console.log('🔧 CMS Data Debug:', {
-    totalData: dataQuery,
-    contentLength: content?.length,
-    totalElements,
-    statistics
-  });
-
-  console.log(dataQuery);
-
   const handleVisibilityToggle = async (productId, currentVisibility, productTitle) => {
     try {
       setTogglingIds((prev) => new Set([...prev, productId]));
@@ -46,11 +37,11 @@ const ProductsList = () => {
       await toggleVisibility(
         { productId },
         {
-          onSuccess: (response) => {
+          onSuccess: () => {
             message.success(
               <span>
                 <FaCheck className="inline mr-1" />
-                {response.message || `Sản phẩm "${productTitle}" đã được ${!currentVisibility ? 'hiển thị' : 'ẩn'}`}
+                {`Sản phẩm ${productTitle} đã được ${!currentVisibility ? 'hiển thị' : 'ẩn'}`}
               </span>
             );
             queryClient.invalidateQueries(['GET_PRODUCTS_LIST']);
@@ -201,17 +192,13 @@ const ProductsList = () => {
       }
     },
     {
-      title: (
-        <div className="flex items-center gap-1">
-          <FaEye className="text-gray-500" />
-          <span>Hiển thị</span>
-        </div>
-      ),
+      title: 'Hiển thị',
       key: 'visibility',
       width: 100,
-      align: 'center',
+      align: 'right',
       render: (record) => {
         const isVisible = record.isVisible === true;
+        // console.log(record.kiotViet.name);
         const isCurrentlyToggling = togglingIds.has(record.id);
 
         return (
@@ -223,7 +210,7 @@ const ProductsList = () => {
               size="small"
               checkedChildren={<FaEye />}
               unCheckedChildren={<FaEyeSlash />}
-              onChange={() => handleVisibilityToggle(record.id, isVisible, record.title)}
+              onChange={() => handleVisibilityToggle(record.id, isVisible, record.kiotViet.name)}
             />
           </Tooltip>
         );

@@ -11,22 +11,9 @@ export const API = {
     const fallbackUrl = 'https://api.gaulermao.com';
     const apiUrl = baseUrlDefault || fallbackUrl;
 
-    console.log('🔍 API Request - Base URL:', apiUrl);
-    console.log('🔍 Environment:', {
-      websiteCode,
-      VITE_DIEP_TRA_API_DOMAIN: import.meta.env.VITE_DIEP_TRA_API_DOMAIN,
-      VITE_LERMAO_API_DOMAIN: import.meta.env.VITE_LERMAO_API_DOMAIN
-    });
-
     const { baseUrl = apiUrl, method = 'GET', url, params, headers, isUpload } = config;
 
     const token = Cookies.get(CK_JWT_TOKEN);
-
-    console.log('🔍 Token check:', {
-      hasToken: !!token,
-      tokenLength: token?.length || 0,
-      tokenPreview: token ? `${token.substring(0, 20)}...` : 'No token'
-    });
 
     const requestConfig = {
       url: `${baseUrl}${url}`,
@@ -41,13 +28,6 @@ export const API = {
       timeout: 60000,
       timeoutErrorMessage: 'Hệ thống không phản hồi. Vui lòng thử lại sau!'
     };
-
-    console.log('🚀 Making API request:', {
-      url: requestConfig.url,
-      method: requestConfig.method,
-      hasToken: !!token,
-      hasAuthHeader: !!requestConfig.headers.Authorization
-    });
 
     return axios(requestConfig)
       .then((response) => {

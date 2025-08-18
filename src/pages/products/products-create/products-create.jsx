@@ -58,7 +58,7 @@ const ProductsCreate = () => {
           }
 
           if (!item?.originFileObj) {
-            return null; // Skip if there's no file
+            return null;
           }
 
           const formData = new FormData();
