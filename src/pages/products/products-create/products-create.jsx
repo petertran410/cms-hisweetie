@@ -31,7 +31,8 @@ const ProductsCreate = () => {
     generalDescription,
     instruction,
     isFeatured,
-    featuredThumbnail
+    featuredThumbnail,
+    kiotViet
   } = productsDetail || {};
 
   const onFinish = useCallback(
@@ -46,7 +47,8 @@ const ProductsCreate = () => {
         generalDescription,
         instruction,
         isFeatured,
-        featuredThumbnail
+        featuredThumbnail,
+        kiotViet
       } = values || {};
       const fileList = Array.isArray(imagesUrl) ? imagesUrl : imagesUrl?.fileList || [];
       const featuredFileList = Array.isArray(featuredThumbnail) ? featuredThumbnail : featuredThumbnail?.fileList || [];
@@ -128,10 +130,12 @@ const ProductsCreate = () => {
 
   const initCategory = ofCategories?.map((i) => ({ label: i.name, value: i.id }))?.[0];
 
-  const initialImages = Array.isArray(imagesUrl) ? imagesUrl.map((i) => ({ name: '', url: i })) : undefined;
+  const arrayImageUrl = kiotViet.images;
 
-  const defaultImages = Array.isArray(imagesUrl)
-    ? imagesUrl.map((i) => ({
+  const initialImages = Array.isArray(arrayImageUrl) ? arrayImageUrl.map((i) => ({ name: '', url: i })) : undefined;
+
+  const defaultImages = Array.isArray(arrayImageUrl)
+    ? arrayImageUrl.map((i) => ({
         type: 'image/*',
         url: i,
         uid: i,
@@ -165,7 +169,7 @@ const ProductsCreate = () => {
         <Form.Item
           label={<p className="font-bold text-md">Tên sản phẩm</p>}
           name="title"
-          initialValue={title}
+          initialValue={kiotViet.name}
           rules={[{ required: true, message: 'Vui lòng nhập tên sản phẩm' }]}
           className="mb-10"
         >
@@ -175,7 +179,7 @@ const ProductsCreate = () => {
         <Form.Item
           label={<p className="font-bold text-md">Mô tả chung</p>}
           name="generalDescription"
-          initialValue={generalDescription}
+          initialValue={kiotViet.kiotviet_description}
           rules={[{ required: true, message: 'Vui lòng nhập mô tả chung' }]}
           className="mb-10"
         >
@@ -185,7 +189,7 @@ const ProductsCreate = () => {
         <FormSelectQuery
           allowClear
           initialValue={initCategory}
-          rules={[{ required: true, message: 'Vui lòng chọn danh mục' }]}
+          rules={[{ required: false, message: 'Vui lòng chọn danh mục' }]}
           label="Danh mục"
           labelKey="name"
           valueKey="id"
@@ -211,7 +215,7 @@ const ProductsCreate = () => {
         </Form.Item>
         <p className="mt-0.5 ml-2 mb-10">{formatCurrency(currentPrice)}</p>
 
-        <Form.Item
+        {/* <Form.Item
           label={<p className="font-bold text-md">Số lượng trong kho</p>}
           name="quantity"
           initialValue={quantity}
@@ -219,7 +223,7 @@ const ProductsCreate = () => {
           rules={[{ required: true, message: 'Vui lòng nhập số lượng' }]}
         >
           <InputNumber type="number" className="py-1 w-full" />
-        </Form.Item>
+        </Form.Item> */}
 
         <div className="w-60 mb-10">
           <FormItemUpload
@@ -262,7 +266,7 @@ const ProductsCreate = () => {
           name="description"
           initialValue={description}
           className="mb-10"
-          rules={[{ required: true, message: 'Vui lòng điền thông tin' }]}
+          rules={[{ required: false, message: 'Vui lòng điền thông tin' }]}
         >
           {/* <FormEditor defaultValue={description} /> */}
           <Editor defaultValue={description} />
@@ -273,7 +277,7 @@ const ProductsCreate = () => {
           name="instruction"
           initialValue={instruction}
           className="mb-10"
-          rules={[{ required: true, message: 'Vui lòng điền thông tin' }]}
+          rules={[{ required: false, message: 'Vui lòng điền thông tin' }]}
         >
           {/* <FormEditor defaultValue={instruction} /> */}
           <Editor defaultValue={instruction} />
