@@ -36,8 +36,18 @@ const ProductsCreate = () => {
 
   const onFinish = useCallback(
     (values) => {
-      const { title, price, categoryId, description, imagesUrl, instruction, isFeatured, featuredThumbnail, kiotViet } =
-        values || {};
+      const {
+        title,
+        price,
+        categoryId,
+        description,
+        imagesUrl,
+        instruction,
+        isFeatured,
+        featuredThumbnail,
+        kiotViet,
+        general_description
+      } = values || {};
       const fileList = Array.isArray(imagesUrl) ? imagesUrl : imagesUrl?.fileList || [];
       const featuredFileList = Array.isArray(featuredThumbnail) ? featuredThumbnail : featuredThumbnail?.fileList || [];
 

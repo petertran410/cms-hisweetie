@@ -75,20 +75,14 @@ export const useUpdateProducts = (id) => {
         params
       });
     },
-    onSuccess: (data) => {
-      console.log('✅ Update success:', data);
-
+    oonSuccess: (data) => {
       showToast({
         type: 'success',
         message: '✅ Cập nhật sản phẩm thành công!',
         duration: 3000
       });
-
-      queryClient.invalidateQueries({ queryKey: ['GET_PRODUCTS_LIST'] });
-      queryClient.invalidateQueries({ queryKey: ['GET_PRODUCT_DETAIL', id] });
     },
     onError: (e) => {
-      console.log('❌ Update error:', e);
       showToast({
         type: 'error',
         message: `❌ Cập nhật thất bại: ${e.message}`,
