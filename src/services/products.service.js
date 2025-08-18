@@ -67,19 +67,33 @@ export const useUpdateProducts = (id) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (params) =>
-      API.request({
+    mutationFn: (params) => {
+      console.log('🚀 Update request data:', params);
+      return API.request({
         url: `/api/product/${id}`,
         method: 'PATCH',
         params
-      }),
-    onSuccess: () => {
-      showToast({ type: 'success', message: 'Cập nhật sản phẩm thành công' });
+      });
+    },
+    onSuccess: (data) => {
+      console.log('✅ Update success:', data);
+
+      showToast({
+        type: 'success',
+        message: '✅ Cập nhật sản phẩm thành công!',
+        duration: 3000
+      });
+
       queryClient.invalidateQueries({ queryKey: ['GET_PRODUCTS_LIST'] });
       queryClient.invalidateQueries({ queryKey: ['GET_PRODUCT_DETAIL', id] });
     },
     onError: (e) => {
-      showToast({ type: 'error', message: `Thao tác thất bại. ${e.message}` });
+      console.log('❌ Update error:', e);
+      showToast({
+        type: 'error',
+        message: `❌ Cập nhật thất bại: ${e.message}`,
+        duration: 5000
+      });
     }
   });
 };

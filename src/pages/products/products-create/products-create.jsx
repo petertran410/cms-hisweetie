@@ -90,8 +90,7 @@ const ProductsCreate = () => {
           const data = {
             title,
             price: Number(price) && Number(price) > 0 ? price : null,
-            quantity,
-            categoryIds: [categoryId?.value],
+            // categoryIds: categoryId?.value ? [categoryId.value] : [],
             description,
             imagesUrl,
             generalDescription,
@@ -99,6 +98,10 @@ const ProductsCreate = () => {
             isFeatured,
             featuredThumbnail: isFeatured ? featuredImageUrl : null
           };
+
+          if (categoryId?.value) {
+            data.categoryIds = [categoryId.value];
+          }
 
           id ? updateMutate(data) : createMutate(data);
         })
