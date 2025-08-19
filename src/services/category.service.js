@@ -14,21 +14,23 @@ export const useQueryCategoryList = () => {
     queryFn: async () => {
       try {
         const response = await API.request({
-          url: '/api/category/for-cms' // ✅ Sử dụng for-cms endpoint
+          url: '/api/category/for-cms',
+          params: {
+            pageSize: 1000,
+            pageNumber: 0
+          }
         });
 
         console.log('API Response:', response);
-
-        // ✅ Return exactly như API response, không transform
         return response;
       } catch (error) {
         console.error('Error fetching categories:', error);
-        throw error; // Let React Query handle the error
+        throw error;
       }
     },
     retry: 2,
     retryDelay: 1000,
-    staleTime: 5 * 60 * 1000, // Cache 5 minutes
+    staleTime: 5 * 60 * 1000,
     onError: (error) => {
       console.error('Category list query error:', error);
     }
