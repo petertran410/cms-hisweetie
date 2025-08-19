@@ -1,11 +1,12 @@
-import { ErrorScreen } from '@/components/effect-screen';
+// src/pages/category/category-list/category-list.jsx - Thay thế hoàn toàn
+import { ErrorScreen, LoadingScreen } from '@/components/effect-screen';
 import { CreateButton } from '@/components/table';
 import { useQueryCategoryList } from '@/services/category.service';
 import { TableStyle } from '@/styles/table.style';
 import { useGetParamsURL } from '@/utils/helper';
 import { WEBSITE_NAME } from '@/utils/resource';
 import { useQueryClient } from '@tanstack/react-query';
-import { Pagination, Table } from 'antd';
+import { Table, Tag, Empty } from 'antd';
 import { useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { GoSortAsc } from 'react-icons/go';
@@ -17,86 +18,73 @@ const CategoryList = () => {
   const paramsURL = useGetParamsURL();
   const { page = 1 } = paramsURL || {};
   const queryClient = useQueryClient();
+
   const { content = [], totalElements = 0 } = data || {};
 
-  const flattenCategories = (categories) => {
-    let result = [];
-
-    const addCategory = (category, level = 0) => {
-      // ✅ Create a clean object without tree properties
-      result.push({
-        id: category.id,
-        name: '—'.repeat(level) + (level > 0 ? ' ' : '') + category.name,
-        originalName: category.name, // Keep original name for reference
-        level: level,
-        kiotVietId: category.kiotVietId,
-        rank: category.rank,
-        hasChild: category.hasChild,
-        createdDate: category.createdDate,
-        modifiedDate: category.modifiedDate,
-        syncedAt: category.syncedAt
-      });
-
-      // Add children
-      if (category.children && category.children.length > 0) {
-        category.children.forEach((child) => {
-          addCategory(child, level + 1);
-        });
-      }
-    };
-
-    categories.forEach((category) => addCategory(category));
-    return result;
+  // ✅ Helper function để tìm tên danh mục cha
+  const getParentName = (parentId, categories) => {
+    if (!parentId) return null;
+    const parent = categories.find((cat) => cat.id === parentId);
+    return parent?.name || 'Không tìm thấy';
   };
 
+  // ✅ Columns definition cho bảng danh mục
   const columns = [
     {
       title: 'ID',
       dataIndex: 'id',
+      width: 80,
+      align: 'center',
       render: (text) => <p className="font-semibold">{text}</p>
     },
     {
       title: 'Tên danh mục',
       dataIndex: 'name',
-      render: (name, record) => {
-        console.log(data);
+      width: 300,
+      render: (name, record) => (
+        <div className="flex items-center gap-3">
+          <div>
+            <p className="font-semibold text-gray-800">{name}</p>
+            {record.description && <p className="text-sm text-gray-500 mt-1">{record.description}</p>}
+          </div>
+        </div>
+      )
+    },
+    {
+      title: 'Danh mục cha',
+      dataIndex: 'parent_id',
+      width: 200,
+      render: (parentId, record) => {
+        if (!parentId) {
+          return <Tag color="blue">Danh mục gốc</Tag>;
+        }
+
+        const parentName = getParentName(parentId, content);
         return (
-          <div className="flex items-center gap-3">
-            {Array.isArray(record?.imagesUrl) && (
-              <img src={record.imagesUrl[0]} className="w-16 h-14 object-cover rounded-md" />
-            )}
-            <p className="font-semibold">{name}</p>
+          <div>
+            <Tag color="orange">{parentName}</Tag>
           </div>
         );
       }
     },
-    // {
-    //   title: 'Danh mục cha',
-    //   dataIndex: 'parentName',
-    //   render: (text, record) => {
-    //     return <p className="font-semibold">{record.name}</p>;
-    //   }
-    // },
     {
-      title: 'Danh mục cha',
-      dataIndex: 'level',
-      render: (level, record) => {
-        if (level === 0) {
-          return <p className="font-semibold text-blue-600">Danh mục gốc</p>;
-        } else if (level === 1) {
-          return <p className="font-semibold text-orange-600">Danh mục con</p>;
-        } else {
-          return <p className="font-semibold text-purple-600">Danh mục cháu</p>;
-        }
-      }
+      title: 'Thứ tự',
+      dataIndex: 'priority',
+      width: 120,
+      align: 'center',
+      render: (priority) => <Tag color="purple">{priority || 0}</Tag>
     },
     {
-      title: 'Thứ tự hiển thị',
-      dataIndex: 'priority',
-      render: (priority) => <p>{Number(priority) + 1}</p>
+      title: 'Số sản phẩm',
+      dataIndex: 'productCount',
+      width: 120,
+      align: 'center',
+      render: (count) => <Tag color={count > 0 ? 'green' : 'default'}>{count || 0} sản phẩm</Tag>
     },
     {
       title: 'Hành động',
+      width: 150,
+      fixed: 'right',
       render: (_, record) => <Action item={record} />
     }
   ];
@@ -107,16 +95,15 @@ const CategoryList = () => {
     };
   }, [queryClient]);
 
+  // ✅ Loading state
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
+  // ✅ Error state
   if (error) {
     return <ErrorScreen message={error?.message} className="mt-20" />;
   }
-
-  // const dataTransform = content?.map((i) => {
-  //   const { children, ...rest } = i;
-  //   return rest;
-  // });
-
-  const dataTransform = flattenCategories(content);
 
   return (
     <TableStyle>
@@ -124,8 +111,9 @@ const CategoryList = () => {
         <title>Danh sách danh mục | {WEBSITE_NAME}</title>
       </Helmet>
 
+      {/* ✅ Action buttons */}
       <div className="flex justify-end mb-5 gap-4">
-        <Link to={`/categories/sort`}>
+        <Link to="/categories/sort">
           <div className="h-10 px-4 rounded-md flex items-center justify-center bg-[#bb6423] hover:bg-[#c77637] duration-200">
             <GoSortAsc color="#FFF" size={20} />
             <p className="text-white ml-1.5">Sắp xếp</p>
@@ -135,9 +123,10 @@ const CategoryList = () => {
         <CreateButton route="/categories/create" />
       </div>
 
+      {/* ✅ Table danh mục */}
       <Table
         columns={columns}
-        dataSource={dataTransform}
+        dataSource={content}
         loading={isLoading}
         pagination={{
           current: Number(page),
@@ -150,11 +139,11 @@ const CategoryList = () => {
           }
         }}
         rowKey="id"
+        locale={{
+          emptyText: <Empty description="Chưa có danh mục nào" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        }}
+        scroll={{ x: 1000 }}
       />
-
-      {/* <div className="flex justify-end mt-10">
-  <Pagination defaultPage={Number(page)} totalItems={totalElements} />
-</div> */}
     </TableStyle>
   );
 };

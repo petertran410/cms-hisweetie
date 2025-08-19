@@ -3,7 +3,7 @@ import { ErrorScreen } from '@/components/effect-screen';
 import MainLayout from '@/layouts/main';
 import NotFound404 from '@/pages/404';
 import { ApplyList } from '@/pages/apply';
-import { CategoryCreate, CategoryList, CategorySort } from '@/pages/category';
+import { CategoryCreate, CategoryList, CategorySort, CategoryEdit } from '@/pages/category';
 import { BlogCultureCreate, BlogCultureList } from '@/pages/culture-blog';
 import Dashboard from '@/pages/dashboard';
 import Login from '@/pages/login';
@@ -35,6 +35,7 @@ const AppRoute = () => {
             <Route path="sort" element={<CategorySort />} />
             <Route path="create" element={<CategoryCreate />} />
             <Route path=":id/edit" element={<CategoryCreate />} />
+            <Route path="/categories/:id/edit" element={<CategoryEdit />} />
           </Route>
 
           <Route path="news">

@@ -1,3 +1,4 @@
+// src/pages/category/category-sort/category-sort.jsx - Chỉ sửa FormSelectQuery
 import { ButtonBack } from '@/components/button';
 import { FormSelectQuery } from '@/components/form';
 import { useSortCategory } from '@/services/category.service';
@@ -45,14 +46,13 @@ const CategorySort = () => {
       >
         <FormSelectQuery
           allowClear
-          // initialValue={initCategory}
           rules={[{ required: true, message: 'Vui lòng chọn danh mục' }]}
           label="Chọn danh mục cha (để sắp xếp danh mục con)"
           labelKey="name"
           valueKey="id"
           name="categoryId"
           request={{
-            url: '/api/category/v2/get-all'
+            url: '/api/category/for-cms' // ✅ Sử dụng API mới
           }}
           fixedOptions={[{ label: 'Danh mục gốc', value: 'HOME' }]}
           initialValue={[{ label: 'Danh mục gốc', value: 'HOME' }]}
