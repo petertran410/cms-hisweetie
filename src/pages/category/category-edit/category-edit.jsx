@@ -1,13 +1,15 @@
-// src/pages/category/category-edit/category-edit.jsx
+// src/pages/category/category-edit/category-edit.jsx - Thay thế hoàn toàn
 import { ButtonBack } from '@/components/button';
 import { LoadingScreen } from '@/components/effect-screen';
-import { FormInput, FormSelectQuery, FormTextArea } from '@/components/form';
+import { FormSelectQuery } from '@/components/form';
 import { useQueryCategoryDetail, useUpdateCategory } from '@/services/category.service';
 import { WEBSITE_NAME } from '@/utils/resource';
-import { Button, Form } from 'antd';
+import { Button, Form, Input } from 'antd';
 import { useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { useParams } from 'react-router-dom';
+
+const { TextArea } = Input;
 
 const CategoryEdit = () => {
   const { id } = useParams();
@@ -49,15 +51,21 @@ const CategoryEdit = () => {
         autoComplete="off"
         className="mt-10"
       >
-        <FormInput
-          label="Tên danh mục"
+        {/* ✅ Sử dụng Form.Item với Input thay vì FormInput */}
+        <Form.Item
+          label={<p className="font-bold text-md">Tên danh mục</p>}
           name="name"
           rules={[{ required: true, message: 'Vui lòng nhập tên danh mục' }]}
-          placeholder="Nhập tên danh mục"
-        />
+        >
+          <Input className="py-2" placeholder="Nhập tên danh mục" />
+        </Form.Item>
 
-        <FormTextArea label="Mô tả danh mục" name="description" placeholder="Nhập mô tả cho danh mục" rows={4} />
+        {/* ✅ Sử dụng Form.Item với TextArea thay vì FormTextArea */}
+        <Form.Item label={<p className="font-bold text-md">Mô tả danh mục</p>} name="description">
+          <TextArea className="py-2" placeholder="Nhập mô tả cho danh mục" rows={4} />
+        </Form.Item>
 
+        {/* ✅ FormSelectQuery vẫn giữ nguyên */}
         <FormSelectQuery
           allowClear
           label="Danh mục cha"
@@ -70,7 +78,10 @@ const CategoryEdit = () => {
           placeholder="Chọn danh mục cha (để trống nếu là danh mục gốc)"
         />
 
-        <FormInput label="Thứ tự hiển thị" name="priority" type="number" placeholder="Nhập số thứ tự" />
+        {/* ✅ Sử dụng Form.Item với Input number */}
+        <Form.Item label={<p className="font-bold text-md">Thứ tự hiển thị</p>} name="priority">
+          <Input type="number" className="py-2" placeholder="Nhập số thứ tự" />
+        </Form.Item>
 
         <div className="flex items-center gap-8 mt-20 justify-center">
           <div className="hidden md:block">
