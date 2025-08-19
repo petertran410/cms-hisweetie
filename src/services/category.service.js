@@ -4,43 +4,33 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export const useQueryCategoryList = () => {
-  const [searchParams] = useSearchParams();
-  const page = searchParams.get('page') || '1';
-  const keyword = searchParams.get('keyword');
+  const paramsURL = useGetParamsURL();
+  const { page = 1 } = paramsURL || {};
 
-  const queryKey = ['GET_CATEGORY_LIST', page, keyword];
+  const queryKey = ['GET_CATEGORY_LIST', page];
 
   return useQuery({
     queryKey,
-    queryFn: () => {
-      const apiParams = {
-        pageSize: 8,
-        pageNumber: Number(page) - 1
-        // url: '/api/category/for-cms'
-      };
+    queryFn: async () => {
+      try {
+        const response = await API.request({
+          url: '/api/category/for-cms' // ✅ Sử dụng for-cms endpoint
+        });
 
-      if (keyword) {
-        apiParams.name = keyword;
+        console.log('API Response:', response);
+
+        // ✅ Return exactly như API response, không transform
+        return response;
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        throw error; // Let React Query handle the error
       }
-
-      // const allCategories = response?.data || [];
-      // const pageSize = 10;
-      // const pageNumber = Number(page) - 1;
-      // const startIndex = pageNumber * pageSize;
-      // const endIndex = startIndex + pageSize;
-      // const pageCategories = allCategories.slice(startIndex, endIndex);
-
-      // return {
-      //   content: pageCategories,
-      //   totalElements: allCategories.length,
-      //   pageNumber: pageNumber,
-      //   pageSize: pageSize
-      // };
-
-      return API.request({
-        url: '/api/category/for-cms',
-        params: apiParams
-      });
+    },
+    retry: 2,
+    retryDelay: 1000,
+    staleTime: 5 * 60 * 1000, // Cache 5 minutes
+    onError: (error) => {
+      console.error('Category list query error:', error);
     }
   });
 };
