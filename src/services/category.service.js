@@ -1,42 +1,50 @@
-// src/services/category.service.js (CMS) - Thay thế hoàn toàn
 import { API } from '@/utils/API';
 import { showToast, useGetParamsURL } from '@/utils/helper';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
-// ✅ Hook để lấy danh sách categories - Sử dụng endpoint flat
 export const useQueryCategoryList = () => {
-  const paramsURL = useGetParamsURL();
-  const { page = 1 } = paramsURL || {};
+  const [searchParams] = useSearchParams();
+  const page = searchParams.get('page') || '1';
+  const keyword = searchParams.get('keyword');
 
-  const queryKey = ['GET_CATEGORY_LIST', page];
+  const queryKey = ['GET_CATEGORY_LIST', page, keyword];
 
   return useQuery({
     queryKey,
-    queryFn: async () => {
-      const response = await API.request({
-        url: '/api/category/flat' // ✅ Sử dụng endpoint flat thay vì paginated
-      });
-
-      // Transform data để có pagination structure
-      const allCategories = response?.data || [];
-      const pageSize = 10;
-      const pageNumber = Number(page) - 1;
-      const startIndex = pageNumber * pageSize;
-      const endIndex = startIndex + pageSize;
-      const pageCategories = allCategories.slice(startIndex, endIndex);
-
-      return {
-        content: pageCategories,
-        totalElements: allCategories.length,
-        pageNumber: pageNumber,
-        pageSize: pageSize
+    queryFn: () => {
+      const apiParams = {
+        pageSize: 8,
+        pageNumber: Number(page) - 1
+        // url: '/api/category/for-cms'
       };
+
+      if (keyword) {
+        apiParams.name = keyword;
+      }
+
+      // const allCategories = response?.data || [];
+      // const pageSize = 10;
+      // const pageNumber = Number(page) - 1;
+      // const startIndex = pageNumber * pageSize;
+      // const endIndex = startIndex + pageSize;
+      // const pageCategories = allCategories.slice(startIndex, endIndex);
+
+      // return {
+      //   content: pageCategories,
+      //   totalElements: allCategories.length,
+      //   pageNumber: pageNumber,
+      //   pageSize: pageSize
+      // };
+
+      return API.request({
+        url: '/api/category/for-cms',
+        params: apiParams
+      });
     }
   });
 };
 
-// ✅ Hook để lấy categories theo parent ID (cho Sort feature)
 export const useQueryCategoryListByParentId = (parentId) => {
   const queryKey = ['GET_CATEGORY_LIST_BY_PARENT_ID', parentId];
 
@@ -44,7 +52,7 @@ export const useQueryCategoryListByParentId = (parentId) => {
     queryKey,
     queryFn: async () => {
       const response = await API.request({
-        url: '/api/category/for-cms' // ✅ Sử dụng endpoint for-cms
+        url: '/api/category/for-cms'
       });
 
       const allCategories = response?.data || [];
@@ -60,7 +68,6 @@ export const useQueryCategoryListByParentId = (parentId) => {
   });
 };
 
-// ✅ Hook để lấy categories cho dropdown (tất cả categories)
 export const useQueryCategoriesForDropdown = () => {
   const queryKey = ['GET_CATEGORIES_FOR_DROPDOWN'];
 
@@ -68,7 +75,7 @@ export const useQueryCategoriesForDropdown = () => {
     queryKey,
     queryFn: async () => {
       const response = await API.request({
-        url: '/api/category/for-cms' // ✅ Endpoint có sẵn
+        url: '/api/category/for-cms'
       });
 
       return response?.data || [];
@@ -77,7 +84,6 @@ export const useQueryCategoriesForDropdown = () => {
   });
 };
 
-// ✅ Mutation để tạo category mới
 export const useCreateCategory = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -106,7 +112,6 @@ export const useCreateCategory = () => {
   });
 };
 
-// ✅ Mutation để cập nhật category
 export const useUpdateCategory = (id) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -135,7 +140,6 @@ export const useUpdateCategory = (id) => {
   });
 };
 
-// ✅ Mutation để xóa category
 export const useDeleteCategory = () => {
   const queryClient = useQueryClient();
 
@@ -161,7 +165,6 @@ export const useDeleteCategory = () => {
   });
 };
 
-// ✅ Hook để lấy category detail
 export const useQueryCategoryDetail = (id) => {
   const queryKey = ['GET_CATEGORY_DETAIL', id];
 
@@ -178,7 +181,6 @@ export const useQueryCategoryDetail = (id) => {
   });
 };
 
-// ✅ Mutation để sort categories
 export const useSortCategory = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();

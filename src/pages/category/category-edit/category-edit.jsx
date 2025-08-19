@@ -1,10 +1,9 @@
-// src/pages/category/category-edit/category-edit.jsx - FIX PRIORITY FIELD
 import { ButtonBack } from '@/components/button';
 import { LoadingScreen } from '@/components/effect-screen';
 import { FormSelectQuery } from '@/components/form';
 import { useQueryCategoryDetail, useUpdateCategory } from '@/services/category.service';
 import { WEBSITE_NAME } from '@/utils/resource';
-import { Button, Form, Input, InputNumber } from 'antd'; // ✅ Import InputNumber
+import { Button, Form, Input, InputNumber } from 'antd';
 import { useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { useParams } from 'react-router-dom';
@@ -18,14 +17,13 @@ const CategoryEdit = () => {
   const { mutate: updateMutate, isPending } = useUpdateCategory(id);
 
   const onFinish = (values) => {
-    // ✅ Transform data để đảm bảo types đúng
     const transformedValues = {
       ...values,
       priority: values.priority ? Number(values.priority) : 0,
       parent_id: values.parent_id ? Number(values.parent_id) : undefined
     };
 
-    console.log('Updating with data:', transformedValues); // Debug log
+    console.log('Updating with data:', transformedValues);
     updateMutate(transformedValues);
   };
 
