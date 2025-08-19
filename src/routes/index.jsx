@@ -1,4 +1,3 @@
-// src/routes/index.jsx - UPDATED
 import { ErrorScreen } from '@/components/effect-screen';
 import MainLayout from '@/layouts/main';
 import NotFound404 from '@/pages/404';
