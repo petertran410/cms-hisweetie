@@ -14,26 +14,45 @@ export const useQueryCategoryList = () => {
     queryFn: async () => {
       try {
         const response = await API.request({
-          url: '/api/category/for-cms',
-          params: {
-            pageSize: 1000,
-            pageNumber: 0
-          }
+          url: '/api/category/for-cms'
         });
 
         console.log('API Response:', response);
-        return response;
+
+        if (!response.success || !response.data) {
+          throw new Error('Invalid API response');
+        }
+
+        const allCategories = response.data || [];
+
+        const pageSize = 10;
+        const pageNumber = Number(page) - 1;
+        const startIndex = pageNumber * pageSize;
+        const endIndex = startIndex + pageSize;
+        const pageCategories = allCategories.slice(startIndex, endIndex);
+
+        return {
+          content: pageCategories,
+          totalElements: allCategories.length,
+          pageNumber: pageNumber,
+          pageSize: pageSize,
+          data: pageCategories
+        };
       } catch (error) {
         console.error('Error fetching categories:', error);
-        throw error;
+
+        return {
+          content: [],
+          totalElements: 0,
+          pageNumber: 0,
+          pageSize: 10,
+          data: []
+        };
       }
     },
     retry: 2,
     retryDelay: 1000,
-    staleTime: 5 * 60 * 1000,
-    onError: (error) => {
-      console.error('Category list query error:', error);
-    }
+    staleTime: 5 * 60 * 1000 // Cache 5 phút
   });
 };
 
@@ -66,11 +85,28 @@ export const useQueryCategoriesForDropdown = () => {
   return useQuery({
     queryKey,
     queryFn: async () => {
-      const response = await API.request({
-        url: '/api/category/for-cms'
-      });
+      try {
+        const response = await API.request({
+          url: '/api/category/for-cms'
+        });
 
-      return response?.data || [];
+        if (!response.success || !response.data) {
+          return [];
+        }
+
+        return response.data.map((cat) => ({
+          id: cat.id,
+          name: cat.name,
+          displayName: cat.displayName || cat.name,
+          value: cat.id,
+          label: cat.displayName || cat.name,
+          level: cat.level || 0,
+          parent_id: cat.parent_id
+        }));
+      } catch (error) {
+        console.error('Error fetching categories for dropdown:', error);
+        return [];
+      }
     },
     staleTime: 5 * 60 * 1000
   });
