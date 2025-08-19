@@ -30,6 +30,8 @@ const ProductsList = () => {
 
   const { content = [], totalElements = 0, statistics = {}, pageNumber = 0, pageSize = 10 } = dataQuery || {};
 
+  console.log(dataQuery);
+
   const handleVisibilityToggle = async (productId, currentVisibility, productTitle) => {
     try {
       setTogglingIds((prev) => new Set([...prev, productId]));
@@ -88,7 +90,7 @@ const ProductsList = () => {
       width: 80,
       align: 'center',
       render: (imagesUrl, record) => {
-        let imageUrl = null;
+        let imageUrl = record.kiotviet_images;
 
         if (Array.isArray(imagesUrl) && imagesUrl.length > 0) {
           imageUrl = imagesUrl[0];
@@ -197,8 +199,7 @@ const ProductsList = () => {
       width: 100,
       align: 'right',
       render: (record) => {
-        const isVisible = record.isVisible === true;
-        // console.log(record.kiotViet.name);
+        const isVisible = record.is_visible === true;
         const isCurrentlyToggling = togglingIds.has(record.id);
 
         return (
@@ -210,7 +211,7 @@ const ProductsList = () => {
               size="small"
               checkedChildren={<FaEye />}
               unCheckedChildren={<FaEyeSlash />}
-              onChange={() => handleVisibilityToggle(record.id, isVisible, record.kiotViet.name)}
+              onChange={() => handleVisibilityToggle(record.id, isVisible, record.kiotviet_name)}
             />
           </Tooltip>
         );

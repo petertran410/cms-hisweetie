@@ -314,7 +314,7 @@ export const useQueryCategoriesForProductDropdown = () => {
     queryKey,
     queryFn: async () => {
       const response = await API.request({
-        url: '/api/category/for-cms' // ✅ Endpoint mới
+        url: '/api/category/for-cms'
       });
 
       return response?.data || [];

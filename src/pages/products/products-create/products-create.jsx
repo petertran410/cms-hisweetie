@@ -210,7 +210,7 @@ const ProductsCreate = () => {
           valueKey="id"
           name="categoryId"
           request={{
-            url: '/api/category/v2/get-all'
+            url: '/api/category/for-cms'
           }}
         />
 

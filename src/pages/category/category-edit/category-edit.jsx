@@ -1,10 +1,10 @@
-// src/pages/category/category-edit/category-edit.jsx - Thay thế hoàn toàn
+// src/pages/category/category-edit/category-edit.jsx - FIX PRIORITY FIELD
 import { ButtonBack } from '@/components/button';
 import { LoadingScreen } from '@/components/effect-screen';
 import { FormSelectQuery } from '@/components/form';
 import { useQueryCategoryDetail, useUpdateCategory } from '@/services/category.service';
 import { WEBSITE_NAME } from '@/utils/resource';
-import { Button, Form, Input } from 'antd';
+import { Button, Form, Input, InputNumber } from 'antd'; // ✅ Import InputNumber
 import { useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { useParams } from 'react-router-dom';
@@ -18,7 +18,15 @@ const CategoryEdit = () => {
   const { mutate: updateMutate, isPending } = useUpdateCategory(id);
 
   const onFinish = (values) => {
-    updateMutate(values);
+    // ✅ Transform data để đảm bảo types đúng
+    const transformedValues = {
+      ...values,
+      priority: values.priority ? Number(values.priority) : 0,
+      parent_id: values.parent_id ? Number(values.parent_id) : undefined
+    };
+
+    console.log('Updating with data:', transformedValues); // Debug log
+    updateMutate(transformedValues);
   };
 
   useEffect(() => {
@@ -51,7 +59,6 @@ const CategoryEdit = () => {
         autoComplete="off"
         className="mt-10"
       >
-        {/* ✅ Sử dụng Form.Item với Input thay vì FormInput */}
         <Form.Item
           label={<p className="font-bold text-md">Tên danh mục</p>}
           name="name"
@@ -60,12 +67,10 @@ const CategoryEdit = () => {
           <Input className="py-2" placeholder="Nhập tên danh mục" />
         </Form.Item>
 
-        {/* ✅ Sử dụng Form.Item với TextArea thay vì FormTextArea */}
         <Form.Item label={<p className="font-bold text-md">Mô tả danh mục</p>} name="description">
           <TextArea className="py-2" placeholder="Nhập mô tả cho danh mục" rows={4} />
         </Form.Item>
 
-        {/* ✅ FormSelectQuery vẫn giữ nguyên */}
         <FormSelectQuery
           allowClear
           label="Danh mục cha"
@@ -78,9 +83,25 @@ const CategoryEdit = () => {
           placeholder="Chọn danh mục cha (để trống nếu là danh mục gốc)"
         />
 
-        {/* ✅ Sử dụng Form.Item với Input number */}
-        <Form.Item label={<p className="font-bold text-md">Thứ tự hiển thị</p>} name="priority">
-          <Input type="number" className="py-2" placeholder="Nhập số thứ tự" />
+        {/* ✅ SỬA: Sử dụng InputNumber thay vì Input type="number" */}
+        <Form.Item
+          label={<p className="font-bold text-md">Thứ tự hiển thị</p>}
+          name="priority"
+          rules={[
+            {
+              type: 'number',
+              min: 0,
+              message: 'Thứ tự phải là số nguyên dương hoặc 0'
+            }
+          ]}
+        >
+          <InputNumber
+            className="py-2 w-full"
+            placeholder="Nhập số thứ tự"
+            min={0}
+            precision={0}
+            style={{ width: '100%' }}
+          />
         </Form.Item>
 
         <div className="flex items-center gap-8 mt-20 justify-center">

@@ -1,9 +1,8 @@
-// src/pages/category/category-create/category-create.jsx - Thay thế hoàn toàn
 import { ButtonBack } from '@/components/button';
 import { FormSelectQuery } from '@/components/form';
 import { useCreateCategory } from '@/services/category.service';
 import { WEBSITE_NAME } from '@/utils/resource';
-import { Button, Form, Input } from 'antd';
+import { Button, Form, Input, InputNumber } from 'antd';
 import { Helmet } from 'react-helmet';
 
 const { TextArea } = Input;
@@ -13,7 +12,14 @@ const CategoryCreate = () => {
   const { mutate: createMutate, isPending } = useCreateCategory();
 
   const onFinish = (values) => {
-    createMutate(values);
+    const transformedValues = {
+      ...values,
+      priority: values.priority ? Number(values.priority) : 0, // Đảm bảo là number
+      parent_id: values.parent_id ? Number(values.parent_id) : undefined // Đảm bảo là number hoặc undefined
+    };
+
+    console.log('Sending data:', transformedValues); // Debug log
+    createMutate(transformedValues);
   };
 
   return (
@@ -30,8 +36,10 @@ const CategoryCreate = () => {
         onFinish={onFinish}
         autoComplete="off"
         className="mt-10"
+        initialValues={{
+          priority: 0 // ✅ Set default value
+        }}
       >
-        {/* ✅ Sử dụng Form.Item với Input thay vì FormInput */}
         <Form.Item
           label={<p className="font-bold text-md">Tên danh mục</p>}
           name="name"
@@ -40,12 +48,10 @@ const CategoryCreate = () => {
           <Input className="py-2" placeholder="Nhập tên danh mục" />
         </Form.Item>
 
-        {/* ✅ Sử dụng Form.Item với TextArea thay vì FormTextArea */}
         <Form.Item label={<p className="font-bold text-md">Mô tả danh mục</p>} name="description">
           <TextArea className="py-2" placeholder="Nhập mô tả cho danh mục (không bắt buộc)" rows={4} />
         </Form.Item>
 
-        {/* ✅ FormSelectQuery vẫn giữ nguyên */}
         <FormSelectQuery
           allowClear
           label="Danh mục cha"
@@ -58,9 +64,25 @@ const CategoryCreate = () => {
           placeholder="Chọn danh mục cha (để trống nếu là danh mục gốc)"
         />
 
-        {/* ✅ Sử dụng Form.Item với Input number */}
-        <Form.Item label={<p className="font-bold text-md">Thứ tự hiển thị</p>} name="priority" initialValue={0}>
-          <Input type="number" className="py-2" placeholder="Nhập số thứ tự (0 = hiển thị đầu tiên)" />
+        {/* ✅ SỬA: Sử dụng InputNumber thay vì Input type="number" */}
+        <Form.Item
+          label={<p className="font-bold text-md">Thứ tự hiển thị</p>}
+          name="priority"
+          rules={[
+            {
+              type: 'number',
+              min: 0,
+              message: 'Thứ tự phải là số nguyên dương hoặc 0'
+            }
+          ]}
+        >
+          <InputNumber
+            className="py-2 w-full"
+            placeholder="Nhập số thứ tự (0 = hiển thị đầu tiên)"
+            min={0}
+            precision={0} // Chỉ cho phép số nguyên
+            style={{ width: '100%' }}
+          />
         </Form.Item>
 
         <div className="flex items-center gap-8 mt-20 justify-center">
