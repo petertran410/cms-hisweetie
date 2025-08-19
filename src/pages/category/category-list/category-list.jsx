@@ -1,4 +1,3 @@
-// src/pages/category/category-list/category-list.jsx - Thay thế hoàn toàn
 import { ErrorScreen, LoadingScreen } from '@/components/effect-screen';
 import { CreateButton } from '@/components/table';
 import { useQueryCategoryList } from '@/services/category.service';
@@ -6,7 +5,7 @@ import { TableStyle } from '@/styles/table.style';
 import { useGetParamsURL } from '@/utils/helper';
 import { WEBSITE_NAME } from '@/utils/resource';
 import { useQueryClient } from '@tanstack/react-query';
-import { Table, Tag, Empty } from 'antd';
+import { Table, Tag, Empty, Button } from 'antd';
 import { useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { GoSortAsc } from 'react-icons/go';
@@ -94,6 +93,40 @@ const CategoryList = () => {
       queryClient.resetQueries({ queryKey: ['GET_CATEGORY_DETAIL'] });
     };
   }, [queryClient]);
+
+  if (!isLoading && (!content || content.length === 0)) {
+    return (
+      <TableStyle>
+        <Helmet>
+          <title>Danh sách danh mục | {WEBSITE_NAME}</title>
+        </Helmet>
+
+        <div className="flex justify-end mb-5 gap-4">
+          <CreateButton route="/categories/create" />
+        </div>
+
+        <div className="text-center py-20">
+          <div className="mb-6">
+            <svg className="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1}
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+              />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có danh mục nào</h3>
+          <p className="text-gray-500 mb-6">Bắt đầu bằng cách tạo danh mục đầu tiên cho sản phẩm của bạn.</p>
+          <Link to="/categories/create">
+            <Button type="primary" size="large">
+              Tạo danh mục đầu tiên
+            </Button>
+          </Link>
+        </div>
+      </TableStyle>
+    );
+  }
 
   // ✅ Loading state
   if (isLoading) {

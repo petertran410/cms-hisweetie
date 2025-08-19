@@ -4,7 +4,7 @@ import { showToast, useGetParamsURL } from '@/utils/helper';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 
-// ✅ Hook để lấy danh sách categories có phân trang (cho Category List)
+// ✅ Hook để lấy danh sách categories - Sử dụng endpoint flat
 export const useQueryCategoryList = () => {
   const paramsURL = useGetParamsURL();
   const { page = 1 } = paramsURL || {};
@@ -15,19 +15,22 @@ export const useQueryCategoryList = () => {
     queryKey,
     queryFn: async () => {
       const response = await API.request({
-        url: '/api/category/paginated',
-        params: {
-          pageSize: 10,
-          pageNumber: Number(page) - 1
-        }
+        url: '/api/category/flat' // ✅ Sử dụng endpoint flat thay vì paginated
       });
 
-      // Transform data để match với component hiện tại
+      // Transform data để có pagination structure
+      const allCategories = response?.data || [];
+      const pageSize = 10;
+      const pageNumber = Number(page) - 1;
+      const startIndex = pageNumber * pageSize;
+      const endIndex = startIndex + pageSize;
+      const pageCategories = allCategories.slice(startIndex, endIndex);
+
       return {
-        content: response?.data || [],
-        totalElements: response?.pagination?.total || 0,
-        pageNumber: response?.pagination?.pageNumber || 0,
-        pageSize: response?.pagination?.pageSize || 10
+        content: pageCategories,
+        totalElements: allCategories.length,
+        pageNumber: pageNumber,
+        pageSize: pageSize
       };
     }
   });
@@ -41,15 +44,17 @@ export const useQueryCategoryListByParentId = (parentId) => {
     queryKey,
     queryFn: async () => {
       const response = await API.request({
-        url: '/api/category/paginated',
-        params: {
-          pageSize: 1000,
-          pageNumber: 0,
-          parentId: parentId === 'HOME' ? undefined : parentId
-        }
+        url: '/api/category/for-cms' // ✅ Sử dụng endpoint for-cms
       });
 
-      return response?.data || [];
+      const allCategories = response?.data || [];
+
+      // Filter by parent ID
+      if (parentId === 'HOME' || !parentId) {
+        return allCategories.filter((cat) => !cat.parent_id);
+      } else {
+        return allCategories.filter((cat) => cat.parent_id === parentId);
+      }
     },
     enabled: parentId !== undefined
   });
@@ -63,7 +68,7 @@ export const useQueryCategoriesForDropdown = () => {
     queryKey,
     queryFn: async () => {
       const response = await API.request({
-        url: '/api/category/for-cms'
+        url: '/api/category/for-cms' // ✅ Endpoint có sẵn
       });
 
       return response?.data || [];
@@ -173,7 +178,7 @@ export const useQueryCategoryDetail = (id) => {
   });
 };
 
-// ✅ Mutation để sort categories (function bị thiếu)
+// ✅ Mutation để sort categories
 export const useSortCategory = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
