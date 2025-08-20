@@ -24,10 +24,11 @@ export const useQueryCategoryList = () => {
     },
 
     staleTime: 0,
-    cacheTime: 5 * 60 * 1000,
+    cacheTime: 0,
     refetchOnWindowFocus: false,
-    keepPreviousData: true,
-    refetchOnMount: true
+    keepPreviousData: false,
+    refetchOnMount: true,
+    enabled: true
   });
 };
 
