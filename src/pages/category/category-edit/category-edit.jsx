@@ -20,7 +20,7 @@ const CategoryEdit = () => {
     const transformedValues = {
       ...values,
       priority: values.priority ? Number(values.priority) : 0,
-      parent_id: values.parent_id ? Number(values.parent_id) : undefined
+      parent_id: values.parent_id?.value ?? values.parent_id ?? null
     };
 
     console.log('Updating with data:', transformedValues);

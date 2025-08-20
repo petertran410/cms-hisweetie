@@ -21,8 +21,6 @@ const ProductsCreate = () => {
   const [currentPrice, setCurrentPrice] = useState(0);
   const [isFeaturedProduct, setIsFeaturedProduct] = useState(false);
 
-  console.log(productsDetail);
-
   const {
     title,
     description,
@@ -42,17 +40,24 @@ const ProductsCreate = () => {
       const {
         title,
         price,
-        categoryId,
+        categoryIds,
         description,
         imagesUrl,
         instruction,
         isFeatured,
         featuredThumbnail,
-        kiotViet,
         general_description
       } = values || {};
       const fileList = Array.isArray(imagesUrl) ? imagesUrl : imagesUrl?.fileList || [];
       const featuredFileList = Array.isArray(featuredThumbnail) ? featuredThumbnail : featuredThumbnail?.fileList || [];
+      let finalCategoryId = null;
+      if (categoryIds) {
+        if (Array.isArray(categoryIds)) {
+          finalCategoryId = categoryIds[0]?.value ?? categoryIds[0] ?? null;
+        } else {
+          finalCategoryId = categoryIds.value ?? categoryIds ?? null;
+        }
+      }
 
       Promise.all(
         [...fileList, ...featuredFileList].map(async (item) => {
@@ -100,11 +105,30 @@ const ProductsCreate = () => {
             featuredThumbnail: isFeatured ? featuredImageUrl : null
           };
 
-          if (categoryId?.value) {
+          if (categoryIds?.value) {
             data.category_id = [categoryId.value];
           }
 
           id ? updateMutate(data) : createMutate(data);
+        })
+        .then((uploadResults) => {
+          const productData = {
+            title,
+            price: Number(price) || 0,
+            categoryIds: finalCategoryId ? [finalCategoryId] : [], // ✅ Send as array
+            description,
+            general_description,
+            instruction,
+            is_featured: isFeatured || false,
+            images_url: uploadResults.images,
+            featured_thumbnail: uploadResults.featuredImage
+          };
+
+          if (id) {
+            updateMutate(productData);
+          } else {
+            createMutate(productData);
+          }
         })
         .catch((e) => {
           showToast({ type: 'error', message: `Tải ảnh sản phẩm thất bại. ${e.message}` });
@@ -131,17 +155,9 @@ const ProductsCreate = () => {
     return <ErrorScreen message={errorDetail?.message} className="mt-20" />;
   }
 
-  const initCategory = ofCategories?.map((i) => ({ label: i.name, value: i.id }))?.[0];
-
   const arrayImageUrl = kiotViet.images;
 
-  const featureImageUrl = imagesUrl;
-
   const initialImages = Array.isArray(arrayImageUrl) ? arrayImageUrl.map((i) => ({ name: '', url: i })) : undefined;
-
-  const initialFeatureImages = Array.isArray(featureImageUrl)
-    ? featureImageUrl.map((i) => ({ name: '', url: i }))
-    : undefined;
 
   const defaultImages = Array.isArray(arrayImageUrl)
     ? arrayImageUrl.map((i) => ({

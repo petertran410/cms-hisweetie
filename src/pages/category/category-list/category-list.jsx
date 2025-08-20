@@ -1,6 +1,6 @@
 import { useQueryCategoryList } from '@/services/category.service';
 import { WEBSITE_NAME } from '@/utils/resource';
-import { Tag, Select, Button, Table, Pagination, Spin } from 'antd';
+import { Tag, Select, Button, Table, Pagination, Spin, Tooltip } from 'antd';
 import { Helmet } from 'react-helmet';
 import Action from './action';
 import { Link, useNavigate } from 'react-router-dom';

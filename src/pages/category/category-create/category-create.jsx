@@ -14,11 +14,11 @@ const CategoryCreate = () => {
   const onFinish = (values) => {
     const transformedValues = {
       ...values,
-      priority: values.priority ? Number(values.priority) : 0, // Đảm bảo là number
-      parent_id: values.parent_id ? Number(values.parent_id) : undefined // Đảm bảo là number hoặc undefined
+      priority: values.priority ? Number(values.priority) : 0,
+      parent_id: values.parent_id?.value ?? values.parent_id ?? null
     };
 
-    console.log('Sending data:', transformedValues); // Debug log
+    console.log('Sending data:', transformedValues);
     createMutate(transformedValues);
   };
 
