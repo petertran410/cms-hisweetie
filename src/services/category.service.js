@@ -7,38 +7,19 @@ export const useQueryCategoryList = () => {
   const paramsURL = useGetParamsURL();
   const { page = 1, keyword } = paramsURL || {};
 
-  const queryKey = ['GET_CATEGORY_LIST', page, name];
+  const queryKey = ['GET_CATEGORY_LIST', page, keyword];
 
   return useQuery({
     queryKey,
-    queryFn: async () => {
-      const response = API.request({
+    queryFn: () => {
+      return API.request({
         url: '/api/category/paginated',
         params: {
-          pageSize: 100,
-          pageNumber: 0,
+          pageSize: 10,
+          pageNumber: Number(page) - 1,
           name: keyword
         }
       });
-
-      if (response?.content) {
-        const allContent = response?.content || [];
-
-        const pageSize = 10;
-        const currentPage = Number(page) - 1;
-        const start = currentPage * pageSize;
-        const end = start + pageSize;
-        const pageContent = allContent.slice(start, end);
-
-        return {
-          content: pageContent,
-          totalElements: allContent.length,
-          totalPages: Math.ceil(filteredContent.length / pageSize),
-          number: currentPage,
-          size: pageSize
-        };
-      }
-      return response;
     }
   });
 };

@@ -7,9 +7,8 @@ import { Link, useNavigate } from 'react-router-dom';
 
 const CategoryList = () => {
   const navigate = useNavigate();
-  const { data, isLoading, error } = useQueryCategoryList();
-
-  const { content = [], totalElements = 0, totalPages = 0, number: currentPage = 0 } = data || {};
+  const { data, isLoading } = useQueryCategoryList();
+  const { content, totalElements, totalPages, number: currentPage } = data || {};
 
   const columns = [
     {
