@@ -30,8 +30,6 @@ const ProductsList = () => {
 
   const { content = [], totalElements = 0, statistics = {}, pageNumber = 0, pageSize = 10 } = dataQuery || {};
 
-  console.log(dataQuery);
-
   const handleVisibilityToggle = async (productId, currentVisibility, productTitle) => {
     try {
       setTogglingIds((prev) => new Set([...prev, productId]));
@@ -128,12 +126,18 @@ const ProductsList = () => {
       key: 'title',
       width: 250,
       render: (record) => {
-        const title = record.title || 'Chưa có tên';
+        console.log(record);
+        let name;
+        if (record.title === null) {
+          name = record.kiotviet_name;
+        } else {
+          name = record.title;
+        }
         const isFromKiotViet = record.isFromKiotViet;
 
         return (
           <div className="space-y-1">
-            <div className="font-medium text-gray-800 line-clamp-2">{title}</div>
+            <div className="font-medium text-gray-800 line-clamp-2">{name}</div>
             <div className="flex gap-1">
               {isFromKiotViet && (
                 <Tag color="orange" className="text-xs">
@@ -185,7 +189,7 @@ const ProductsList = () => {
       width: 120,
       align: 'right',
       render: (record) => {
-        const price = record.kiotViet?.price;
+        const price = record.kiotviet_price;
         return price ? (
           <span className="font-medium text-green-600">{formatCurrency(price)}</span>
         ) : (
