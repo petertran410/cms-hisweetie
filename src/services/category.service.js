@@ -11,55 +11,18 @@ export const useQueryCategoryList = () => {
 
   return useQuery({
     queryKey,
-    queryFn: async () => {
-      try {
-        const response = await API.request({
-          url: '/api/category/for-cms'
-        });
+    queryFn: () => {
+      console.log('Fetching categories for page:', page);
 
-        if (!response.success || !response.data) {
-          throw new Error('Invalid API response');
-        }
-
-        const allCategories = response.data || [];
-
-        // ✅ Pagination logic
-        const pageSize = 10;
-        const pageNumber = Number(page) - 1;
-        const startIndex = pageNumber * pageSize;
-        const endIndex = startIndex + pageSize;
-        const pageCategories = allCategories.slice(startIndex, endIndex);
-
-        console.log('Page data:', {
-          page,
-          pageNumber,
-          startIndex,
-          endIndex,
-          totalCategories: allCategories.length,
-          pageCategories: pageCategories.length
-        });
-
-        return {
-          content: pageCategories,
-          totalElements: allCategories.length,
-          pageNumber: pageNumber,
-          pageSize: pageSize,
-          data: pageCategories
-        };
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-
-        return {
-          content: [],
-          totalElements: 0,
-          pageNumber: 0,
+      return API.request({
+        url: '/api/category/paginated',
+        params: {
           pageSize: 10,
-          data: []
-        };
-      }
+          pageNumber: Number(page) - 1
+        }
+      });
     },
-    retry: 1,
-    retryDelay: 500,
+
     staleTime: 0,
     cacheTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,

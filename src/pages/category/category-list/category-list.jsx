@@ -16,8 +16,6 @@ const CategoryList = () => {
   const { pageNumber = 0, pageSize = 10 } = dataQuery || {};
   const { content = [], totalElements = 0 } = dataQuery || {};
 
-  console.log('CategoryList dataQuery:', dataQuery);
-
   if (error) {
     return (
       <div className="text-center py-20">
