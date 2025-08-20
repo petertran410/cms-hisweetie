@@ -88,7 +88,6 @@ const ProductsCreate = () => {
           const data = {
             title,
             price: Number(price) && Number(price) > 0 ? price : null,
-            // categoryIds: categoryId?.value ? [categoryId.value] : [],
             description,
             imagesUrl,
             general_description,
@@ -149,15 +148,6 @@ const ProductsCreate = () => {
       }))
     : undefined;
 
-  const defaultFeatureImages = Array.isArray(initialFeatureImages)
-    ? initialFeatureImages.map((i) => ({
-        type: 'image/*',
-        url: i,
-        uid: i,
-        name: ''
-      }))
-    : undefined;
-
   const initFeaturedImage = featuredThumbnail ? { name: '', url: featuredThumbnail } : undefined;
   const defaultFeaturedImage = featuredThumbnail
     ? { type: 'image/*', url: featuredThumbnail, uid: featuredThumbnail, name: '' }
@@ -202,16 +192,15 @@ const ProductsCreate = () => {
         </Form.Item>
 
         <FormSelectQuery
-          allowClear
-          initialValue={initCategory}
-          rules={[{ required: false, message: 'Vui lòng chọn danh mục' }]}
-          label="Danh mục"
-          labelKey="name"
-          valueKey="id"
           name="categoryId"
+          label="Danh mục"
+          placeholder="Chọn danh mục..."
+          labelKey="displayName"
+          valueKey="id"
           request={{
-            url: '/api/category/for-cms'
+            url: '/api/category/dropdown'
           }}
+          allowClear
         />
 
         <Form.Item

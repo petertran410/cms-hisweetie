@@ -283,30 +283,27 @@ export const useQueryVisibilityStats = () => {
 
 export const useQueryProductsForCMS = () => {
   const paramsURL = useGetParamsURL();
-  const { page = 1, title, categoryId, is_visible } = paramsURL || {};
+  const { page = 1, keyword, categoryId, is_visible } = paramsURL || {};
 
-  const queryKey = ['GET_PRODUCTS_FOR_CMS', page, title, categoryId, is_visible];
+  const queryKey = ['GET_PRODUCTS_FOR_CMS', page, keyword, categoryId, is_visible];
 
   return useQuery({
     queryKey,
-    queryFn: async () => {
-      const response = await API.request({
-        url: '/api/product/cms/get-all', // ✅ Endpoint mới
+    queryFn: () => {
+      return API.request({
+        url: '/api/product/cms/get-all',
         params: {
           pageSize: 10,
           pageNumber: Number(page) - 1,
-          title,
+          title: keyword,
           categoryId,
           is_visible
         }
       });
-
-      return response;
     }
   });
 };
 
-// ✅ Hook để lấy categories cho product dropdown
 export const useQueryCategoriesForProductDropdown = () => {
   const queryKey = ['GET_CATEGORIES_FOR_PRODUCT_DROPDOWN'];
 
@@ -323,22 +320,19 @@ export const useQueryCategoriesForProductDropdown = () => {
   });
 };
 
-// ✅ Mutation để update category của product
 export const useUpdateProductCategory = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ productId, categoryId }) => {
       return API.request({
-        url: `/api/product/${productId}/category`, // ✅ Endpoint mới
+        url: `/api/product/${productId}/category`,
         method: 'PATCH',
-        params: { category_id: categoryId }
+        data: { category_id: categoryId }
       });
     },
     onSuccess: () => {
-      // Invalidate product list cache
       queryClient.invalidateQueries(['GET_PRODUCTS_FOR_CMS']);
-
       showToast({
         type: 'success',
         message: 'Cập nhật danh mục sản phẩm thành công'

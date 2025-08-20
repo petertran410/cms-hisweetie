@@ -47,34 +47,17 @@ export const useQueryCategoryListByParentId = (parentId) => {
   });
 };
 
-export const useQueryCategoriesForDropdown = () => {
-  const queryKey = ['GET_CATEGORIES_FOR_DROPDOWN'];
+export const useQueryCategoriesForProductDropdown = () => {
+  const queryKey = ['GET_CATEGORIES_FOR_PRODUCT_DROPDOWN'];
 
   return useQuery({
     queryKey,
     queryFn: async () => {
-      try {
-        const response = await API.request({
-          url: '/api/category/for-cms'
-        });
+      const response = await API.request({
+        url: '/api/category/dropdown'
+      });
 
-        if (!response.success || !response.data) {
-          return [];
-        }
-
-        return response.data.map((cat) => ({
-          id: cat.id,
-          name: cat.name,
-          displayName: cat.displayName || cat.name,
-          value: cat.id,
-          label: cat.displayName || cat.name,
-          level: cat.level || 0,
-          parent_id: cat.parent_id
-        }));
-      } catch (error) {
-        console.error('Error fetching categories for dropdown:', error);
-        return [];
-      }
+      return Array.isArray(response) ? response : [];
     },
     staleTime: 5 * 60 * 1000
   });
@@ -183,7 +166,6 @@ export const useSortCategory = () => {
 
   return useMutation({
     mutationFn: (items) => {
-      // API để update priority của multiple categories
       const updatePromises = items.map((item) =>
         API.request({
           url: `/api/category/${item.id}`,

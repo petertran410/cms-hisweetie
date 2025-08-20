@@ -60,12 +60,12 @@ const FormSelectQuery = (props) => {
   }, []);
 
   const loadFirstPage = useCallback(() => {
-    if (!isEmpty(options)) {
-      return;
-    }
-    getData({ ...params, pageNumber: 1 })
+    if (!isEmpty(options)) return;
+
+    getData({ ...params, pageNumber: 0 })
       .then((res) => {
-        setOptions(res);
+        const data = Array.isArray(res) ? res : res?.data || res?.content || [];
+        setOptions(data);
         setIsLastPage(true);
       })
       .catch((e) => handleCatch(e));
@@ -92,9 +92,10 @@ const FormSelectQuery = (props) => {
   const onSearch = debounce((value) => {
     setPage(0);
     setKeyword(value);
-    getData({ page: 0, keyword: value })
+    getData({ ...params, page: 0, keyword: value })
       .then((res) => {
-        setOptions(res);
+        const data = Array.isArray(res) ? res : res?.data || res?.content || [];
+        setOptions(data);
         setIsLastPage(true);
       })
       .catch((e) => handleCatch(e));
