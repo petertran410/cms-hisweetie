@@ -1,6 +1,6 @@
 import { ErrorScreen, LoadingScreen } from '@/components/effect-screen';
 import { CreateButton, Pagination } from '@/components/table';
-import { useQueryCategoryList } from '@/services/category.service';
+import { useQueryCategoryList, useRefreshCategoryList } from '@/services/category.service';
 import { TableStyle } from '@/styles/table.style';
 import { useGetParamsURL } from '@/utils/helper';
 import { WEBSITE_NAME } from '@/utils/resource';
@@ -10,11 +10,18 @@ import { GoSortAsc } from 'react-icons/go';
 import { FaPlus, FaDatabase } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import Action from './action';
+import { useEffect } from 'react';
 
 const CategoryList = () => {
   const { data: dataQuery = {}, isLoading, error } = useQueryCategoryList();
+  const refreshCategories = useRefreshCategoryList();
   const paramsURL = useGetParamsURL();
   const { page = 1 } = paramsURL || {};
+
+  useEffect(() => {
+    console.log('Page changed to:', page);
+    refreshCategories();
+  }, [page, refreshCategories]);
 
   const { pageNumber = 0, pageSize = 10 } = dataQuery || {};
   const { content = [], totalElements = 0 } = dataQuery || {};
@@ -32,12 +39,10 @@ const CategoryList = () => {
     );
   }
 
-  // ✅ Handle loading state
   if (isLoading) {
     return <LoadingScreen />;
   }
 
-  // ✅ Handle empty state
   if (!content || content.length === 0) {
     return (
       <div className="text-center py-20">
@@ -48,7 +53,6 @@ const CategoryList = () => {
     );
   }
 
-  // ✅ Define table columns
   const columns = [
     {
       title: 'STT',
@@ -153,7 +157,6 @@ const CategoryList = () => {
         <title>Danh sách danh mục | {WEBSITE_NAME}</title>
       </Helmet>
 
-      {/* ✅ Header với thống kê */}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-xl font-semibold text-gray-800">Quản lý danh mục</h2>
@@ -163,7 +166,6 @@ const CategoryList = () => {
         </div>
       </div>
 
-      {/* ✅ Table with better styling */}
       <Table
         columns={columns}
         dataSource={content}
@@ -179,7 +181,6 @@ const CategoryList = () => {
         rowClassName={(record, index) => (index % 2 === 0 ? 'bg-gray-50' : 'bg-white')}
       />
 
-      {/* ✅ Pagination */}
       {totalElements > pageSize && (
         <div className="flex justify-end mt-6">
           <Pagination defaultPage={Number(page)} totalItems={totalElements} pageSize={pageSize} />

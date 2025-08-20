@@ -33,8 +33,7 @@ const AppRoute = () => {
             <Route path="" element={<CategoryList />} />
             <Route path="sort" element={<CategorySort />} />
             <Route path="create" element={<CategoryCreate />} />
-            <Route path=":id/edit" element={<CategoryCreate />} />
-            <Route path="/categories/:id/edit" element={<CategoryEdit />} />
+            <Route path=":id/edit" element={<CategoryEdit />} />
           </Route>
 
           <Route path="news">
