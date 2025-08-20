@@ -21,6 +21,8 @@ const ProductsCreate = () => {
   const [currentPrice, setCurrentPrice] = useState(0);
   const [isFeaturedProduct, setIsFeaturedProduct] = useState(false);
 
+  console.log(productsDetail);
+
   const {
     title,
     description,
@@ -31,6 +33,7 @@ const ProductsCreate = () => {
     instruction,
     isFeatured,
     featuredThumbnail,
+    category_id,
     kiotViet
   } = productsDetail || {};
 
@@ -93,11 +96,12 @@ const ProductsCreate = () => {
             general_description,
             instruction,
             isFeatured,
+            category_id,
             featuredThumbnail: isFeatured ? featuredImageUrl : null
           };
 
           if (categoryId?.value) {
-            data.categoryIds = [categoryId.value];
+            data.category_id = [categoryId.value];
           }
 
           id ? updateMutate(data) : createMutate(data);
@@ -200,6 +204,7 @@ const ProductsCreate = () => {
           request={{
             url: '/api/category/dropdown'
           }}
+          initialValue={category_id}
           allowClear
         />
 
