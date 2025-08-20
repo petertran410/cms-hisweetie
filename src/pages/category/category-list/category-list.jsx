@@ -1,27 +1,17 @@
 import { ErrorScreen, LoadingScreen } from '@/components/effect-screen';
 import { CreateButton, Pagination } from '@/components/table';
-import { useQueryCategoryList, useRefreshCategoryList } from '@/services/category.service';
+import { useQueryCategoryList } from '@/services/category.service';
 import { TableStyle } from '@/styles/table.style';
 import { useGetParamsURL } from '@/utils/helper';
 import { WEBSITE_NAME } from '@/utils/resource';
 import { Table, Tag, Empty, Button, Space, Tooltip } from 'antd';
 import { Helmet } from 'react-helmet';
-import { GoSortAsc } from 'react-icons/go';
-import { FaPlus, FaDatabase } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
 import Action from './action';
-import { useEffect } from 'react';
 
 const CategoryList = () => {
   const { data: dataQuery = {}, isLoading, error } = useQueryCategoryList();
-  const refreshCategories = useRefreshCategoryList();
   const paramsURL = useGetParamsURL();
   const { page = 1 } = paramsURL || {};
-
-  useEffect(() => {
-    console.log('Page changed to:', page);
-    refreshCategories();
-  }, [page, refreshCategories]);
 
   const { pageNumber = 0, pageSize = 10 } = dataQuery || {};
   const { content = [], totalElements = 0 } = dataQuery || {};

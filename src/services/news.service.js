@@ -43,14 +43,13 @@ export const useQueryNewsList = () => {
         const pageContent = filteredContent.slice(start, end);
 
         return {
-          content: pageContent, // ✅ Current page items
-          totalElements: filteredContent.length, // ✅ Total filtered count
+          content: pageContent,
+          totalElements: filteredContent.length,
           totalPages: Math.ceil(filteredContent.length / pageSize),
           number: currentPage,
           size: pageSize,
-          // ✅ ADD FULL STATISTICS
-          allFilteredContent: filteredContent, // ✅ All filtered data for statistics
-          statisticsByType: statisticsByType // ✅ Statistics by type
+          allFilteredContent: filteredContent,
+          statisticsByType: statisticsByType
         };
       }
 
@@ -203,7 +202,6 @@ export const useQueryNewsDetail = (id) => {
   return { data, isLoading, error };
 };
 
-// THÊM MỚI: Hook để lấy thống kê các loại bài viết
 export const useQueryNewsStats = () => {
   const queryKey = ['GET_NEWS_STATS'];
 

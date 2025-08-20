@@ -13,8 +13,6 @@ export const useQueryCategoryList = () => {
     queryKey,
     queryFn: async () => {
       try {
-        console.log('Fetching categories for page:', page); // Debug log
-
         const response = await API.request({
           url: '/api/category/for-cms'
         });
@@ -39,7 +37,7 @@ export const useQueryCategoryList = () => {
           endIndex,
           totalCategories: allCategories.length,
           pageCategories: pageCategories.length
-        }); // Debug log
+        });
 
         return {
           content: pageCategories,
@@ -62,20 +60,12 @@ export const useQueryCategoryList = () => {
     },
     retry: 1,
     retryDelay: 500,
-    staleTime: 30 * 1000,
-    cacheTime: 2 * 60 * 1000,
+    staleTime: 0,
+    cacheTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
-    keepPreviousData: false
+    keepPreviousData: true,
+    refetchOnMount: true
   });
-};
-
-export const useRefreshCategoryList = () => {
-  const queryClient = useQueryClient();
-
-  return () => {
-    queryClient.invalidateQueries(['GET_CATEGORY_LIST']);
-    console.log('Category list cache invalidated'); // Debug log
-  };
 };
 
 export const useQueryCategoryListByParentId = (parentId) => {
