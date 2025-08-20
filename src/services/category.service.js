@@ -1,34 +1,45 @@
 import { API } from '@/utils/API';
 import { showToast, useGetParamsURL } from '@/utils/helper';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export const useQueryCategoryList = () => {
   const paramsURL = useGetParamsURL();
-  const { page = 1 } = paramsURL || {};
+  const { page = 1, keyword } = paramsURL || {};
 
-  const queryKey = ['GET_CATEGORY_LIST', page];
+  const queryKey = ['GET_CATEGORY_LIST', page, name];
 
   return useQuery({
     queryKey,
-    queryFn: () => {
-      console.log('Fetching categories for page:', page);
-
-      return API.request({
+    queryFn: async () => {
+      const response = API.request({
         url: '/api/category/paginated',
         params: {
-          pageSize: 10,
-          pageNumber: Number(page) - 1
+          pageSize: 100,
+          pageNumber: 0,
+          name: keyword
         }
       });
-    },
 
-    staleTime: 0,
-    cacheTime: 0,
-    refetchOnWindowFocus: false,
-    keepPreviousData: false,
-    refetchOnMount: true,
-    enabled: true
+      if (response?.content) {
+        const allContent = response?.content || [];
+
+        const pageSize = 10;
+        const currentPage = Number(page) - 1;
+        const start = currentPage * pageSize;
+        const end = start + pageSize;
+        const pageContent = allContent.slice(start, end);
+
+        return {
+          content: pageContent,
+          totalElements: allContent.length,
+          totalPages: Math.ceil(filteredContent.length / pageSize),
+          number: currentPage,
+          size: pageSize
+        };
+      }
+      return response;
+    }
   });
 };
 

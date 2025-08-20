@@ -1,58 +1,22 @@
-import { ErrorScreen, LoadingScreen } from '@/components/effect-screen';
-import { CreateButton, Pagination } from '@/components/table';
 import { useQueryCategoryList } from '@/services/category.service';
-import { TableStyle } from '@/styles/table.style';
-import { useGetParamsURL } from '@/utils/helper';
 import { WEBSITE_NAME } from '@/utils/resource';
-import { Table, Tag, Empty, Button, Space, Tooltip } from 'antd';
+import { Tag, Select, Button, Table, Pagination, Spin } from 'antd';
 import { Helmet } from 'react-helmet';
 import Action from './action';
+import { Link, useNavigate } from 'react-router-dom';
 
 const CategoryList = () => {
-  const { data: dataQuery = {}, isLoading, error } = useQueryCategoryList();
-  const paramsURL = useGetParamsURL();
-  const { page = 1 } = paramsURL || {};
+  const navigate = useNavigate();
+  const { data, isLoading, error } = useQueryCategoryList();
 
-  const { pageNumber = 0, pageSize = 10 } = dataQuery || {};
-  const { content = [], totalElements = 0 } = dataQuery || {};
-
-  console.log('🔍 Debug - Current page:', page);
-  console.log('🔍 Debug - dataQuery:', dataQuery);
-  console.log('🔍 Debug - content length:', content?.length);
-  console.log('🔍 Debug - totalElements:', totalElements);
-
-  if (error) {
-    return (
-      <div className="text-center py-20">
-        <ErrorScreen message={error?.message || 'Có lỗi xảy ra khi tải danh mục'} />
-        <Button type="primary" onClick={() => window.location.reload()} className="mt-4">
-          Thử lại
-        </Button>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
-
-  if (!content || content.length === 0) {
-    return (
-      <div className="text-center py-20">
-        <Helmet>
-          <title>Danh sách danh mục | {WEBSITE_NAME}</title>
-        </Helmet>
-      </div>
-    );
-  }
+  const { content = [], totalElements = 0, totalPages = 0, number: currentPage = 0 } = data || {};
 
   const columns = [
     {
       title: 'STT',
       key: 'index',
       width: 60,
-      align: 'center',
-      render: (_, __, index) => <span className="text-gray-600 font-medium">{pageNumber * pageSize + index + 1}</span>
+      render: (_, __, index) => index + 1
     },
     {
       title: 'Tên danh mục',
@@ -73,7 +37,6 @@ const CategoryList = () => {
                 </Tag>
               )}
             </div>
-            {record.description && <div className="text-sm text-gray-500 line-clamp-2">{record.description}</div>}
           </div>
         );
       }
@@ -102,38 +65,12 @@ const CategoryList = () => {
       render: (priority) => <Tag color="purple">{priority ?? 0}</Tag>
     },
     {
-      title: 'Số sản phẩm',
-      dataIndex: 'productCount',
-      width: 120,
-      align: 'center',
-      render: (productCount, record) => {
-        const count = productCount ?? 0;
-        return (
-          <Tooltip title={count > 0 ? `${count} sản phẩm` : 'Chưa có sản phẩm'}>
-            <Tag color={count > 0 ? 'green' : 'default'}>{count}</Tag>
-          </Tooltip>
-        );
-      }
-    },
-    {
-      title: 'Trạng thái',
+      title: 'Mô tả',
+      dataIndex: 'description',
       key: 'status',
       width: 120,
-      align: 'center',
-      render: (_, record) => {
-        const hasProducts = record.hasProducts || record.productCount > 0;
-        const hasChildren = record.hasChildren;
-
-        if (hasProducts && hasChildren) {
-          return <Tag color="green">Đầy đủ</Tag>;
-        } else if (hasProducts) {
-          return <Tag color="blue">Có SP</Tag>;
-        } else if (hasChildren) {
-          return <Tag color="orange">Có con</Tag>;
-        } else {
-          return <Tag color="default">Trống</Tag>;
-        }
-      }
+      align: 'left',
+      render: (text) => <div className="text-gray-600 text-sm line-clamp-2 max-w-xs">{text || 'Chưa có mô tả'}</div>
     },
     {
       title: 'Hành động',
@@ -145,41 +82,49 @@ const CategoryList = () => {
   ];
 
   return (
-    <TableStyle>
+    <div>
       <Helmet>
         <title>Danh sách danh mục | {WEBSITE_NAME}</title>
       </Helmet>
 
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-800">Quản lý danh mục</h2>
-          <p className="text-gray-500 text-sm mt-1">
-            Tổng cộng: <span className="font-medium">{totalElements}</span> danh mục
-          </p>
-        </div>
+        <h1 className="text-2xl font-bold text-gray-800">Quản lý danh mục</h1>
+        <Link to="/categories/create">
+          <Button type="primary" size="large">
+            Tạo danh mục
+          </Button>
+        </Link>
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={content}
-        loading={isLoading}
-        pagination={false}
-        rowKey="id"
-        scroll={{ x: 1000 }}
-        size="middle"
-        bordered
-        locale={{
-          emptyText: <Empty description="Không có dữ liệu" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-        }}
-        rowClassName={(record, index) => (index % 2 === 0 ? 'bg-gray-50' : 'bg-white')}
-      />
+      <div className="bg-white rounded-lg shadow">
+        <Table
+          columns={columns}
+          dataSource={content}
+          rowKey="id"
+          loading={isLoading}
+          pagination={false}
+          scroll={{ x: 1200 }}
+          size="middle"
+          bordered
+        />
+      </div>
 
-      {totalElements > pageSize && (
-        <div className="flex justify-end mt-6">
-          <Pagination defaultPage={Number(page)} totalItems={totalElements} pageSize={pageSize} />
+      {totalPages > 1 && (
+        <div className="flex justify-end mt-4">
+          <Pagination
+            current={currentPage + 1}
+            total={totalElements}
+            pageSize={10}
+            showSizeChanger={false}
+            onChange={(newPage) => {
+              const searchParams = new URLSearchParams(window.location.search);
+              searchParams.set('page', newPage.toString());
+              navigate(`/categories?${searchParams.toString()}`);
+            }}
+          />
         </div>
       )}
-    </TableStyle>
+    </div>
   );
 };
 
