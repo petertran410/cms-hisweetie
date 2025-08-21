@@ -40,7 +40,7 @@ const ProductsCreate = () => {
       const {
         title,
         price,
-        categoryIds,
+        categoryId,
         description,
         imagesUrl,
         instruction,
@@ -48,16 +48,21 @@ const ProductsCreate = () => {
         featuredThumbnail,
         general_description
       } = values || {};
+      // const fileList = Array.isArray(imagesUrl) ? imagesUrl : imagesUrl?.fileList || [];
+      // const featuredFileList = Array.isArray(featuredThumbnail) ? featuredThumbnail : featuredThumbnail?.fileList || [];
+      // let finalCategoryId = null;
+      // if (categoryId) {
+      //   if (Array.isArray(categoryId)) {
+      //     finalCategoryId = categoryId[0]?.value ?? categoryId[0] ?? null;
+      //   } else {
+      //     finalCategoryId = categoryId.value ?? categoryId ?? null;
+      //   }
+      // }
+
+      const extractedCategoryId = categoryId?.value ?? categoryId ?? null;
+
       const fileList = Array.isArray(imagesUrl) ? imagesUrl : imagesUrl?.fileList || [];
       const featuredFileList = Array.isArray(featuredThumbnail) ? featuredThumbnail : featuredThumbnail?.fileList || [];
-      let finalCategoryId = null;
-      if (categoryIds) {
-        if (Array.isArray(categoryIds)) {
-          finalCategoryId = categoryIds[0]?.value ?? categoryIds[0] ?? null;
-        } else {
-          finalCategoryId = categoryIds.value ?? categoryIds ?? null;
-        }
-      }
 
       Promise.all(
         [...fileList, ...featuredFileList].map(async (item) => {
@@ -105,24 +110,27 @@ const ProductsCreate = () => {
             featuredThumbnail: isFeatured ? featuredImageUrl : null
           };
 
-          if (categoryIds?.value) {
+          if (categoryId?.value) {
             data.category_id = [categoryId.value];
           }
 
           id ? updateMutate(data) : createMutate(data);
         })
         .then((uploadResults) => {
+          // ✅ Clean data structure
           const productData = {
             title,
-            price: Number(price) || 0,
-            categoryIds: finalCategoryId ? [finalCategoryId] : [], // ✅ Send as array
+            price: Number(price) || null,
             description,
             general_description,
             instruction,
             is_featured: isFeatured || false,
-            images_url: uploadResults.images,
-            featured_thumbnail: uploadResults.featuredImage
+            images_url: uploadResults.filter(Boolean),
+            featured_thumbnail: featuredFileList.length ? uploadResults[uploadResults.length - 1] : null,
+            categoryIds: extractedCategoryId ? [extractedCategoryId] : []
           };
+
+          console.log('🚀 Update request data:', productData);
 
           if (id) {
             updateMutate(productData);
@@ -130,8 +138,11 @@ const ProductsCreate = () => {
             createMutate(productData);
           }
         })
-        .catch((e) => {
-          showToast({ type: 'error', message: `Tải ảnh sản phẩm thất bại. ${e.message}` });
+        .catch((error) => {
+          showToast({
+            type: 'error',
+            message: `Upload failed: ${error.message}`
+          });
         });
     },
     [createMutate, updateMutate, id]
