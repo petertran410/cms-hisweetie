@@ -13,7 +13,16 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Table, Tag, Button, Card, Statistic, Space, Tooltip, Alert, Switch, message } from 'antd';
 import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
-import { FaCheck, FaSync, FaInfoCircle, FaExclamationTriangle, FaTools, FaEye, FaEyeSlash } from 'react-icons/fa';
+import {
+  FaCheck,
+  FaSync,
+  FaInfoCircle,
+  FaExclamationTriangle,
+  FaTools,
+  FaEye,
+  FaEyeSlash,
+  FaTag
+} from 'react-icons/fa';
 import Action from './action';
 import TableFilter from './filter';
 import ImportProduct from './import-product';
@@ -161,12 +170,20 @@ const ProductsList = () => {
     },
     {
       title: 'Danh mục',
-      dataIndex: 'ofCategories',
+      dataIndex: 'category',
       key: 'categories',
       width: 180,
-      render: (text, record) => {
-        const kiotVietCategory = record.kiotViet?.category?.name;
+      render: (category, record) => {
+        if (category && category.name) {
+          return (
+            <Tag color="green" className="text-xs">
+              <FaTag className="inline mr-1" />
+              {category.name}
+            </Tag>
+          );
+        }
 
+        const kiotVietCategory = record.kiotViet?.category?.name;
         if (kiotVietCategory) {
           return (
             <Tag color="orange" className="text-xs">

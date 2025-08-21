@@ -42,13 +42,13 @@ const CategoryList = () => {
     },
     {
       title: 'Danh mục cha',
-      dataIndex: 'parent_id',
+      dataIndex: 'parent_name',
       width: 150,
-      render: (parentId, record) => {
-        if (parentId) {
+      render: (parentName, record) => {
+        if (parentName) {
           return (
-            <Tooltip title={`ID danh mục cha: ${parentId}`}>
-              <Tag color="orange">ID: {parentId}</Tag>
+            <Tooltip title={`Danh mục cha: ${parentName}`}>
+              <Tag color="orange">{parentName}</Tag>
             </Tooltip>
           );
         } else {
