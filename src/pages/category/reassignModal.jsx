@@ -1,34 +1,72 @@
-// ✅ TẠO FILE MỚI: src/components/category/ReassignModal.jsx
-import { Modal, Select, Button, Typography, Divider } from 'antd';
-import { FormSelectQuery } from '@/components/form';
-import { useState } from 'react';
-
-const { Text, Title } = Typography;
+// ✅ BACKUP SOLUTION: Dùng Select thuần của Antd
+import { Modal, Button, Typography, Divider, Select } from 'antd';
+import { useState, useEffect } from 'react';
+import { API } from '../../utils/API'; // Import API service của bạn
 
 const ReassignModal = ({ visible, onCancel, onConfirm, category, loading = false }) => {
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [hasUserMadeChoice, setHasUserMadeChoice] = useState(false);
+  const [categoryOptions, setCategoryOptions] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+
+  // ✅ Fetch categories khi modal mở
+  useEffect(() => {
+    if (visible) {
+      fetchCategories();
+    }
+  }, [visible]);
+
+  const fetchCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const response = await API.request({
+        url: '/api/category/for-cms',
+        method: 'GET'
+      });
+
+      const categories = response?.data || [];
+
+      // Filter out current category
+      const filteredCategories = categories.filter((cat) => cat.id !== category?.id);
+
+      setCategoryOptions(
+        filteredCategories.map((cat) => ({
+          label: cat.displayName || cat.name,
+          value: cat.id
+        }))
+      );
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
+  const handleCategoryChange = (value) => {
+    console.log('Category changed:', value); // ✅ DEBUG LOG
+    setSelectedCategoryId(value);
+    setHasUserMadeChoice(true);
+  };
 
   const handleConfirm = () => {
-    if (selectedCategoryId) {
-      onConfirm(selectedCategoryId);
-    }
+    console.log('Confirming with category:', selectedCategoryId); // ✅ DEBUG LOG
+    onConfirm(selectedCategoryId);
+  };
+
+  const handleCancel = () => {
+    setSelectedCategoryId(null);
+    setHasUserMadeChoice(false);
+    onCancel();
   };
 
   return (
     <Modal
-      title={
-        <div>
-          <Title level={4}>Chuyển sản phẩm trước khi xóa</Title>
-          <Text type="secondary">
-            Danh mục "{category?.name}" có {category?.productCount} sản phẩm
-          </Text>
-        </div>
-      }
+      title="Chuyển sản phẩm trước khi xóa"
       open={visible}
-      onCancel={onCancel}
+      onCancel={handleCancel}
       width={600}
       footer={[
-        <Button key="cancel" onClick={onCancel}>
+        <Button key="cancel" onClick={handleCancel}>
           Hủy
         </Button>,
         <Button
@@ -36,45 +74,37 @@ const ReassignModal = ({ visible, onCancel, onConfirm, category, loading = false
           type="primary"
           danger
           onClick={handleConfirm}
-          disabled={!selectedCategoryId}
+          disabled={!hasUserMadeChoice}
           loading={loading}
         >
           Chuyển sản phẩm và Xóa danh mục
         </Button>
       ]}
     >
-      <Divider />
-
       <div className="space-y-4">
+        <p>
+          <strong>Danh mục:</strong> "{category?.name}" ({category?.productCount} sản phẩm)
+        </p>
+
         <div>
-          <Text strong>Chọn danh mục đích:</Text>
-          <p className="text-sm text-gray-500 mt-1">
-            Tất cả {category?.productCount} sản phẩm sẽ được chuyển sang danh mục này
-          </p>
+          <label className="block mb-2 font-medium">Chọn danh mục đích:</label>
+          <Select
+            value={selectedCategoryId}
+            onChange={handleCategoryChange}
+            allowClear
+            placeholder="Chọn danh mục (hoặc để trống = không phân loại)"
+            className="w-full"
+            loading={loadingCategories}
+            options={categoryOptions}
+          />
         </div>
 
-        <FormSelectQuery
-          value={selectedCategoryId}
-          onChange={setSelectedCategoryId}
-          allowClear
-          labelKey="displayName"
-          valueKey="id"
-          placeholder="Chọn danh mục đích (hoặc để trống = không phân loại)"
-          request={{
-            url: '/api/category/for-cms'
-          }}
-          filterOption={(inputValue, option) => {
-            // Loại bỏ category hiện tại khỏi danh sách
-            return option.id !== category?.id;
-          }}
-        />
-
-        <div className="bg-orange-50 p-3 rounded border border-orange-200">
-          <Text type="warning" className="text-sm">
-            ⚠️ <strong>Lưu ý:</strong> Hành động này không thể hoàn tác. Danh mục sẽ bị xóa vĩnh viễn sau khi chuyển sản
-            phẩm.
-          </Text>
-        </div>
+        {hasUserMadeChoice && (
+          <div className="bg-blue-50 p-3 rounded">
+            <strong>Lựa chọn:</strong>{' '}
+            {selectedCategoryId ? `Chuyển sang danh mục được chọn` : `Chuyển về "Không phân loại"`}
+          </div>
+        )}
       </div>
     </Modal>
   );
