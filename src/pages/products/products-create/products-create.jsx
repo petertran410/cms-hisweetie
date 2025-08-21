@@ -117,7 +117,6 @@ const ProductsCreate = () => {
           id ? updateMutate(data) : createMutate(data);
         })
         .then((uploadResults) => {
-          // ✅ Clean data structure
           const productData = {
             title,
             price: Number(price) || null,

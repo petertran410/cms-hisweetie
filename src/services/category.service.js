@@ -191,3 +191,37 @@ export const useSortCategory = () => {
     }
   });
 };
+
+export const useReassignProducts = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ fromCategoryId, toCategoryId }) => {
+      const response = await API.request({
+        url: `/api/category/reassign-products`,
+        method: 'POST',
+        params: {
+          fromCategoryId,
+          toCategoryId: toCategoryId || null
+        }
+      });
+
+      return response?.data || {};
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(['GET_CATEGORY_LIST']);
+      queryClient.invalidateQueries(['GET_CATEGORIES_FOR_DROPDOWN']);
+
+      showToast({
+        type: 'success',
+        message: `Đã chuyển ${data.reassignedCount || 0} sản phẩm thành công`
+      });
+    },
+    onError: (error) => {
+      showToast({
+        type: 'error',
+        message: `Chuyển sản phẩm thất bại. ${error.message}`
+      });
+    }
+  });
+};
