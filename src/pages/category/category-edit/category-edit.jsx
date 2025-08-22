@@ -31,10 +31,18 @@ const CategoryEdit = () => {
 
   useEffect(() => {
     if (categoryData) {
+      const parentValue =
+        categoryData.parent_id && categoryData.parent_name
+          ? {
+              label: categoryData.parent_name,
+              value: categoryData.parent_id
+            }
+          : null;
+
       form.setFieldsValue({
         name: categoryData.name,
         description: categoryData.description,
-        parent_id: categoryData.parent_id,
+        parent_id: parentValue,
         priority: categoryData.priority || 0
       });
     }
@@ -81,6 +89,9 @@ const CategoryEdit = () => {
             url: '/api/category/for-cms'
           }}
           placeholder="Chọn danh mục cha (để trống nếu là danh mục gốc)"
+          filterOption={(inputValue, option) => {
+            return option.id !== parseInt(id);
+          }}
         />
 
         <Form.Item
