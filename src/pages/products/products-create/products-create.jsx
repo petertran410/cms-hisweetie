@@ -21,6 +21,8 @@ const ProductsCreate = () => {
   const [currentPrice, setCurrentPrice] = useState(0);
   const [isFeaturedProduct, setIsFeaturedProduct] = useState(false);
 
+  console.log(productsDetail);
+
   const {
     title,
     description,
@@ -32,6 +34,7 @@ const ProductsCreate = () => {
     isFeatured,
     featuredThumbnail,
     category_id,
+    category,
     kiotViet
   } = productsDetail || {};
 
@@ -48,16 +51,6 @@ const ProductsCreate = () => {
         featuredThumbnail,
         general_description
       } = values || {};
-      // const fileList = Array.isArray(imagesUrl) ? imagesUrl : imagesUrl?.fileList || [];
-      // const featuredFileList = Array.isArray(featuredThumbnail) ? featuredThumbnail : featuredThumbnail?.fileList || [];
-      // let finalCategoryId = null;
-      // if (categoryId) {
-      //   if (Array.isArray(categoryId)) {
-      //     finalCategoryId = categoryId[0]?.value ?? categoryId[0] ?? null;
-      //   } else {
-      //     finalCategoryId = categoryId.value ?? categoryId ?? null;
-      //   }
-      // }
 
       const extractedCategoryId = categoryId?.value ?? categoryId ?? null;
 
@@ -148,6 +141,42 @@ const ProductsCreate = () => {
   );
 
   useEffect(() => {
+    if (productsDetail && !loadingDetail) {
+      const categoryValue = category.name
+        ? {
+            label: category.name,
+            value: category.id
+          }
+        : null;
+
+      form.setFieldsValue({
+        title: title,
+        general_description: general_description,
+        categoryId: categoryValue,
+        price: price,
+        isFeatured: isFeatured,
+        description: description,
+        instruction: instruction
+      });
+
+      setCurrentPrice(price || 0);
+      setIsFeaturedProduct(isFeatured || false);
+    }
+  }, [
+    productsDetail,
+    loadingDetail,
+    form,
+    title,
+    general_description,
+    category_id,
+    ofCategories,
+    price,
+    isFeatured,
+    description,
+    instruction
+  ]);
+
+  useEffect(() => {
     if (id && productsDetail) {
       setCurrentPrice(productsDetail?.price);
     }
@@ -222,16 +251,19 @@ const ProductsCreate = () => {
         </Form.Item>
 
         <FormSelectQuery
-          name="categoryId"
+          allowClear
           label="Danh mục"
-          placeholder="Chọn danh mục..."
           labelKey="displayName"
           valueKey="id"
+          name="categoryId"
           request={{
-            url: '/api/category/dropdown'
+            url: '/api/category/for-cms'
           }}
+          placeholder="Chọn danh mục sản phẩm..."
           initialValue={category_id}
-          allowClear
+          // fixedOptions={(inputValue, option) => {
+          //   return option.id !== parseInt(id);
+          // }}
         />
 
         <Form.Item
