@@ -1,7 +1,6 @@
-// ✅ BACKUP SOLUTION: Dùng Select thuần của Antd
 import { Modal, Button, Typography, Divider, Select } from 'antd';
 import { useState, useEffect } from 'react';
-import { API } from '../../utils/API'; // Import API service của bạn
+import { API } from '../../utils/API';
 
 const ReassignModal = ({ visible, onCancel, onConfirm, category, loading = false }) => {
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
@@ -9,7 +8,6 @@ const ReassignModal = ({ visible, onCancel, onConfirm, category, loading = false
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
 
-  // ✅ Fetch categories khi modal mở
   useEffect(() => {
     if (visible) {
       fetchCategories();
