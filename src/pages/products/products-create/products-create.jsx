@@ -142,12 +142,13 @@ const ProductsCreate = () => {
 
   useEffect(() => {
     if (productsDetail && !loadingDetail) {
-      const categoryValue = category.name
-        ? {
-            label: category.name,
-            value: category.id
-          }
-        : null;
+      const categoryValue =
+        category && category.name
+          ? {
+              label: category.name,
+              value: category.id
+            }
+          : null;
 
       form.setFieldsValue({
         title: title,
@@ -173,7 +174,8 @@ const ProductsCreate = () => {
     price,
     isFeatured,
     description,
-    instruction
+    instruction,
+    category
   ]);
 
   useEffect(() => {
