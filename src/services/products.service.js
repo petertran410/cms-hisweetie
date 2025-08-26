@@ -1,6 +1,6 @@
 import { API } from '@/utils/API';
 import { showToast } from '@/utils/helper';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -65,27 +65,32 @@ export const useCreateProducts = () => {
 
 export const useUpdateProducts = (id) => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: (params) => {
-      console.log('🚀 Update request data:', params);
+      console.log('Update request data:', params);
       return API.request({
         url: `/api/product/${id}`,
         method: 'PATCH',
         params
       });
     },
-    oonSuccess: (data) => {
+    onSuccess: (data) => {
       showToast({
         type: 'success',
-        message: '✅ Cập nhật sản phẩm thành công!',
+        message: 'Cập nhật sản phẩm thành công!',
         duration: 3000
       });
+
+      queryClient.invalidateQueries({ queryKey: ['GET_PRODUCTS_LIST'] });
+
+      navigate('/products');
     },
     onError: (e) => {
       showToast({
         type: 'error',
-        message: `❌ Cập nhật thất bại: ${e.message}`,
+        message: `Cập nhật thất bại: ${e.message}`,
         duration: 5000
       });
     }
