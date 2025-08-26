@@ -243,10 +243,10 @@ const ProductsCreate = () => {
         </Form.Item>
 
         <Form.Item
-          label={<p className="font-bold text-md">Mô tả chung</p>}
+          label={<p className="font-bold text-md">Meta description</p>}
           name="general_description"
           initialValue={general_description}
-          rules={[{ required: false, message: 'Vui lòng nhập mô tả chung' }]}
+          rules={[{ required: false, message: 'Vui lòng nhập meta description' }]}
           className="mb-10"
         >
           <Input.TextArea rows={2} className="py-2" />
@@ -331,7 +331,7 @@ const ProductsCreate = () => {
         )}
 
         <Form.Item
-          label={<p className="font-bold text-md">Thành phần nguyên liệu</p>}
+          label={<p className="font-bold text-md">Mô tả chung (Nằm ngay dưới title)</p>}
           name="description"
           initialValue={description}
           className="mb-10"
@@ -342,7 +342,7 @@ const ProductsCreate = () => {
         </Form.Item>
 
         <Form.Item
-          label={<p className="font-bold text-md">Hướng dẫn sử dụng</p>}
+          label={<p className="font-bold text-md">Thông tin sản phẩm (Thông tin dài)</p>}
           name="instruction"
           initialValue={instruction}
           className="mb-10"
