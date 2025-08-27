@@ -75,6 +75,10 @@ const CategoryEdit = () => {
           <Input className="py-2" placeholder="Nhập tên danh mục" />
         </Form.Item>
 
+        <Form.Item label={<p className="font-bold text-md">Title Meta</p>} name="title_meta">
+          <TextArea className="py-2" placeholder="Nhập mô tả title meta cho danh mục (không bắt buộc)" rows={4} />
+        </Form.Item>
+
         <Form.Item label={<p className="font-bold text-md">Mô tả danh mục</p>} name="description">
           <TextArea className="py-2" placeholder="Nhập mô tả cho danh mục" rows={4} />
         </Form.Item>
