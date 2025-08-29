@@ -41,6 +41,7 @@ const CategoryEdit = () => {
 
       form.setFieldsValue({
         name: categoryData.name,
+        title_meta: categoryData.title_meta,
         description: categoryData.description,
         parent_id: parentValue,
         priority: categoryData.priority || 0
