@@ -175,7 +175,7 @@ export const useSyncProducts = () => {
   return useMutation({
     mutationFn: () =>
       API.request({
-        url: '/api/product/kiotviet/sync/products',
+        url: '/api/product/products',
         method: 'POST'
       }),
     onSuccess: (data) => {

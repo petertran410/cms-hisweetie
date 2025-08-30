@@ -50,7 +50,6 @@ const AppRoute = () => {
             <Route path=":id/detail" element={<BlogCultureCreate />} />
           </Route>
 
-          {/* THÊM PAGES ROUTES */}
           <Route path="pages">
             <Route path="" element={<PagesList />} />
             <Route path="create" element={<PagesCreate />} />
@@ -84,11 +83,11 @@ const AppRoute = () => {
             <Route path=":id/edit" element={<ProductsCreate />} />
           </Route>
 
-          <Route path="recipes">
+          {/* <Route path="recipes">
             <Route path="" element={<RecipeList />} />
             <Route path="create" element={<RecipeCreate />} />
             <Route path=":id/edit" element={<RecipeCreate />} />
-          </Route>
+          </Route> */}
 
           <Route path="*" element={<NotFound404 />} />
         </Route>

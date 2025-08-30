@@ -18,9 +18,9 @@ export const getMenuList = (userRoles) => {
   const currentWebsite = localStorage.getItem('website') || 'lermao';
 
   const menuItemsSuperAdmin = [
-    getMenuItem('Đơn hàng', 'orders', <FaMoneyBill />),
+    // getMenuItem('Đơn hàng', 'orders', <FaMoneyBill />),
     getMenuItem('Sản phẩm', 'products', <FaProductHunt />),
-    getMenuItem('Công thức', 'recipes', <FaAlignLeft />),
+    // getMenuItem('Công thức', 'recipes', <FaAlignLeft />),
     getMenuItem('Danh mục', 'categories', <BiSolidCategory />),
     getMenuItem('Người dùng', 'users', <FaUserFriends />),
     getMenuItem('Tin tức', 'news', <FaNewspaper />),
@@ -28,9 +28,9 @@ export const getMenuList = (userRoles) => {
   ];
 
   const menuItemsAdmin = [
-    getMenuItem('Đơn hàng', 'orders', <FaMoneyBill />),
+    // getMenuItem('Đơn hàng', 'orders', <FaMoneyBill />),
     getMenuItem('Sản phẩm', 'products', <FaProductHunt />),
-    getMenuItem('Công thức', 'recipes', <FaAlignLeft />),
+    // getMenuItem('Công thức', 'recipes', <FaAlignLeft />),
     getMenuItem('Danh mục', 'categories', <BiSolidCategory />),
     getMenuItem('Người dùng', 'users', <FaUserFriends />),
     getMenuItem('Tin tức', 'news', <FaNewspaper />),
@@ -44,8 +44,8 @@ export const getMenuList = (userRoles) => {
     return [
       ...menuItemsSuperAdmin,
       getMenuItem('Việc làm', 'recruitment', <FaFileAlt />),
-      getMenuItem('Bài viết văn hoá', 'blog-culture', <FaFileArchive />),
-      getMenuItem('Quản lý trang', 'pages', <FaFilePen />) // THÊM MENU PAGES
+      getMenuItem('Bài viết văn hoá', 'blog-culture', <FaFileArchive />)
+      // getMenuItem('Quản lý trang', 'pages', <FaFilePen />)
     ];
   } else {
     if (currentWebsite === 'lermao') {
@@ -54,8 +54,8 @@ export const getMenuList = (userRoles) => {
     return [
       ...menuItemsAdmin,
       getMenuItem('Việc làm', 'recruitment', <FaFileAlt />),
-      getMenuItem('Bài viết văn hoá', 'blog-culture', <FaFileArchive />),
-      getMenuItem('Quản lý trang', 'pages', <FaFilePen />) // THÊM MENU PAGES
+      getMenuItem('Bài viết văn hoá', 'blog-culture', <FaFileArchive />)
+      // getMenuItem('Quản lý trang', 'pages', <FaFilePen />)
     ];
   }
 };
@@ -72,28 +72,28 @@ export const MENU_ROUTES = [
     ],
     section: 'Bảng điều khiển'
   },
-  {
-    key: 'orders',
-    route: '/orders',
-    breadcrumb: [
-      {
-        title: 'Đơn hàng',
-        route: '/orders'
-      }
-    ],
-    section: 'Đơn hàng'
-  },
-  {
-    key: 'completed-orders',
-    route: '/completed-orders',
-    breadcrumb: [
-      {
-        title: 'Đơn hàng đã hoàn thành',
-        route: '/completed-orders'
-      }
-    ],
-    section: 'Đơn hàng đã hoàn thành'
-  },
+  // {
+  //   key: 'orders',
+  //   route: '/orders',
+  //   breadcrumb: [
+  //     {
+  //       title: 'Đơn hàng',
+  //       route: '/orders'
+  //     }
+  //   ],
+  //   section: 'Đơn hàng'
+  // },
+  // {
+  //   key: 'completed-orders',
+  //   route: '/completed-orders',
+  //   breadcrumb: [
+  //     {
+  //       title: 'Đơn hàng đã hoàn thành',
+  //       route: '/completed-orders'
+  //     }
+  //   ],
+  //   section: 'Đơn hàng đã hoàn thành'
+  // },
   {
     key: 'products',
     route: '/products',
@@ -240,47 +240,47 @@ export const MENU_ROUTES = [
     ],
     section: 'Tạo việc làm'
   },
-  {
-    key: 'recipes',
-    route: '/recipes',
-    breadcrumb: [
-      {
-        title: 'Công thức',
-        route: '/recipes'
-      }
-    ],
-    section: 'Danh sách công thức'
-  },
-  {
-    key: 'recipes/create',
-    route: '/recipes/create',
-    breadcrumb: [
-      {
-        title: 'Công thức',
-        route: '/recipes'
-      },
-      {
-        title: 'Tạo công thức',
-        route: '/recipes/create'
-      }
-    ],
-    section: 'Tạo công thức'
-  },
-  {
-    key: 'recipes/:id/edit',
-    route: '/recipes/:id/edit',
-    breadcrumb: [
-      {
-        title: 'Công thức',
-        route: '/recipes'
-      },
-      {
-        title: 'Cập nhật công thức',
-        route: '/recipes/:id/edit'
-      }
-    ],
-    section: 'Cập nhật công thức'
-  },
+  // {
+  //   key: 'recipes',
+  //   route: '/recipes',
+  //   breadcrumb: [
+  //     {
+  //       title: 'Công thức',
+  //       route: '/recipes'
+  //     }
+  //   ],
+  //   section: 'Danh sách công thức'
+  // },
+  // {
+  //   key: 'recipes/create',
+  //   route: '/recipes/create',
+  //   breadcrumb: [
+  //     {
+  //       title: 'Công thức',
+  //       route: '/recipes'
+  //     },
+  //     {
+  //       title: 'Tạo công thức',
+  //       route: '/recipes/create'
+  //     }
+  //   ],
+  //   section: 'Tạo công thức'
+  // },
+  // {
+  //   key: 'recipes/:id/edit',
+  //   route: '/recipes/:id/edit',
+  //   breadcrumb: [
+  //     {
+  //       title: 'Công thức',
+  //       route: '/recipes'
+  //     },
+  //     {
+  //       title: 'Cập nhật công thức',
+  //       route: '/recipes/:id/edit'
+  //     }
+  //   ],
+  //   section: 'Cập nhật công thức'
+  // },
   {
     key: 'backgrounds',
     route: '/backgrounds',
