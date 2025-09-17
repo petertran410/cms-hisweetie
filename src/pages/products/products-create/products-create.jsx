@@ -25,6 +25,7 @@ const ProductsCreate = () => {
 
   const {
     title,
+    title_meta,
     description,
     imagesUrl,
     price,
@@ -42,6 +43,7 @@ const ProductsCreate = () => {
     (values) => {
       const {
         title,
+        title_meta,
         price,
         categoryId,
         description,
@@ -93,6 +95,7 @@ const ProductsCreate = () => {
 
           const data = {
             title,
+            title_meta,
             price: Number(price) && Number(price) > 0 ? price : null,
             description,
             imagesUrl,
@@ -112,6 +115,7 @@ const ProductsCreate = () => {
         .then((uploadResults) => {
           const productData = {
             title,
+            title_meta,
             price: Number(price) || null,
             description,
             general_description,
@@ -152,6 +156,7 @@ const ProductsCreate = () => {
 
       form.setFieldsValue({
         title: title,
+        title_meta: title_meta,
         general_description: general_description,
         categoryId: categoryValue,
         price: price,
@@ -168,6 +173,7 @@ const ProductsCreate = () => {
     loadingDetail,
     form,
     title,
+    title_meta,
     general_description,
     category_id,
     ofCategories,
@@ -237,6 +243,16 @@ const ProductsCreate = () => {
           name="title"
           initialValue={title}
           rules={[{ required: true, message: 'Vui lòng nhập tên sản phẩm' }]}
+          className="mb-10"
+        >
+          <Input className="py-2" />
+        </Form.Item>
+
+        <Form.Item
+          label={<p className="font-bold text-md">Title Meta</p>}
+          name="title_meta"
+          initialValue={title_meta}
+          rules={[{ required: true, message: 'Vui lòng nhập title meta sản phẩm' }]}
           className="mb-10"
         >
           <Input className="py-2" />
