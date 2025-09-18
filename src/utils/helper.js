@@ -276,3 +276,25 @@ export const useMediaQuery = (query, initialValue = true, getInitialValueInEffec
 
   return matches;
 };
+
+export const sanitizeEditorContent = (htmlContent) => {
+  if (!htmlContent) return '';
+
+  return htmlContent
+    .replace(/>\s+</g, '><') // Remove whitespace between tags
+    .replace(/(<\/p>)\s+(<img)/g, '$1$2') // Remove space between p and img
+    .replace(/(<\/img>)\s+(<p)/g, '$1$2') // Remove space between img and p
+    .replace(/(<figure[^>]*>)\s+/g, '$1') // Remove space after figure opening
+    .replace(/\s+(<\/figure>)/g, '$1') // Remove space before figure closing
+    .replace(/(<\/div>)\s+(<img)/g, '$1$2') // Remove space between div and img
+    .replace(/(<\/img>)\s+(<div)/g, '$1$2') // Remove space between img and div
+    .trim();
+};
+
+export const loadEditorContent = (htmlContent) => {
+  if (!htmlContent) return '';
+
+  return htmlContent
+    .replace(/>\s+</g, '><') // Normalize all spacing
+    .trim();
+};

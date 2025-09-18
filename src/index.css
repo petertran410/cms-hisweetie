@@ -7,3 +7,23 @@
   font-weight: 400;
   font-size: 14px;
 }
+
+.ProseMirror img {
+  display: inline-block !important;
+  vertical-align: top !important;
+  margin: 0 !important;
+}
+
+.ProseMirror p + img,
+.ProseMirror img + p {
+  margin-top: 0 !important;
+}
+
+/* Loại bỏ khoảng trắng giữa các element */
+.ProseMirror > * + * {
+  margin-top: 0.5em !important;
+}
+
+.ProseMirror figure {
+  margin: 0.5em 0 !important;
+}

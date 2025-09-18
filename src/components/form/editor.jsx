@@ -34,6 +34,29 @@ import 'reactjs-tiptap-editor/style.css';
 import FigureImage from '@/extensions/FigureImage';
 import ImageCaptionModal from '@/components/modals/ImageCaptionModal';
 
+// THÊM: Helper functions trực tiếp trong file
+const sanitizeEditorContent = (htmlContent) => {
+  if (!htmlContent) return '';
+
+  return htmlContent
+    .replace(/>\s+</g, '><') // Remove whitespace between tags
+    .replace(/(<\/p>)\s+(<img)/g, '$1$2') // Remove space between p and img
+    .replace(/(<\/img>)\s+(<p)/g, '$1$2') // Remove space between img and p
+    .replace(/(<figure[^>]*>)\s+/g, '$1') // Remove space after figure opening
+    .replace(/\s+(<\/figure>)/g, '$1') // Remove space before figure closing
+    .replace(/(<\/div>)\s+(<img)/g, '$1$2') // Remove space between div and img
+    .replace(/(<\/img>)\s+(<div)/g, '$1$2') // Remove space between img and div
+    .trim();
+};
+
+const loadEditorContent = (htmlContent) => {
+  if (!htmlContent) return '';
+
+  return htmlContent
+    .replace(/>\s+</g, '><') // Normalize all spacing
+    .trim();
+};
+
 // Tạo extension FigureImage mới
 const customFigureImage = FigureImage.configure({
   uploadImage: async (file) => {
@@ -49,12 +72,9 @@ const customFigureImage = FigureImage.configure({
 
 const extensions = [
   BaseKit.configure({
-    // Show placeholder
     placeholder: {
       showOnlyCurrent: true
     },
-
-    // Character count
     characterCount: {
       limit: 50_000
     }
@@ -62,18 +82,19 @@ const extensions = [
   History,
   SearchAndReplace,
   Clear,
-  // FontFamily,
-  Heading.configure({ spacer: true }),
+  Heading.configure({
+    spacer: false
+  }),
   FontSize,
   Bold,
   Italic,
   Underline,
   Strike,
-  Color.configure({ spacer: true }),
+  Color.configure({ spacer: false }),
   Highlight,
   BulletList,
   OrderedList,
-  TextAlign.configure({ types: ['heading', 'paragraph'], spacer: true }),
+  TextAlign.configure({ types: ['heading', 'paragraph'], spacer: false }),
   Indent,
   LineHeight,
   Link.configure({
@@ -81,7 +102,6 @@ const extensions = [
       rel: 'noopener'
     }
   }),
-  // Vẫn giữ lại extension Image để tương thích ngược
   Image.configure({
     upload: (file) => {
       return uploadFileCdn({ file }).then((url) => {
@@ -89,8 +109,10 @@ const extensions = [
       });
     },
     allowBase64: true,
-    inline: false,
-    HTMLAttributes: {},
+    inline: true,
+    HTMLAttributes: {
+      style: 'display: inline-block; vertical-align: top;'
+    },
     uploadWithAlt: true,
     interfaceLanguage: {
       uploadImage: 'Tải ảnh lên',
@@ -101,7 +123,6 @@ const extensions = [
       submit: 'Chèn ảnh'
     }
   }),
-  // Thêm extension FigureImage mới
   customFigureImage,
   Blockquote,
   SlashCommand,
@@ -128,14 +149,16 @@ const Editor = (props) => {
   const editorRef = useRef(null);
 
   const onChangeContent = (value) => {
-    setContent(value);
-    onChange && onChange(value);
+    const sanitizedContent = sanitizeEditorContent(value);
+    setContent(sanitizedContent);
+    onChange && onChange(sanitizedContent);
   };
 
   useEffect(() => {
     if (defaultValue) {
-      setContent(defaultValue);
-      setCreateTableOfContents(defaultValue.startsWith('<toc></toc>'));
+      const processedContent = loadEditorContent(defaultValue);
+      setContent(processedContent);
+      setCreateTableOfContents(processedContent.startsWith('<toc></toc>'));
     }
   }, [defaultValue]);
 
@@ -145,7 +168,6 @@ const Editor = (props) => {
     }
   }, [getCreateTableOfContents, createTableOfContents]);
 
-  // Xử lý sự kiện chỉnh sửa hình ảnh
   useEffect(() => {
     const handleEditFigureImage = (event) => {
       const { node, pos } = event.detail;
@@ -161,7 +183,6 @@ const Editor = (props) => {
     };
   }, []);
 
-  // Xử lý khi user lưu thông tin caption
   const handleSaveImageCaption = (values) => {
     if (editorRef.current && selectedImageNode && selectedImagePos !== null) {
       const { editor } = editorRef.current;
@@ -181,7 +202,6 @@ const Editor = (props) => {
     }
   };
 
-  // Thêm button vào toolbar để chèn hình ảnh có caption
   const customMenuItems = [
     {
       name: 'insertFigureImage',
@@ -200,7 +220,6 @@ const Editor = (props) => {
               const url = await uploadFileCdn({ file });
 
               if (url) {
-                // Mở modal để nhập caption sau khi upload thành công
                 setSelectedImageNode({ attrs: { src: url } });
                 setShowImageCaptionModal(true);
               }
@@ -214,6 +233,14 @@ const Editor = (props) => {
       }
     }
   ];
+
+  const handleModalOk = () => {
+    setKey((prev) => prev + 1);
+    const cleanContent = sanitizeEditorContent(contentModalHtml?.trim());
+    setContent(cleanContent);
+    setShowModalHtml(false);
+    onChange && onChange(cleanContent);
+  };
 
   locale.setLang('vi');
 
@@ -265,12 +292,7 @@ const Editor = (props) => {
         cancelText="Huỷ bỏ"
         okText="Xác nhận"
         width={1000}
-        onOk={() => {
-          setKey((prev) => prev + 1);
-          setContent(contentModalHtml?.trim());
-          setShowModalHtml(false);
-          onChange && onChange(contentModalHtml?.trim());
-        }}
+        onOk={handleModalOk}
         onCancel={() => {
           setShowModalHtml(false);
           setContentModalHtml();
@@ -286,7 +308,6 @@ const Editor = (props) => {
         </div>
       </Modal>
 
-      {/* Modal chỉnh sửa caption */}
       <ImageCaptionModal
         visible={showImageCaptionModal}
         onCancel={() => {
@@ -295,7 +316,6 @@ const Editor = (props) => {
         }}
         onSave={(values) => {
           if (selectedImageNode && selectedImageNode.attrs && selectedImageNode.attrs.src) {
-            // Nếu đang tạo mới (upload) thì chèn vào editor
             if (selectedImagePos === null) {
               if (editorRef.current) {
                 const { editor } = editorRef.current;
@@ -311,7 +331,6 @@ const Editor = (props) => {
                   .run();
               }
             } else {
-              // Nếu đang cập nhật caption cho hình ảnh đã có
               handleSaveImageCaption(values);
             }
           }
