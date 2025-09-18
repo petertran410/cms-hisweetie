@@ -123,30 +123,43 @@ const extensions = [
 
 const Editor = (props) => {
   const { defaultValue, disabled, onChange, showCreateTableOfContents, getCreateTableOfContents } = props;
-  const [content, setContent] = useState(defaultValue || ''); // FIX: Khôi phục defaultValue
+  const [content, setContent] = useState(defaultValue || '');
   const [contentModalHtml, setContentModalHtml] = useState();
   const [showModalHtml, setShowModalHtml] = useState(false);
   const [key, setKey] = useState(0);
   const [createTableOfContents, setCreateTableOfContents] = useState(false);
 
-  // Thêm state cho modal caption
+  const isInitialMount = useRef(true);
+  const isSettingContent = useRef(false);
+
   const [showImageCaptionModal, setShowImageCaptionModal] = useState(false);
   const [selectedImageNode, setSelectedImageNode] = useState(null);
   const [selectedImagePos, setSelectedImagePos] = useState(null);
   const editorRef = useRef(null);
 
   const onChangeContent = (value) => {
-    // FIX: Đơn giản hóa logic
+    if (isInitialMount.current || isSettingContent.current) {
+      setContent(value);
+      return;
+    }
+
     const sanitizedContent = sanitizeEditorContent(value);
     setContent(sanitizedContent);
     onChange && onChange(sanitizedContent);
   };
 
-  // FIX: Đơn giản hóa useEffect
   useEffect(() => {
     if (defaultValue) {
+      isSettingContent.current = true;
       setContent(defaultValue);
       setCreateTableOfContents(defaultValue.startsWith('<toc></toc>'));
+
+      setTimeout(() => {
+        isSettingContent.current = false;
+        isInitialMount.current = false;
+      }, 100);
+    } else {
+      isInitialMount.current = false;
     }
   }, [defaultValue]);
 
