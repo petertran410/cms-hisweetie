@@ -8,22 +8,47 @@
   font-size: 14px;
 }
 
+/* STRONGER CSS rules to override editor behavior */
 .ProseMirror img {
   display: inline-block !important;
   vertical-align: top !important;
   margin: 0 !important;
+  padding: 0 !important;
 }
 
 .ProseMirror p + img,
-.ProseMirror img + p {
+.ProseMirror img + p,
+.ProseMirror div + img,
+.ProseMirror img + div {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Force remove spacing between ALL elements */
+.ProseMirror > * + * {
   margin-top: 0 !important;
 }
 
-/* Loại bỏ khoảng trắng giữa các element */
-.ProseMirror > * + * {
-  margin-top: 0.5em !important;
+.ProseMirror figure {
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
-.ProseMirror figure {
-  margin: 0.5em 0 !important;
+/* ADDED: Target editor specifically */
+.editor-no-spacing * {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.editor-no-spacing p {
+  margin-bottom: 0.5em !important;
+}
+
+/* Override TipTap default styles */
+.ProseMirror {
+  white-space: normal !important;
+}
+
+.ProseMirror .ProseMirror-selectednode {
+  outline: none !important;
 }

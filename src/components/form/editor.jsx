@@ -34,26 +34,13 @@ import 'reactjs-tiptap-editor/style.css';
 import FigureImage from '@/extensions/FigureImage';
 import ImageCaptionModal from '@/components/modals/ImageCaptionModal';
 
-// THÊM: Helper functions trực tiếp trong file
+// Helper functions được tối ưu lại
 const sanitizeEditorContent = (htmlContent) => {
   if (!htmlContent) return '';
 
   return htmlContent
     .replace(/>\s+</g, '><') // Remove whitespace between tags
-    .replace(/(<\/p>)\s+(<img)/g, '$1$2') // Remove space between p and img
-    .replace(/(<\/img>)\s+(<p)/g, '$1$2') // Remove space between img and p
-    .replace(/(<figure[^>]*>)\s+/g, '$1') // Remove space after figure opening
-    .replace(/\s+(<\/figure>)/g, '$1') // Remove space before figure closing
-    .replace(/(<\/div>)\s+(<img)/g, '$1$2') // Remove space between div and img
-    .replace(/(<\/img>)\s+(<div)/g, '$1$2') // Remove space between img and div
-    .trim();
-};
-
-const loadEditorContent = (htmlContent) => {
-  if (!htmlContent) return '';
-
-  return htmlContent
-    .replace(/>\s+</g, '><') // Normalize all spacing
+    .replace(/\s{2,}/g, ' ') // Replace multiple spaces with single space
     .trim();
 };
 
@@ -111,7 +98,7 @@ const extensions = [
     allowBase64: true,
     inline: true,
     HTMLAttributes: {
-      style: 'display: inline-block; vertical-align: top;'
+      style: 'display: inline-block; vertical-align: top; margin: 0;'
     },
     uploadWithAlt: true,
     interfaceLanguage: {
@@ -136,7 +123,7 @@ const extensions = [
 
 const Editor = (props) => {
   const { defaultValue, disabled, onChange, showCreateTableOfContents, getCreateTableOfContents } = props;
-  const [content, setContent] = useState(defaultValue);
+  const [content, setContent] = useState(defaultValue || ''); // FIX: Khôi phục defaultValue
   const [contentModalHtml, setContentModalHtml] = useState();
   const [showModalHtml, setShowModalHtml] = useState(false);
   const [key, setKey] = useState(0);
@@ -149,16 +136,17 @@ const Editor = (props) => {
   const editorRef = useRef(null);
 
   const onChangeContent = (value) => {
+    // FIX: Đơn giản hóa logic
     const sanitizedContent = sanitizeEditorContent(value);
     setContent(sanitizedContent);
     onChange && onChange(sanitizedContent);
   };
 
+  // FIX: Đơn giản hóa useEffect
   useEffect(() => {
     if (defaultValue) {
-      const processedContent = loadEditorContent(defaultValue);
-      setContent(processedContent);
-      setCreateTableOfContents(processedContent.startsWith('<toc></toc>'));
+      setContent(defaultValue);
+      setCreateTableOfContents(defaultValue.startsWith('<toc></toc>'));
     }
   }, [defaultValue]);
 
