@@ -187,8 +187,6 @@ const ProductsCreate = () => {
       ? arrayImageUrl.map((i) => ({ name: '', url: i }))
       : undefined;
 
-  console.log(initialImages);
-
   const defaultImages =
     Array.isArray(arrayImageUrl) && arrayImageUrl.length > 0
       ? arrayImageUrl.map((i) => ({
@@ -299,7 +297,7 @@ const ProductsCreate = () => {
             name="imagesUrl"
             label="Ảnh sản phẩm"
             multiple
-            accept=".JPG, .JPEG, .PNG, .GIF, .BMP, .HEIC, .SVG"
+            accept=".JPG, .JPEG, .PNG, .GIF, .BMP, .HEIC, .SVG, .WEBP"
             initialValue={initialImages}
             defaultFileList={defaultImages}
             maxCount={10}
@@ -322,7 +320,7 @@ const ProductsCreate = () => {
               name="featuredThumbnail"
               multiple
               label="Ảnh sản phẩm nổi bật"
-              accept=".JPG, .JPEG, .PNG, .GIF, .BMP, .HEIC, .SVG"
+              accept=".JPG, .JPEG, .PNG, .GIF, .BMP, .HEIC, .SVG, .WEBP"
               initialValue={initFeaturedImage ? [initFeaturedImage] : undefined}
               defaultFileList={defaultFeaturedImage ? [defaultFeaturedImage] : undefined}
               maxCount={1}
