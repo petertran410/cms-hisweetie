@@ -135,7 +135,6 @@ const ProductsList = () => {
       key: 'title',
       width: 250,
       render: (record) => {
-        console.log(record);
         let name;
         if (record.title === null) {
           name = record.kiotviet_name;

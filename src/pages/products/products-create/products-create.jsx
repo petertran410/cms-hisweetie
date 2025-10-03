@@ -21,8 +21,6 @@ const ProductsCreate = () => {
   const [currentPrice, setCurrentPrice] = useState(0);
   const [isFeaturedProduct, setIsFeaturedProduct] = useState(false);
 
-  console.log(productsDetail);
-
   const {
     title,
     title_meta,
@@ -82,15 +80,16 @@ const ProductsCreate = () => {
           });
         })
       )
-        .then((imagesUrlData) => {
-          let imagesUrl = [];
+        .then((uploadResults) => {
+          const filteredResults = uploadResults.filter(Boolean);
+          let productImagesUrl = [];
           let featuredImageUrl = null;
 
           if (!featuredFileList?.length) {
-            imagesUrl = imagesUrlData;
+            productImagesUrl = filteredResults;
           } else {
-            featuredImageUrl = imagesUrlData?.[imagesUrlData?.length - 1];
-            imagesUrl = imagesUrlData?.slice(0, -1);
+            featuredImageUrl = filteredResults[filteredResults.length - 1];
+            productImagesUrl = filteredResults.slice(0, -1);
           }
 
           const data = {
@@ -98,41 +97,15 @@ const ProductsCreate = () => {
             title_meta,
             price: Number(price) && Number(price) > 0 ? price : null,
             description,
-            imagesUrl,
+            images_url: productImagesUrl,
             general_description,
             instruction,
-            isFeatured,
-            category_id,
-            featuredThumbnail: isFeatured ? featuredImageUrl : null
-          };
-
-          if (categoryId?.value) {
-            data.category_id = [categoryId.value];
-          }
-
-          id ? updateMutate(data) : createMutate(data);
-        })
-        .then((uploadResults) => {
-          const productData = {
-            title,
-            title_meta,
-            price: Number(price) || null,
-            description,
-            general_description,
-            instruction,
-            is_featured: isFeatured || false,
-            images_url: uploadResults.filter(Boolean),
-            featured_thumbnail: featuredFileList.length ? uploadResults[uploadResults.length - 1] : null,
+            is_featured: isFeatured,
+            featured_thumbnail: isFeatured ? featuredImageUrl : null,
             categoryIds: extractedCategoryId ? [extractedCategoryId] : []
           };
 
-          console.log('🚀 Update request data:', productData);
-
-          if (id) {
-            updateMutate(productData);
-          } else {
-            createMutate(productData);
-          }
+          id ? updateMutate(data) : createMutate(data);
         })
         .catch((error) => {
           showToast({
@@ -202,18 +175,27 @@ const ProductsCreate = () => {
     return <ErrorScreen message={errorDetail?.message} className="mt-20" />;
   }
 
-  const arrayImageUrl = kiotViet.images;
+  const arrayImageUrl =
+    imagesUrl && imagesUrl.length > 0
+      ? imagesUrl
+      : kiotViet?.images && Array.isArray(kiotViet.images) && kiotViet.images.length > 0
+      ? [kiotViet.images[0]]
+      : [];
 
-  const initialImages = Array.isArray(arrayImageUrl) ? arrayImageUrl.map((i) => ({ name: '', url: i })) : undefined;
+  const initialImages =
+    Array.isArray(arrayImageUrl) && arrayImageUrl.length > 0
+      ? arrayImageUrl.map((i) => ({ name: '', url: i }))
+      : undefined;
 
-  const defaultImages = Array.isArray(arrayImageUrl)
-    ? arrayImageUrl.map((i) => ({
-        type: 'image/*',
-        url: i,
-        uid: i,
-        name: ''
-      }))
-    : undefined;
+  const defaultImages =
+    Array.isArray(arrayImageUrl) && arrayImageUrl.length > 0
+      ? arrayImageUrl.map((i) => ({
+          type: 'image/*',
+          url: i,
+          uid: i,
+          name: ''
+        }))
+      : undefined;
 
   const initFeaturedImage = featuredThumbnail ? { name: '', url: featuredThumbnail } : undefined;
   const defaultFeaturedImage = featuredThumbnail
