@@ -96,28 +96,13 @@ const ProductsList = () => {
       key: 'image',
       width: 80,
       align: 'center',
-      render: (imagesUrl, record) => {
-        let imageUrl = record.kiotviet_images;
-
-        if (Array.isArray(imagesUrl) && imagesUrl.length > 0) {
-          imageUrl = imagesUrl[0];
-        } else if (record.kiotViet && record.kiotViet.images) {
-          if (Array.isArray(record.kiotViet.images) && record.kiotViet.images.length > 0) {
-            const firstImage = record.kiotViet.images[0];
-            if (typeof firstImage === 'string') {
-              imageUrl = firstImage;
-            } else if (firstImage && typeof firstImage === 'object' && firstImage.Image) {
-              imageUrl = firstImage.Image;
-            }
-          }
-        } else if (record.featuredThumbnail) {
-          imageUrl = record.featuredThumbnail;
-        }
+      render: (imagesUrl) => {
+        const imageUrl = Array.isArray(imagesUrl) && imagesUrl.length > 0 ? imagesUrl[0] : null;
 
         return imageUrl ? (
           <img
             src={imageUrl}
-            alt={record.title || 'Product'}
+            alt="Product"
             className="w-12 h-12 object-cover rounded border"
             onError={(e) => {
               e.target.src = '/images/product-placeholder.webp';

@@ -175,20 +175,12 @@ const ProductsCreate = () => {
     return <ErrorScreen message={errorDetail?.message} className="mt-20" />;
   }
 
-  const arrayImageUrl =
-    imagesUrl && imagesUrl.length > 0
-      ? imagesUrl
-      : kiotViet?.images && Array.isArray(kiotViet.images) && kiotViet.images.length > 0
-      ? [kiotViet.images[0]]
-      : [];
+  const arrayImageUrl = imagesUrl && imagesUrl.length > 0 ? imagesUrl : [];
 
-  const initialImages =
-    Array.isArray(arrayImageUrl) && arrayImageUrl.length > 0
-      ? arrayImageUrl.map((i) => ({ name: '', url: i }))
-      : undefined;
+  const initialImages = arrayImageUrl.length > 0 ? arrayImageUrl.map((i) => ({ name: '', url: i })) : undefined;
 
   const defaultImages =
-    Array.isArray(arrayImageUrl) && arrayImageUrl.length > 0
+    arrayImageUrl.length > 0
       ? arrayImageUrl.map((i) => ({
           type: 'image/*',
           url: i,
