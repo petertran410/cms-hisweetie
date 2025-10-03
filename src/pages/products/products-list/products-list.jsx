@@ -96,13 +96,20 @@ const ProductsList = () => {
       key: 'image',
       width: 80,
       align: 'center',
-      render: (imagesUrl) => {
-        const imageUrl = Array.isArray(imagesUrl) && imagesUrl.length > 0 ? imagesUrl[0] : null;
+      render: (imagesUrl, record) => {
+        let imageUrl = null;
+
+        // Ưu tiên images_url, không thì lấy kiotviet_images[0]
+        if (Array.isArray(imagesUrl) && imagesUrl.length > 0) {
+          imageUrl = imagesUrl[0];
+        } else if (Array.isArray(record.kiotviet_images) && record.kiotviet_images.length > 0) {
+          imageUrl = record.kiotviet_images[0];
+        }
 
         return imageUrl ? (
           <img
             src={imageUrl}
-            alt="Product"
+            alt={record.title || 'Product'}
             className="w-12 h-12 object-cover rounded border"
             onError={(e) => {
               e.target.src = '/images/product-placeholder.webp';
