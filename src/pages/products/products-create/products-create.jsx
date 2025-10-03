@@ -187,6 +187,8 @@ const ProductsCreate = () => {
       ? arrayImageUrl.map((i) => ({ name: '', url: i }))
       : undefined;
 
+  console.log(initialImages);
+
   const defaultImages =
     Array.isArray(arrayImageUrl) && arrayImageUrl.length > 0
       ? arrayImageUrl.map((i) => ({
