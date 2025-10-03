@@ -26,7 +26,7 @@ const FilterSearch = ({ placeholder = 'Nhập từ khóa...', label = 'Tìm ki�
         }}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
-            setParamsURL({ keyword: text });
+            setParamsURL({ keyword: text, page: '1' });
           }
         }}
       />

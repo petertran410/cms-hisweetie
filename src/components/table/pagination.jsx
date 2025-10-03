@@ -1,16 +1,16 @@
-import { useSetParamsURL } from '@/utils/helper';
+import { useParamsURL } from '@/utils/helper';
 import { Pagination as AntdPagination } from 'antd';
 import { memo } from 'react';
 
 const Pagination = ({ defaultPage, totalItems }) => {
-  const setParamsURL = useSetParamsURL();
+  const { paramsURL, setParamsURL } = useParamsURL();
 
   return (
     <AntdPagination
       defaultCurrent={defaultPage || 1}
       total={totalItems}
       showSizeChanger={false}
-      onChange={(e) => setParamsURL({ page: `${e}` })}
+      onChange={(e) => setParamsURL({ ...paramsURL, page: `${e}` })}
     />
   );
 };
