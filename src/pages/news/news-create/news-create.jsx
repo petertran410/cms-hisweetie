@@ -11,21 +11,24 @@ import { Button, Form, Input, Select } from 'antd';
 import { useCallback, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { Link, useParams } from 'react-router-dom';
-import GuideGetLink from './guide-get-link'; // THÊM MỚI
+import GuideGetLink from './guide-get-link';
 
 const NewsCreate = () => {
   const { id } = useParams();
   const { isPending: loadingCreate, mutate: createMutate } = useCreateNews();
   const { isPending: loadingUpdate, mutate: updateMutate } = useUpdateNews(id);
+
   const { isLoading: loadingDetail, data: newsDetail, error: errorDetail } = useQueryNewsDetail(id);
   const { isDetail } = useFormType();
   const [hasTableOfContents, setHasTableOfContents] = useState(false);
 
   const onFinish = useCallback(
     (values) => {
-      const { title, htmlContent, description, imagesUrl, type, embedUrl } = values || {}; // THÊM embedUrl
+      const { title, htmlContent, description, imagesUrl, type, embedUrl, titleMeta } = values || {};
       const fileData = imagesUrl?.fileList || imagesUrl || [];
       const fileList = fileData?.[fileData.length - 1] ? [fileData?.[fileData.length - 1]] : [];
+
+      console.log(values);
 
       Promise.all(
         fileList.map(async (item) => {
@@ -53,11 +56,12 @@ const NewsCreate = () => {
         .then((imagesUrl) => {
           const data = {
             title,
+            titleMeta,
             htmlContent: getHtmlContentWithTOC(htmlContent, hasTableOfContents),
             description,
             imagesUrl,
             type,
-            embedUrl: embedUrl?.trim() || null // THÊM embedUrl
+            embedUrl: embedUrl?.trim() || null
           };
           id ? updateMutate(data) : createMutate(data);
         })
@@ -78,7 +82,7 @@ const NewsCreate = () => {
     return <ErrorScreen message={errorDetail?.message} className="mt-20" />;
   }
 
-  const { title, description, htmlContent, imagesUrl, type, embedUrl } = newsDetail || {}; // THÊM embedUrl
+  const { title, description, htmlContent, imagesUrl, type, embedUrl, titleMeta } = newsDetail || {};
 
   const initialImages = Array.isArray(imagesUrl) ? imagesUrl.map((i) => ({ name: '', url: i })) : undefined;
 
@@ -115,6 +119,15 @@ const NewsCreate = () => {
           rules={[{ required: true, message: 'Vui lòng nhập tiêu đề' }]}
         >
           <Input className="py-2" disabled={isDetail} />
+        </Form.Item>
+
+        <Form.Item
+          label={<p className="font-bold text-md">Title Meta</p>}
+          name="titleMeta"
+          initialValue={titleMeta}
+          rules={[{ required: true, message: 'Vui lòng nhập title meta' }]}
+        >
+          <Input className="py-2" disabled={isDetail} placeholder="Nhập title meta" />
         </Form.Item>
 
         <Form.Item
