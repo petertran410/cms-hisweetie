@@ -91,6 +91,20 @@ const ProductsList = () => {
       render: (_, __, index) => <span className="text-gray-600">{pageNumber * pageSize + index + 1}</span>
     },
     {
+      title: 'Code',
+      key: 'code',
+      width: 120,
+      align: 'center',
+      render: (record) => {
+        const code = record.kiotviet_code;
+        return code ? (
+          <span className="font-medium text-green-600">{code}</span>
+        ) : (
+          <span className="text-gray-500 text-sm">Chưa có code</span>
+        );
+      }
+    },
+    {
       title: 'Hình ảnh',
       dataIndex: 'imagesUrl',
       key: 'image',
