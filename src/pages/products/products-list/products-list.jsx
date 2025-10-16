@@ -97,11 +97,7 @@ const ProductsList = () => {
       align: 'center',
       render: (record) => {
         const code = record.kiotviet_code;
-        return code ? (
-          <span className="font-medium text-green-600">{code}</span>
-        ) : (
-          <span className="text-gray-500 text-sm">Chưa có code</span>
-        );
+        return code ? <span className="font-medium">{code}</span> : <span className="text-sm">Chưa có code</span>;
       }
     },
     {
