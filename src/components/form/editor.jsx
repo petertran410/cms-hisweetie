@@ -46,53 +46,21 @@ const normalizeHtmlContent = (htmlContent) => {
       .join('');
   }
 
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(htmlContent, 'text/html');
-
-  const removeEmptyTextNodes = (node) => {
-    for (let i = node.childNodes.length - 1; i >= 0; i--) {
-      const child = node.childNodes[i];
-      if (child.nodeType === 3 && !child.textContent.trim()) {
-        node.removeChild(child);
-      } else if (child.nodeType === 1) {
-        removeEmptyTextNodes(child);
-      }
-    }
-  };
-
-  removeEmptyTextNodes(doc.body);
-
-  const children = Array.from(doc.body.childNodes);
-  children.forEach((child) => {
-    if (child.nodeType === 3 && child.textContent.trim()) {
-      const p = doc.createElement('p');
-      p.textContent = child.textContent;
-      doc.body.replaceChild(p, child);
-    }
-  });
-
-  const firstChild = doc.body.firstChild;
-  const blockElements = ['UL', 'OL', 'BLOCKQUOTE', 'TABLE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'PRE', 'DIV'];
-
-  if (!firstChild || blockElements.includes(firstChild.nodeName)) {
-    const p = doc.createElement('p');
-    p.innerHTML = '<br>';
-    doc.body.insertBefore(p, doc.body.firstChild);
-  }
-
-  if (!doc.body.innerHTML.trim()) {
-    return '<p></p>';
-  }
-
-  return doc.body.innerHTML;
+  // Xóa tất cả <p></p> rỗng và whitespace thừa
+  return htmlContent
+    .replace(/<p>\s*<\/p>/g, '')
+    .replace(/<p><\/p>/g, '')
+    .replace(/>\s+</g, '><')
+    .trim();
 };
 
 const sanitizeEditorContent = (htmlContent) => {
   if (!htmlContent) return '';
 
   return htmlContent
+    .replace(/<p>\s*<\/p>/g, '')
+    .replace(/<p><\/p>/g, '')
     .replace(/>\s+</g, '><')
-    .replace(/\s{2,}/g, ' ')
     .trim();
 };
 
@@ -150,15 +118,6 @@ const extensions = [
     inline: true,
     HTMLAttributes: {
       style: 'display: inline-block; vertical-align: top; margin: 0;'
-    },
-    uploadWithAlt: true,
-    interfaceLanguage: {
-      uploadImage: 'Tải ảnh lên',
-      uploadViaURL: 'Tải từ URL',
-      enterImageURL: 'Nhập URL hình ảnh',
-      enterImageAlt: 'Nhập mô tả hình ảnh (alt text)',
-      cancel: 'Hủy',
-      submit: 'Chèn ảnh'
     }
   }),
   customFigureImage,
