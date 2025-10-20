@@ -34,17 +34,68 @@ import 'reactjs-tiptap-editor/style.css';
 import FigureImage from '@/extensions/FigureImage';
 import ImageCaptionModal from '@/components/modals/ImageCaptionModal';
 
-// Helper functions được tối ưu lại
+const normalizeHtmlContent = (htmlContent) => {
+  if (!htmlContent) return '<p></p>';
+
+  const hasHtmlTags = /<[^>]+>/.test(htmlContent);
+  if (!hasHtmlTags) {
+    return htmlContent
+      .split('\n')
+      .filter((line) => line.trim())
+      .map((line) => `<p>${line.trim()}</p>`)
+      .join('');
+  }
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlContent, 'text/html');
+
+  const removeEmptyTextNodes = (node) => {
+    for (let i = node.childNodes.length - 1; i >= 0; i--) {
+      const child = node.childNodes[i];
+      if (child.nodeType === 3 && !child.textContent.trim()) {
+        node.removeChild(child);
+      } else if (child.nodeType === 1) {
+        removeEmptyTextNodes(child);
+      }
+    }
+  };
+
+  removeEmptyTextNodes(doc.body);
+
+  const children = Array.from(doc.body.childNodes);
+  children.forEach((child) => {
+    if (child.nodeType === 3 && child.textContent.trim()) {
+      const p = doc.createElement('p');
+      p.textContent = child.textContent;
+      doc.body.replaceChild(p, child);
+    }
+  });
+
+  const firstChild = doc.body.firstChild;
+  const blockElements = ['UL', 'OL', 'BLOCKQUOTE', 'TABLE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'PRE', 'DIV'];
+
+  if (!firstChild || blockElements.includes(firstChild.nodeName)) {
+    const p = doc.createElement('p');
+    p.innerHTML = '<br>';
+    doc.body.insertBefore(p, doc.body.firstChild);
+  }
+
+  if (!doc.body.innerHTML.trim()) {
+    return '<p></p>';
+  }
+
+  return doc.body.innerHTML;
+};
+
 const sanitizeEditorContent = (htmlContent) => {
   if (!htmlContent) return '';
 
   return htmlContent
-    .replace(/>\s+</g, '><') // Remove whitespace between tags
-    .replace(/\s{2,}/g, ' ') // Replace multiple spaces with single space
+    .replace(/>\s+</g, '><')
+    .replace(/\s{2,}/g, ' ')
     .trim();
 };
 
-// Tạo extension FigureImage mới
 const customFigureImage = FigureImage.configure({
   uploadImage: async (file) => {
     try {
@@ -63,7 +114,7 @@ const extensions = [
       showOnlyCurrent: true
     },
     characterCount: {
-      limit: 50_000
+      limit: 100_000
     }
   }),
   History,
@@ -149,10 +200,12 @@ const Editor = (props) => {
   };
 
   useEffect(() => {
-    if (defaultValue) {
+    if (defaultValue !== undefined) {
       isSettingContent.current = true;
-      setContent(defaultValue);
-      setCreateTableOfContents(defaultValue.startsWith('<toc></toc>'));
+      const normalizedContent = normalizeHtmlContent(defaultValue);
+      setContent(normalizedContent);
+      setCreateTableOfContents(normalizedContent.startsWith('<toc></toc>'));
+      setKey((prev) => prev + 1);
 
       setTimeout(() => {
         isSettingContent.current = false;

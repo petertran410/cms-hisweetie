@@ -1,7 +1,7 @@
 import { ButtonBack } from '@/components/button';
 import { ErrorScreen, LoadingScreen } from '@/components/effect-screen';
 import { FormSelectQuery } from '@/components/form';
-import Editor from '@/components/form/editor';
+import Editor from '../../../components/form/editor';
 import FormItemUpload from '@/components/form/form-upload';
 import { useCreateProducts, useQueryProductDetail, useUpdateProducts } from '@/services/products.service';
 import { API } from '@/utils/API';
