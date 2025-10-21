@@ -144,7 +144,7 @@ const Editor = (props) => {
       return;
     }
 
-    const cleanContent = value.trim();
+    const cleanContent = value.trim().replace(/<p><\/p>/g, '');
     setContent(cleanContent);
     onChange && onChange(cleanContent);
   };
@@ -153,7 +153,8 @@ const Editor = (props) => {
     if (defaultValue !== undefined) {
       isSettingContent.current = true;
 
-      setContent(defaultValue || '<p></p>');
+      const cleanedDefaultValue = (defaultValue || '<p></p>').replace(/<p><\/p>/g, '');
+      setContent(cleanedDefaultValue);
       setCreateTableOfContents((defaultValue || '').startsWith('<toc></toc>'));
       setKey((prev) => prev + 1);
 
@@ -240,7 +241,7 @@ const Editor = (props) => {
 
   const handleModalOk = () => {
     setKey((prev) => prev + 1);
-    const cleanContent = sanitizeEditorContent(contentModalHtml?.trim());
+    const cleanContent = sanitizeEditorContent(contentModalHtml?.trim()).replace(/<p><\/p>/g, '');
     setContent(cleanContent);
     setShowModalHtml(false);
     onChange && onChange(cleanContent);
