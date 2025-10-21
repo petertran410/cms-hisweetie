@@ -31,7 +31,7 @@ import RichTextEditor, {
   Underline
 } from 'reactjs-tiptap-editor';
 import 'reactjs-tiptap-editor/style.css';
-import FigureImage from '@/extensions/FigureImage';
+import FigureImage from '../table/extensions/FigureImage';
 import ImageCaptionModal from '@/components/modals/ImageCaptionModal';
 
 const normalizeHtmlContent = (htmlContent) => {
@@ -46,22 +46,13 @@ const normalizeHtmlContent = (htmlContent) => {
       .join('');
   }
 
-  // Xóa tất cả <p></p> rỗng và whitespace thừa
-  return htmlContent
-    .replace(/<p>\s*<\/p>/g, '')
-    .replace(/<p><\/p>/g, '')
-    .replace(/>\s+</g, '><')
-    .trim();
+  return htmlContent.trim();
 };
 
 const sanitizeEditorContent = (htmlContent) => {
   if (!htmlContent) return '';
 
-  return htmlContent
-    .replace(/<p>\s*<\/p>/g, '')
-    .replace(/<p><\/p>/g, '')
-    .replace(/>\s+</g, '><')
-    .trim();
+  return htmlContent.replace(/>\s+</g, '><').trim();
 };
 
 const customFigureImage = FigureImage.configure({
@@ -153,17 +144,17 @@ const Editor = (props) => {
       return;
     }
 
-    const sanitizedContent = sanitizeEditorContent(value);
-    setContent(sanitizedContent);
-    onChange && onChange(sanitizedContent);
+    const cleanContent = value.trim();
+    setContent(cleanContent);
+    onChange && onChange(cleanContent);
   };
 
   useEffect(() => {
     if (defaultValue !== undefined) {
       isSettingContent.current = true;
-      const normalizedContent = normalizeHtmlContent(defaultValue);
-      setContent(normalizedContent);
-      setCreateTableOfContents(normalizedContent.startsWith('<toc></toc>'));
+
+      setContent(defaultValue || '<p></p>');
+      setCreateTableOfContents((defaultValue || '').startsWith('<toc></toc>'));
       setKey((prev) => prev + 1);
 
       setTimeout(() => {
