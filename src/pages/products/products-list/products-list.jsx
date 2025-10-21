@@ -208,11 +208,18 @@ const ProductsList = () => {
       align: 'right',
       render: (record) => {
         const price = record.kiotviet_price;
-        return price ? (
-          <span className="font-medium text-green-600">{formatCurrency(price)}</span>
-        ) : (
-          <span className="text-gray-500 text-sm">Chưa có giá</span>
-        );
+        const isPriceOn = record.price_on;
+
+        if (price) {
+          return (
+            <span className="font-medium text-green-600">
+              {formatCurrency(price)}
+              {isPriceOn && <span className="ml-1 text-blue-600">(Liên hệ)</span>}
+            </span>
+          );
+        }
+
+        return <span className="text-gray-500 text-sm">Chưa có giá</span>;
       }
     },
     {

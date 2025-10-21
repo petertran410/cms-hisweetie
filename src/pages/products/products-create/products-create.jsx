@@ -34,8 +34,11 @@ const ProductsCreate = () => {
     featuredThumbnail,
     category_id,
     category,
-    kiotViet
+    kiotViet,
+    price_on
   } = productsDetail || {};
+
+  console.log(productsDetail);
 
   const onFinish = useCallback(
     (values) => {
@@ -49,7 +52,8 @@ const ProductsCreate = () => {
         instruction,
         isFeatured,
         featuredThumbnail,
-        general_description
+        general_description,
+        price_on
       } = values || {};
 
       const extractedCategoryId = categoryId?.value ?? categoryId ?? null;
@@ -101,6 +105,7 @@ const ProductsCreate = () => {
             general_description,
             instruction,
             is_featured: isFeatured,
+            price_on,
             featured_thumbnail: isFeatured ? featuredImageUrl : null,
             categoryIds: extractedCategoryId ? [extractedCategoryId] : []
           };
@@ -272,7 +277,18 @@ const ProductsCreate = () => {
             }}
           />
         </Form.Item>
+
         <p className="mt-0.5 ml-2 mb-10">{formatCurrency(currentPrice)}</p>
+
+        <Form.Item
+          label={<p className="font-bold text-md">Hiển thị "Liên hệ"</p>}
+          name="price_on"
+          initialValue={price_on}
+          valuePropName="checked"
+          className="mb-10"
+        >
+          <Switch />
+        </Form.Item>
 
         {/* <Form.Item
           label={<p className="font-bold text-md">Số lượng trong kho</p>}
