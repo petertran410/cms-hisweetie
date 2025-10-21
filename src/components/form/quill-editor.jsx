@@ -1,6 +1,6 @@
 import { uploadFileCdn } from '@/utils/helper';
 import { Checkbox, Tooltip } from 'antd';
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { FaQuestionCircle } from 'react-icons/fa';
 import ReactQuill, { Quill } from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -16,11 +16,10 @@ const QuillEditor = (props) => {
   const isInitialMount = useRef(true);
 
   useEffect(() => {
-    if (defaultValue !== undefined && defaultValue !== content) {
-      setContent(defaultValue);
-      setCreateTableOfContents(defaultValue.startsWith('<toc></toc>'));
+    if (defaultValue !== undefined) {
+      setContent(defaultValue || '');
+      setCreateTableOfContents((defaultValue || '').startsWith('<toc></toc>'));
     }
-    isInitialMount.current = false;
   }, [defaultValue]);
 
   useEffect(() => {
@@ -40,10 +39,12 @@ const QuillEditor = (props) => {
       if (file) {
         try {
           const url = await uploadFileCdn({ file });
-          const quill = quillRef.current.getEditor();
-          const range = quill.getSelection(true);
-          quill.insertEmbed(range.index, 'image', url);
-          quill.setSelection(range.index + 1);
+          const editor = quillRef.current?.getEditor();
+          if (editor) {
+            const range = editor.getSelection(true);
+            editor.insertEmbed(range.index, 'image', url);
+            editor.setSelection(range.index + 1);
+          }
         } catch (error) {
           console.error('Error uploading image:', error);
         }
@@ -51,31 +52,34 @@ const QuillEditor = (props) => {
     };
   };
 
-  const modules = {
-    toolbar: {
-      container: [
-        [{ header: [1, 2, 3, 4, 5, 6, false] }],
-        [{ size: ['small', false, 'large', 'huge'] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ color: [] }, { background: [] }],
-        [{ list: 'ordered' }, { list: 'bullet' }],
-        [{ align: [] }],
-        [{ indent: '-1' }, { indent: '+1' }],
-        ['blockquote', 'code-block'],
-        ['link', 'image'],
-        ['clean']
-      ],
-      handlers: {
-        image: imageHandler
+  const modules = useMemo(
+    () => ({
+      toolbar: {
+        container: [
+          [{ header: [1, 2, 3, 4, 5, 6, false] }],
+          [{ size: ['small', false, 'large', 'huge'] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ color: [] }, { background: [] }],
+          [{ list: 'ordered' }, { list: 'bullet' }],
+          [{ align: [] }],
+          [{ indent: '-1' }, { indent: '+1' }],
+          ['blockquote', 'code-block'],
+          ['link', 'image'],
+          ['clean']
+        ],
+        handlers: {
+          image: imageHandler
+        }
+      },
+      imageUploader: {
+        upload: async (file) => {
+          const url = await uploadFileCdn({ file });
+          return url;
+        }
       }
-    },
-    imageUploader: {
-      upload: async (file) => {
-        const url = await uploadFileCdn({ file });
-        return url;
-      }
-    }
-  };
+    }),
+    []
+  );
 
   const formats = [
     'header',
@@ -97,7 +101,10 @@ const QuillEditor = (props) => {
   ];
 
   const handleChange = (value) => {
-    if (isInitialMount.current) return;
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
 
     setContent(value);
     onChange && onChange(value);
