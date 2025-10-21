@@ -1,7 +1,8 @@
 import { ButtonBack } from '@/components/button';
 import { ErrorScreen, LoadingScreen } from '@/components/effect-screen';
 import { FormSelectQuery } from '@/components/form';
-import Editor from '../../../components/form/editor';
+// import Editor from '../../../components/form/editor';
+import QuillEditor from '@/components/form/quill-editor';
 import FormItemUpload from '@/components/form/form-upload';
 import { useCreateProducts, useQueryProductDetail, useUpdateProducts } from '@/services/products.service';
 import { API } from '@/utils/API';
@@ -328,7 +329,7 @@ const ProductsCreate = () => {
           rules={[{ required: false, message: 'Vui lòng điền thông tin' }]}
         >
           {/* <FormEditor defaultValue={description} /> */}
-          <Editor defaultValue={description} />
+          <QuillEditor defaultValue={description} />
         </Form.Item>
 
         <Form.Item
@@ -339,7 +340,7 @@ const ProductsCreate = () => {
           rules={[{ required: false, message: 'Vui lòng điền thông tin' }]}
         >
           {/* <FormEditor defaultValue={instruction} /> */}
-          <Editor defaultValue={instruction} />
+          <QuillEditor defaultValue={instruction} />
         </Form.Item>
 
         <div className="flex items-center gap-8 mt-20 justify-center">

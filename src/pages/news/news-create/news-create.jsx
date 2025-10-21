@@ -1,6 +1,7 @@
 import { ButtonBack } from '@/components/button';
 import { ErrorScreen, LoadingScreen } from '@/components/effect-screen';
-import Editor from '@/components/form/editor';
+// import Editor from '@/components/form/editor';
+import QuillEditor from '@/components/form/quill-editor';
 import FormItemUpload from '@/components/form/form-upload';
 import { useCreateNews, useQueryNewsDetail, useUpdateNews } from '@/services/news.service';
 import { NEWS_TYPE_OPTIONS } from '@/utils/news-types.constants';
@@ -173,7 +174,7 @@ const NewsCreate = () => {
           initialValue={htmlContent}
           rules={[{ required: true, message: 'Vui lòng nhập nội dung' }]}
         >
-          <Editor
+          <QuillEditor
             showCreateTableOfContents
             getCreateTableOfContents={(value) => setHasTableOfContents(value)}
             defaultValue={htmlContent}
