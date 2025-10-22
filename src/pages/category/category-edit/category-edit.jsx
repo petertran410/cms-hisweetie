@@ -1,10 +1,12 @@
 import { ButtonBack } from '@/components/button';
 import { LoadingScreen } from '@/components/effect-screen';
-import { FormSelectQuery } from '@/components/form';
+import { FormSelectQuery, FormUpload } from '@/components/form';
+import { API } from '@/utils/API';
+import { showToast } from '@/utils/helper';
 import { useQueryCategoryDetail, useUpdateCategory } from '@/services/category.service';
 import { WEBSITE_NAME } from '@/utils/resource';
 import { Button, Form, Input, InputNumber } from 'antd';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { useParams } from 'react-router-dom';
 
@@ -18,16 +20,50 @@ const CategoryEdit = () => {
 
   console.log(categoryData);
 
-  const onFinish = (values) => {
-    const transformedValues = {
-      ...values,
-      priority: values.priority ? Number(values.priority) : 0,
-      parent_id: values.parent_id?.value ?? values.parent_id ?? null
-    };
+  const onFinish = useCallback(
+    async (values) => {
+      const { image_url } = values;
 
-    console.log('Updating with data:', transformedValues);
-    updateMutate(transformedValues);
-  };
+      let uploadedImageUrl = null;
+
+      if (image_url?.fileList?.length > 0) {
+        const file = image_url.fileList[0];
+
+        if (file.url) {
+          uploadedImageUrl = file.url;
+        } else if (file.originFileObj) {
+          const formData = new FormData();
+          formData.append('file', file.originFileObj);
+
+          try {
+            uploadedImageUrl = await API.request({
+              url: '/api/file/upload',
+              method: 'POST',
+              params: formData,
+              isUpload: true,
+              headers: {
+                'X-Force-Signature': import.meta.env.VITE_API_KEY
+              }
+            });
+          } catch (error) {
+            showToast({ type: 'error', message: `Upload failed: ${error.message}` });
+            return;
+          }
+        }
+      }
+
+      const transformedValues = {
+        ...values,
+        priority: values.priority ? Number(values.priority) : 0,
+        parent_id: values.parent_id?.value ?? values.parent_id ?? null,
+        image_url: uploadedImageUrl
+      };
+
+      console.log('Updating with data:', transformedValues);
+      updateMutate(transformedValues);
+    },
+    [updateMutate]
+  );
 
   useEffect(() => {
     if (categoryData) {
@@ -39,12 +75,17 @@ const CategoryEdit = () => {
             }
           : null;
 
+      const imageFileList = categoryData.image_url
+        ? [{ url: categoryData.image_url, uid: categoryData.image_url, name: '' }]
+        : [];
+
       form.setFieldsValue({
         name: categoryData.name,
         title_meta: categoryData.title_meta,
         description: categoryData.description,
         parent_id: parentValue,
-        priority: categoryData.priority || 0
+        priority: categoryData.priority || 0,
+        image_url: imageFileList.length > 0 ? { fileList: imageFileList } : undefined
       });
     }
   }, [categoryData, form]);
@@ -118,6 +159,8 @@ const CategoryEdit = () => {
             style={{ width: '100%' }}
           />
         </Form.Item>
+
+        <FormUpload name="image_url" label="Hình ảnh danh mục" accept="image/*" maxCount={1} multiple={false} />
 
         <div className="flex items-center gap-8 mt-20 justify-center">
           <div className="hidden md:block">
