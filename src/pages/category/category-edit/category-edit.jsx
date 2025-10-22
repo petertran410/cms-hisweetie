@@ -20,6 +20,17 @@ const CategoryEdit = () => {
 
   console.log(categoryData);
 
+  const defaultImageFile = categoryData?.image_url
+    ? [
+        {
+          type: 'image/*',
+          url: categoryData.image_url,
+          uid: categoryData.image_url,
+          name: ''
+        }
+      ]
+    : undefined;
+
   const onFinish = useCallback(
     async (values) => {
       const { image_url } = values;
@@ -159,8 +170,16 @@ const CategoryEdit = () => {
             style={{ width: '100%' }}
           />
         </Form.Item>
-
-        <FormUpload name="image_url" label="Hình ảnh danh mục" accept="image/*" maxCount={1} multiple={false} />
+        <div className="w-60 mb-10">
+          <FormUpload
+            name="image_url"
+            label="Hình ảnh danh mục"
+            accept="image/*"
+            maxCount={1}
+            multiple={false}
+            defaultFileList={defaultImageFile}
+          />
+        </div>
 
         <div className="flex items-center gap-8 mt-20 justify-center">
           <div className="hidden md:block">
