@@ -230,3 +230,24 @@ export const useQueryNewsStats = () => {
     staleTime: 5 * 60 * 1000
   });
 };
+
+export const useToggleNewsVisibility = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ newsId }) => {
+      return API.request({
+        url: `/api/news/toggle-visibility/${newsId}`,
+        method: 'PATCH'
+      });
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['GET_NEWS_LIST'] });
+      queryClient.invalidateQueries({ queryKey: ['GET_NEWS_LIST_EXCLUDE_VIDEO_CULTURE'] });
+      queryClient.invalidateQueries({ queryKey: ['GET_NEWS_DETAIL'] });
+    },
+    onError: (error) => {
+      console.error('Toggle visibility error:', error);
+    }
+  });
+};
