@@ -54,10 +54,10 @@ export const useQueryCategoriesForProductDropdown = () => {
     queryKey,
     queryFn: async () => {
       const response = await API.request({
-        url: '/api/category/dropdown'
+        url: '/api/category/for-cms'
       });
 
-      return Array.isArray(response) ? response : [];
+      return response?.data || [];
     },
     staleTime: 5 * 60 * 1000
   });

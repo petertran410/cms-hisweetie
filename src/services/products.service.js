@@ -10,9 +10,10 @@ export const useQueryProductsList = () => {
   const page = searchParams.get('page') || '1';
   const keyword = searchParams.get('keyword');
   const categoryId = searchParams.get('categoryId');
+  const categoryIds = searchParams.get('categoryIds');
   const is_visible = searchParams.get('is_visible');
 
-  const queryKey = ['GET_PRODUCTS_LIST', page, keyword, categoryId, is_visible];
+  const queryKey = ['GET_PRODUCTS_LIST', page, keyword, categoryId, categoryIds, is_visible];
 
   return useQuery({
     queryKey,
@@ -27,7 +28,9 @@ export const useQueryProductsList = () => {
         apiParams.title = keyword;
       }
 
-      if (categoryId) {
+      if (categoryIds) {
+        apiParams.categoryIds = categoryIds;
+      } else if (categoryId) {
         apiParams.categoryId = categoryId;
       }
 
