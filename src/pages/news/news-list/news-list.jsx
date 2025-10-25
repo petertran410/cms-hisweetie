@@ -8,6 +8,7 @@ import { Helmet } from 'react-helmet';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import Action from './action';
+import NewsFilter from './news-filter';
 
 const NewsList = () => {
   const navigate = useNavigate();
@@ -239,6 +240,10 @@ const NewsList = () => {
             Tạo tin tức mới
           </Button>
         </Link>
+      </div>
+
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <NewsFilter />
       </div>
 
       <div className="mb-6">{displayStatistics()}</div>
