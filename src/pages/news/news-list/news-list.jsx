@@ -1,62 +1,23 @@
-import { useQueryNewsList, useToggleNewsVisibility } from '../../../services/news.service';
+import { useQueryNewsList } from '../../../services/news.service';
 import { getNewsTypeLabel, NEWS_TYPE_OPTIONS } from '../../../utils/news-types.constants';
 import { convertTimestamp } from '../../../utils/helper';
 import { WEBSITE_NAME } from '../../../utils/resource';
-import { Tag, Button, Table, Pagination, Switch, Tooltip, message } from 'antd';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { Tag, Select, Button, Table, Pagination, Spin } from 'antd';
 import { Helmet } from 'react-helmet';
 import { Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
 import Action from './action';
 
 const NewsList = () => {
   const navigate = useNavigate();
   const { data, isLoading, error } = useQueryNewsList();
-  const { mutate: toggleVisibility } = useToggleNewsVisibility();
-  const [togglingIds, setTogglingIds] = useState(new Set());
-
   const {
     content = [],
     totalElements = 0,
     totalPages = 0,
     number: currentPage = 0,
+    allFilteredContent = [],
     statisticsByType = {}
   } = data || {};
-
-  const handleVisibilityToggle = async (newsId, currentVisibility, newsTitle) => {
-    try {
-      setTogglingIds((prev) => new Set([...prev, newsId]));
-
-      await toggleVisibility(
-        { newsId },
-        {
-          onSuccess: () => {
-            message.success(`Bài viết ${newsTitle} đã được ${!currentVisibility ? 'hiển thị' : 'ẩn'}`);
-            setTogglingIds((prev) => {
-              const newSet = new Set(prev);
-              newSet.delete(newsId);
-              return newSet;
-            });
-          },
-          onError: (err) => {
-            message.error(`Lỗi: ${err.message}`);
-            setTogglingIds((prev) => {
-              const newSet = new Set(prev);
-              newSet.delete(newsId);
-              return newSet;
-            });
-          }
-        }
-      );
-    } catch (err) {
-      message.error(`Lỗi: ${err.message}`);
-      setTogglingIds((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(newsId);
-        return newSet;
-      });
-    }
-  };
 
   const displayStatistics = () => {
     if (Object.keys(statisticsByType).length === 0) {
@@ -169,30 +130,6 @@ const NewsList = () => {
       render: (viewCount) => <span className="text-gray-600 text-sm">{viewCount || 0}</span>
     },
     {
-      title: 'Hiển thị',
-      key: 'visibility',
-      width: 100,
-      align: 'center',
-      render: (record) => {
-        const isVisible = record.is_visible === true;
-        const isCurrentlyToggling = togglingIds.has(record.id);
-
-        return (
-          <Tooltip title={isVisible ? 'Ẩn khỏi trang web' : 'Hiển thị trên trang web'}>
-            <Switch
-              checked={isVisible}
-              loading={isCurrentlyToggling}
-              disabled={isCurrentlyToggling}
-              size="small"
-              checkedChildren={<FaEye />}
-              unCheckedChildren={<FaEyeSlash />}
-              onChange={() => handleVisibilityToggle(record.id, isVisible, record.title)}
-            />
-          </Tooltip>
-        );
-      }
-    },
-    {
       title: 'Ngày tạo',
       dataIndex: 'createdDate',
       key: 'createdDate',
@@ -228,12 +165,7 @@ const NewsList = () => {
       </Helmet>
 
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Quản lý tin tức</h1>
-          <p className="text-gray-600 mt-1">
-            Quản lý tất cả bài viết và trạng thái hiển thị trên website ({totalElements} bài viết)
-          </p>
-        </div>
+        <h1 className="text-2xl font-bold text-gray-800">Danh sách tin tức</h1>
         <Link to="/news/create">
           <Button type="primary" size="large">
             Tạo tin tức mới
@@ -241,7 +173,7 @@ const NewsList = () => {
         </Link>
       </div>
 
-      <div className="mb-6">{displayStatistics()}</div>
+      <div className="mb-6 p-4 bg-gray-50 rounded-lg">{displayStatistics()}</div>
 
       <div className="bg-white rounded-lg shadow">
         <Table
