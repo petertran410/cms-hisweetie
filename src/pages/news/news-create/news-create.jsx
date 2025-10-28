@@ -80,7 +80,7 @@ const NewsCreate = () => {
     return <ErrorScreen message={errorDetail?.message} className="mt-20" />;
   }
 
-  const { title, description, htmlContent, imagesUrl, type, embedUrl, title_meta } = newsDetail || {};
+  const { title, description, htmlContent, imagesUrl, type, embedUrl, titleMeta } = newsDetail || {};
 
   const initialImages = Array.isArray(imagesUrl) ? imagesUrl.map((i) => ({ name: '', url: i })) : undefined;
 
@@ -122,7 +122,7 @@ const NewsCreate = () => {
         <Form.Item
           label={<p className="font-bold text-md">Title Meta</p>}
           name="titleMeta"
-          initialValue={title_meta}
+          initialValue={titleMeta}
           rules={[{ required: true, message: 'Vui lòng nhập title meta' }]}
         >
           <Input className="py-2" disabled={isDetail} placeholder="Nhập title meta" />
