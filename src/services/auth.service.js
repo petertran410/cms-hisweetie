@@ -18,13 +18,11 @@ export const useMutateLogin = () => {
         throw new Error('Username and password are required');
       }
 
-      console.log('Login params:', params);
-
       const response = await API.request({
         url: '/api/auth/login',
         method: 'POST',
         params: {
-          phone: params.username, // Your backend expects 'phone', not 'username'
+          phone: params.username,
           password: params.password
         }
       });
@@ -33,24 +31,18 @@ export const useMutateLogin = () => {
         throw new Error('Invalid response from server');
       }
 
-      console.log('Login response:', response);
       return response;
     },
     onSuccess: async (response) => {
       const token = response.token;
-      console.log('Setting token:', token);
 
-      // Set token in both Recoil state and cookie directly
       setToken(token);
       Cookies.set(CK_JWT_TOKEN, token, { expires: 60, secure: true });
 
-      // Wait a bit for cookie to be set
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Invalidate and refetch user info
       queryClient.invalidateQueries({ queryKey: ['GET_USER_INFO'] });
 
-      // Navigate after a short delay to ensure everything is set
       setTimeout(() => {
         navigate('/');
       }, 200);

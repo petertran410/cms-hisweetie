@@ -72,7 +72,6 @@ export const useUpdateProducts = (id) => {
 
   return useMutation({
     mutationFn: (params) => {
-      console.log('Update request data:', params);
       return API.request({
         url: `/api/product/${id}`,
         method: 'PATCH',
@@ -135,7 +134,6 @@ export const useQueryProductsByHierarchicalCategories = (searchParams = {}) => {
   const paramsURL = useGetParamsURL();
   const { page = 1, keyword } = paramsURL || {};
 
-  // Merge URL params with provided search params
   const finalParams = {
     pageSize: 10,
     pageNumber: Number(page) - 1,

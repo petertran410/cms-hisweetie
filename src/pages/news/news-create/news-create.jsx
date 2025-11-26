@@ -24,7 +24,8 @@ const NewsCreate = () => {
 
   const onFinish = useCallback(
     (values) => {
-      const { title, htmlContent, description, imagesUrl, type, embedUrl, titleMeta } = values || {};
+      const { title, htmlContent, description, imagesUrl, type, embedUrl, titleMeta, title_en, html_content_en } =
+        values || {};
       const fileData = imagesUrl?.fileList || imagesUrl || [];
       const fileList = fileData?.[fileData.length - 1] ? [fileData?.[fileData.length - 1]] : [];
 
@@ -59,7 +60,9 @@ const NewsCreate = () => {
             description,
             imagesUrl,
             type,
-            embedUrl: embedUrl?.trim() || null
+            embedUrl: embedUrl?.trim() || null,
+            title_en,
+            html_content_en
           };
           id ? updateMutate(data) : createMutate(data);
         })
@@ -80,7 +83,8 @@ const NewsCreate = () => {
     return <ErrorScreen message={errorDetail?.message} className="mt-20" />;
   }
 
-  const { title, description, htmlContent, imagesUrl, type, embedUrl, titleMeta } = newsDetail || {};
+  const { title, description, htmlContent, imagesUrl, type, embedUrl, titleMeta, title_en, html_content_en } =
+    newsDetail || {};
 
   const initialImages = Array.isArray(imagesUrl) ? imagesUrl.map((i) => ({ name: '', url: i })) : undefined;
 
@@ -115,6 +119,15 @@ const NewsCreate = () => {
           name="title"
           initialValue={title}
           rules={[{ required: true, message: 'Vui lòng nhập tiêu đề' }]}
+        >
+          <Input className="py-2" disabled={isDetail} />
+        </Form.Item>
+
+        <Form.Item
+          label={<p className="font-bold text-md">Tiêu đề tiếng anh</p>}
+          name="title_en"
+          initialValue={title_en}
+          rules={[{ required: false, message: 'Vui lòng nhập tiêu đề tiếng anh' }]}
         >
           <Input className="py-2" disabled={isDetail} />
         </Form.Item>
@@ -179,6 +192,14 @@ const NewsCreate = () => {
             defaultValue={htmlContent}
             disabled={isDetail}
           />
+        </Form.Item>
+
+        <Form.Item
+          label={<p className="font-bold text-md">Nội dung (English)</p>}
+          name="html_content_en"
+          initialValue={html_content_en}
+        >
+          <Editor defaultValue={html_content_en} disabled={isDetail} placeholder="English content" />
         </Form.Item>
 
         <div className="flex items-center gap-8 mt-20 justify-center">

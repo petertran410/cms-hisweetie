@@ -36,7 +36,6 @@ const ImportProduct = () => {
       responseType: 'arraybuffer'
     })
       .then((res) => {
-        console.log(res instanceof ArrayBuffer);
         showToast({
           type: 'success',
           duration: 60000,

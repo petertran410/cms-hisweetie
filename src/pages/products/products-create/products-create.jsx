@@ -34,11 +34,11 @@ const ProductsCreate = () => {
     featuredThumbnail,
     category_id,
     category,
-    kiotViet,
-    price_on
+    price_on,
+    title_en,
+    description_en,
+    instruction_en
   } = productsDetail || {};
-
-  console.log(productsDetail);
 
   const onFinish = useCallback(
     (values) => {
@@ -53,7 +53,10 @@ const ProductsCreate = () => {
         isFeatured,
         featuredThumbnail,
         general_description,
-        price_on
+        price_on,
+        title_en,
+        description_en,
+        instruction_en
       } = values || {};
 
       const extractedCategoryId = categoryId?.value ?? categoryId ?? null;
@@ -107,7 +110,10 @@ const ProductsCreate = () => {
             is_featured: isFeatured,
             price_on,
             featured_thumbnail: isFeatured ? featuredImageUrl : null,
-            categoryIds: extractedCategoryId ? [extractedCategoryId] : []
+            categoryIds: extractedCategoryId ? [extractedCategoryId] : [],
+            title_en,
+            description_en,
+            instruction_en
           };
 
           id ? updateMutate(data) : createMutate(data);
@@ -140,7 +146,10 @@ const ProductsCreate = () => {
         price: price,
         isFeatured: isFeatured,
         description: description,
-        instruction: instruction
+        instruction: instruction,
+        title_en: title_en,
+        description_en: description_en,
+        instruction_en: instruction_en
       });
 
       setCurrentPrice(price || 0);
@@ -159,7 +168,10 @@ const ProductsCreate = () => {
     isFeatured,
     description,
     instruction,
-    category
+    category,
+    title_en,
+    description_en,
+    instruction_en
   ]);
 
   useEffect(() => {
@@ -222,6 +234,16 @@ const ProductsCreate = () => {
           name="title"
           initialValue={title}
           rules={[{ required: true, message: 'Vui lòng nhập tên sản phẩm' }]}
+          className="mb-10"
+        >
+          <Input className="py-2" />
+        </Form.Item>
+
+        <Form.Item
+          label={<p className="font-bold text-md">Tên sản phẩm (English)</p>}
+          name="title_en"
+          initialValue={title_en}
+          rules={[{ required: false, message: 'Vui lòng nhập tên sản phẩm tiếng anh' }]}
           className="mb-10"
         >
           <Input className="py-2" />
@@ -343,8 +365,17 @@ const ProductsCreate = () => {
           className="mb-10"
           rules={[{ required: false, message: 'Vui lòng điền thông tin' }]}
         >
-          {/* <FormEditor defaultValue={description} /> */}
           <Editor defaultValue={description} />
+        </Form.Item>
+
+        <Form.Item
+          label={<p className="font-bold text-md">Mô tả chung (Nằm ngay dưới title) (English)</p>}
+          name="description_en"
+          initialValue={description_en}
+          className="mb-10"
+          rules={[{ required: false, message: 'Vui lòng điền thông tin (English)' }]}
+        >
+          <Editor defaultValue={description_en} />
         </Form.Item>
 
         <Form.Item
@@ -354,8 +385,17 @@ const ProductsCreate = () => {
           className="mb-10"
           rules={[{ required: false, message: 'Vui lòng điền thông tin' }]}
         >
-          {/* <FormEditor defaultValue={instruction} /> */}
           <Editor defaultValue={instruction} />
+        </Form.Item>
+
+        <Form.Item
+          label={<p className="font-bold text-md">Thông tin sản phẩm (Thông tin dài) (English)</p>}
+          name="instruction_en"
+          initialValue={instruction_en}
+          className="mb-10"
+          rules={[{ required: false, message: 'Vui lòng điền thông tin (English)' }]}
+        >
+          <Editor defaultValue={instruction_en} />
         </Form.Item>
 
         <div className="flex items-center gap-8 mt-20 justify-center">

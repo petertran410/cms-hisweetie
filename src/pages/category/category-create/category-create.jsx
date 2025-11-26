@@ -18,7 +18,6 @@ const CategoryCreate = () => {
       parent_id: values.parent_id?.value ?? values.parent_id ?? null
     };
 
-    console.log('Sending data:', transformedValues);
     createMutate(transformedValues);
   };
 

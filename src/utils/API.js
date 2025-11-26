@@ -31,7 +31,6 @@ export const API = {
 
     return axios(requestConfig)
       .then((response) => {
-        console.log('✅ API Success:', response.status);
         return response.data;
       })
       .catch((e) => {
@@ -43,7 +42,6 @@ export const API = {
         });
 
         if (e?.response?.status === 401) {
-          console.log('🚨 401 Unauthorized - Clearing token');
           Cookies.remove(CK_JWT_TOKEN);
           window.location.href = '/login';
         }
@@ -69,7 +67,6 @@ export const API = {
     const baseUrlDefault =
       websiteCode === 'dieptra' ? import.meta.env.VITE_DIEP_TRA_API_DOMAIN : import.meta.env.VITE_LERMAO_API_DOMAIN;
 
-    // Fallback nếu environment variable không được set
     const fallbackUrl = 'https://api.gaulermao.com';
     const apiUrl = baseUrlDefault || fallbackUrl;
 

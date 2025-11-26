@@ -41,13 +41,11 @@ const ReassignModal = ({ visible, onCancel, onConfirm, category, loading = false
   };
 
   const handleCategoryChange = (value) => {
-    console.log('Category changed:', value); // ✅ DEBUG LOG
     setSelectedCategoryId(value);
     setHasUserMadeChoice(true);
   };
 
   const handleConfirm = () => {
-    console.log('Confirming with category:', selectedCategoryId); // ✅ DEBUG LOG
     onConfirm(selectedCategoryId);
   };
 

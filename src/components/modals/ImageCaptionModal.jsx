@@ -22,7 +22,7 @@ const ImageCaptionModal = ({ visible, onCancel, onSave, initialValues = {} }) =>
         form.resetFields();
       })
       .catch((info) => {
-        console.log('Validate Failed:', info);
+        throw new Error(info);
       });
   };
 
