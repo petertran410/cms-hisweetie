@@ -19,13 +19,24 @@ const NewsCreate = () => {
   const { isPending: loadingUpdate, mutate: updateMutate } = useUpdateNews(id);
 
   const { isLoading: loadingDetail, data: newsDetail, error: errorDetail } = useQueryNewsDetail(id);
+  console.log(newsDetail);
   const { isDetail } = useFormType();
   const [hasTableOfContents, setHasTableOfContents] = useState(false);
 
   const onFinish = useCallback(
     (values) => {
-      const { title, htmlContent, description, imagesUrl, type, embedUrl, titleMeta, title_en, html_content_en } =
-        values || {};
+      const {
+        title,
+        htmlContent,
+        description,
+        description_en,
+        imagesUrl,
+        type,
+        embedUrl,
+        titleMeta,
+        title_en,
+        html_content_en
+      } = values || {};
       const fileData = imagesUrl?.fileList || imagesUrl || [];
       const fileList = fileData?.[fileData.length - 1] ? [fileData?.[fileData.length - 1]] : [];
 
@@ -58,6 +69,7 @@ const NewsCreate = () => {
             titleMeta,
             htmlContent: getHtmlContentWithTOC(htmlContent, hasTableOfContents),
             description,
+            description_en,
             imagesUrl,
             type,
             embedUrl: embedUrl?.trim() || null,
@@ -83,8 +95,18 @@ const NewsCreate = () => {
     return <ErrorScreen message={errorDetail?.message} className="mt-20" />;
   }
 
-  const { title, description, htmlContent, imagesUrl, type, embedUrl, titleMeta, title_en, html_content_en } =
-    newsDetail || {};
+  const {
+    title,
+    description,
+    description_en,
+    htmlContent,
+    imagesUrl,
+    type,
+    embedUrl,
+    titleMeta,
+    title_en,
+    html_content_en
+  } = newsDetail || {};
 
   const initialImages = Array.isArray(imagesUrl) ? imagesUrl.map((i) => ({ name: '', url: i })) : undefined;
 
@@ -151,6 +173,14 @@ const NewsCreate = () => {
         </Form.Item>
 
         <Form.Item label={<p className="font-bold text-md">Mô tả</p>} name="description" initialValue={description}>
+          <Input className="py-2" disabled={isDetail} />
+        </Form.Item>
+
+        <Form.Item
+          label={<p className="font-bold text-md">Mô tả (English)</p>}
+          name="description_en"
+          initialValue={description_en}
+        >
           <Input className="py-2" disabled={isDetail} />
         </Form.Item>
 
