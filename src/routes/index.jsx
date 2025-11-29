@@ -15,6 +15,7 @@ import { UserCreate, UserList } from '@/pages/user';
 import { VideoCreate, VideoList } from '@/pages/video';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Route, Routes } from 'react-router-dom';
+import NewsCreateEn from '../pages/news/news-en-create/news-create';
 
 const AppRoute = () => {
   return (
@@ -39,6 +40,7 @@ const AppRoute = () => {
             <Route path="" element={<NewsList />} />
             <Route path="create" element={<NewsCreate />} />
             <Route path=":id/edit" element={<NewsCreate />} />
+            <Route path=":id/edit-en" element={<NewsCreateEn />} />
             <Route path=":id/detail" element={<NewsCreate />} />
           </Route>
 
