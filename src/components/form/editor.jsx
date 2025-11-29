@@ -1,6 +1,6 @@
 import { uploadFileCdn } from '@/utils/helper';
 import { Checkbox, Modal, Tooltip, message } from 'antd';
-import { memo, useEffect, useState, useRef, useId } from 'react';
+import { memo, useEffect, useState, useRef, useId, useCallback, useMemo } from 'react';
 import { FaQuestionCircle } from 'react-icons/fa';
 import RichTextEditor, {
   BaseKit,
@@ -56,102 +56,133 @@ const Editor = (props) => {
 
   console.log(`🆔 Editor instance created: ${editorInstanceId}`);
 
-  // SCOPED UPLOAD FUNCTION CHO EDITOR INSTANCE NÀY
-  const scopedImageUpload = async (file) => {
-    console.log(`🔄 Scoped upload started for ${editorInstanceId}:`, {
-      fileName: file.name,
-      size: file.size,
-      type: file.type
-    });
-
-    try {
-      // Prevent multiple uploads
-      if (isUploading) {
-        console.log(`⚠️ Upload already in progress for ${editorInstanceId}`);
-        return null;
-      }
-
-      setIsUploading(true);
-
-      message.loading({
-        content: `Đang tải hình ảnh... (${editorInstanceId})`,
-        key: `upload-${editorInstanceId}`,
-        duration: 0
+  // SCOPED UPLOAD FUNCTION VỚI EDITOR INSTANCE BINDING
+  const scopedImageUpload = useCallback(
+    async (file) => {
+      console.log(`🔄 Scoped upload started for ${editorInstanceId}:`, {
+        fileName: file.name,
+        size: file.size,
+        type: file.type
       });
 
-      const url = await uploadFileCdn({ file });
-      console.log(`✅ Scoped upload successful for ${editorInstanceId}:`, url);
+      try {
+        if (isUploading) {
+          console.log(`⚠️ Upload already in progress for ${editorInstanceId}`);
+          return null;
+        }
 
-      message.destroy(`upload-${editorInstanceId}`);
-      message.success(`Tải hình ảnh thành công! (${editorInstanceId})`);
+        setIsUploading(true);
 
-      return url;
-    } catch (error) {
-      console.error(`❌ Scoped upload error for ${editorInstanceId}:`, error);
+        message.loading({
+          content: `Đang tải hình ảnh... (${editorInstanceId})`,
+          key: `upload-${editorInstanceId}`,
+          duration: 0
+        });
 
-      message.destroy(`upload-${editorInstanceId}`);
-      message.error(`Tải hình ảnh thất bại (${editorInstanceId}): ${error.message || 'Unknown error'}`);
+        const url = await uploadFileCdn({ file });
+        console.log(`✅ Scoped upload successful for ${editorInstanceId}:`, url);
 
-      return null;
-    } finally {
-      setIsUploading(false);
-    }
-  };
+        message.destroy(`upload-${editorInstanceId}`);
+        message.success(`Tải hình ảnh thành công! (${editorInstanceId})`);
 
-  // EXTENSIONS VỚI SCOPED UPLOAD FUNCTION
-  const extensions = [
-    BaseKit.configure({
-      placeholder: {
-        showOnlyCurrent: true
-      },
-      characterCount: {
-        limit: 100_000
+        // QUAN TRỌNG: Kiểm tra và insert image vào đúng editor instance
+        if (url && editorRef.current) {
+          const { editor } = editorRef.current;
+
+          // Đảm bảo editor có focus và insert image vào đúng vị trí
+          editor
+            .chain()
+            .focus()
+            .setImage({
+              src: url,
+              alt: file.name,
+              title: `Upload to ${editorInstanceId}`
+            })
+            .run();
+
+          console.log(`🖼️ Image inserted into correct editor ${editorInstanceId}`);
+        }
+
+        return url;
+      } catch (error) {
+        console.error(`❌ Scoped upload error for ${editorInstanceId}:`, error);
+
+        message.destroy(`upload-${editorInstanceId}`);
+        message.error(`Tải hình ảnh thất bại (${editorInstanceId}): ${error.message || 'Unknown error'}`);
+
+        return null;
+      } finally {
+        setIsUploading(false);
       }
-    }),
-    History,
-    SearchAndReplace,
-    Clear,
-    Heading.configure({
-      spacer: false
-    }),
-    FontSize,
-    Bold,
-    Italic,
-    Underline,
-    Strike,
-    Color.configure({ spacer: false }),
-    Highlight,
-    BulletList,
-    OrderedList,
-    TextAlign.configure({ types: ['heading', 'paragraph'], spacer: false }),
-    Indent,
-    LineHeight,
-    Link.configure({
-      HTMLAttributes: {
-        rel: 'noopener'
-      }
-    }),
-    // IMAGE EXTENSION VỚI SCOPED UPLOAD FUNCTION
-    Image.configure({
-      upload: scopedImageUpload, // ← PROVIDE UPLOAD FUNCTION
-      allowBase64: false,
-      inline: false,
-      HTMLAttributes: {
-        style: 'max-width: 100%; height: auto; margin: 10px 0;'
-      }
-    }),
-    Blockquote,
-    SlashCommand,
-    HorizontalRule,
-    Code.configure({
-      toolbar: false
-    }),
-    CodeBlock.configure({ defaultTheme: 'dracula' }),
-    Table
-  ];
+    },
+    [editorInstanceId, isUploading]
+  );
 
-  // MANUAL UPLOAD FUNCTION (BACKUP - CHỈ NẾU CẦN CUSTOM BUTTON)
-  const handleManualImageUpload = async () => {
+  // EXTENSIONS VỚI IMAGE UPLOAD CUSTOM HANDLER
+  const extensions = useMemo(
+    () => [
+      BaseKit.configure({
+        placeholder: {
+          showOnlyCurrent: true
+        },
+        characterCount: {
+          limit: 100_000
+        }
+      }),
+      History,
+      SearchAndReplace,
+      Clear,
+      Heading.configure({
+        spacer: false
+      }),
+      FontSize,
+      Bold,
+      Italic,
+      Underline,
+      Strike,
+      Color.configure({ spacer: false }),
+      Highlight,
+      BulletList,
+      OrderedList,
+      TextAlign.configure({ types: ['heading', 'paragraph'], spacer: false }),
+      Indent,
+      LineHeight,
+      Link.configure({
+        HTMLAttributes: {
+          rel: 'noopener'
+        }
+      }),
+      // IMAGE EXTENSION VỚI CUSTOM UPLOAD FUNCTION VÀ INSTANCE BINDING
+      Image.configure({
+        upload: async (file) => {
+          console.log(`📸 Image extension upload triggered for ${editorInstanceId}`);
+
+          // Gọi scoped upload function của instance này
+          const url = await scopedImageUpload(file);
+
+          // Trả về null để không auto-insert vì đã insert trong scopedImageUpload
+          return null;
+        },
+        allowBase64: false,
+        inline: false,
+        HTMLAttributes: {
+          style: 'max-width: 100%; height: auto; margin: 10px 0;'
+        }
+      }),
+      Blockquote,
+      SlashCommand,
+      HorizontalRule,
+      Code.configure({
+        toolbar: false
+      }),
+      CodeBlock.configure({ defaultTheme: 'dracula' }),
+      Table
+    ],
+    [scopedImageUpload, editorInstanceId]
+  );
+
+  // MANUAL UPLOAD FUNCTION (BACKUP)
+  const handleManualImageUpload = useCallback(async () => {
     if (isUploading || disabled || !editorRef.current) {
       console.log(`⚠️ Manual upload blocked for ${editorInstanceId}:`, {
         isUploading,
@@ -177,59 +208,46 @@ const Editor = (props) => {
       }
 
       try {
-        const url = await scopedImageUpload(file);
-
-        if (url && editorRef.current) {
-          const { editor } = editorRef.current;
-
-          // INSERT IMAGE AT CURRENT POSITION
-          editor
-            .chain()
-            .focus()
-            .setImage({
-              src: url,
-              alt: file.name,
-              title: `Manual upload to ${editorInstanceId}`
-            })
-            .run();
-
-          console.log(`🖼️ Manual image inserted into ${editorInstanceId}`);
-        }
+        await scopedImageUpload(file);
       } catch (error) {
         console.error(`❌ Manual upload error for ${editorInstanceId}:`, error);
       } finally {
-        // Clean up input element
         input.remove();
       }
     };
 
-    // Trigger file selection
     document.body.appendChild(input);
     input.click();
-  };
+  }, [scopedImageUpload, editorInstanceId, isUploading, disabled]);
 
-  // CUSTOM MENU ITEMS (OPTIONAL)
-  const customMenuItems = [
-    {
-      name: `manual-upload-${editorInstanceId}`,
-      tooltip: `Upload hình ảnh thủ công`,
-      display: '📎 Upload',
-      icon: '📎',
-      disabled: isUploading || disabled,
-      action: handleManualImageUpload
-    }
-  ];
+  // CUSTOM MENU ITEMS
+  const customMenuItems = useMemo(
+    () => [
+      {
+        name: `manual-upload-${editorInstanceId}`,
+        tooltip: `Upload hình ảnh thủ công`,
+        display: '📎 Upload',
+        icon: '📎',
+        disabled: isUploading || disabled,
+        action: handleManualImageUpload
+      }
+    ],
+    [editorInstanceId, isUploading, disabled, handleManualImageUpload]
+  );
 
-  const onChangeContent = (value) => {
-    if (isInitialMount.current || isSettingContent.current) {
-      setContent(value);
-      return;
-    }
+  const onChangeContent = useCallback(
+    (value) => {
+      if (isInitialMount.current || isSettingContent.current) {
+        setContent(value);
+        return;
+      }
 
-    const cleanContent = value.trim().replace(/<p><\/p>/g, '');
-    setContent(cleanContent);
-    onChange && onChange(cleanContent);
-  };
+      const cleanContent = value.trim().replace(/<p><\/p>/g, '');
+      setContent(cleanContent);
+      onChange && onChange(cleanContent);
+    },
+    [onChange]
+  );
 
   useEffect(() => {
     if (defaultValue !== undefined) {
@@ -255,19 +273,18 @@ const Editor = (props) => {
     }
   }, [getCreateTableOfContents, createTableOfContents]);
 
-  const handleModalOk = () => {
+  const handleModalOk = useCallback(() => {
     setKey((prev) => prev + 1);
     const cleanContent = sanitizeEditorContent(contentModalHtml?.trim()).replace(/<p><\/p>/g, '');
     setContent(cleanContent);
     setShowModalHtml(false);
     onChange && onChange(cleanContent);
-  };
+  }, [contentModalHtml, onChange]);
 
   locale.setLang('vi');
 
   return (
     <div className="relative" key={`${key}-${editorInstanceId}`}>
-      {/* EDITOR IDENTIFIER - CHỈ HIỂN THỊ KHI DEBUG */}
       {process.env.NODE_ENV === 'development' && (
         <div className="mb-2 text-xs text-gray-500 font-mono">Editor ID: {editorInstanceId}</div>
       )}
@@ -305,7 +322,6 @@ const Editor = (props) => {
         key={`editor-content-${editorInstanceId}`}
       />
 
-      {/* UPLOAD LOADING INDICATOR */}
       {isUploading && (
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-90 p-4 rounded-md shadow-lg z-50">
           <div className="flex items-center gap-2">
