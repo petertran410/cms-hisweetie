@@ -19,25 +19,12 @@ const NewsCreate = () => {
   const { isPending: loadingUpdate, mutate: updateMutate } = useUpdateNews(id);
 
   const { isLoading: loadingDetail, data: newsDetail, error: errorDetail } = useQueryNewsDetail(id);
-  console.log(newsDetail);
   const { isDetail } = useFormType();
   const [hasTableOfContents, setHasTableOfContents] = useState(false);
-  const [hasTableOfContentsEn, setHasTableOfContentsEn] = useState(false);
 
   const onFinish = useCallback(
     (values) => {
-      const {
-        title,
-        htmlContent,
-        description,
-        description_en,
-        imagesUrl,
-        type,
-        embedUrl,
-        titleMeta,
-        title_en,
-        html_content_en
-      } = values || {};
+      const { title, htmlContent, description, imagesUrl, type, embedUrl, titleMeta } = values || {};
       const fileData = imagesUrl?.fileList || imagesUrl || [];
       const fileList = fileData?.[fileData.length - 1] ? [fileData?.[fileData.length - 1]] : [];
 
@@ -70,12 +57,9 @@ const NewsCreate = () => {
             titleMeta,
             htmlContent: getHtmlContentWithTOC(htmlContent, hasTableOfContents),
             description,
-            description_en,
             imagesUrl,
             type,
-            embedUrl: embedUrl?.trim() || null,
-            title_en,
-            html_content_en: getHtmlContentWithTOC(html_content_en, hasTableOfContentsEn)
+            embedUrl: embedUrl?.trim() || null
           };
           id ? updateMutate(data) : createMutate(data);
         })
@@ -83,7 +67,7 @@ const NewsCreate = () => {
           showToast({ type: 'error', message: `Tải ảnh bài viết thất bại. ${e.message}` });
         });
     },
-    [createMutate, updateMutate, id, hasTableOfContents, hasTableOfContentsEn]
+    [createMutate, updateMutate, id, hasTableOfContents]
   );
 
   useScrollTop();
@@ -96,18 +80,7 @@ const NewsCreate = () => {
     return <ErrorScreen message={errorDetail?.message} className="mt-20" />;
   }
 
-  const {
-    title,
-    description,
-    description_en,
-    htmlContent,
-    imagesUrl,
-    type,
-    embedUrl,
-    titleMeta,
-    title_en,
-    html_content_en
-  } = newsDetail || {};
+  const { title, description, htmlContent, imagesUrl, type, embedUrl, titleMeta } = newsDetail || {};
 
   const initialImages = Array.isArray(imagesUrl) ? imagesUrl.map((i) => ({ name: '', url: i })) : undefined;
 
@@ -147,15 +120,6 @@ const NewsCreate = () => {
         </Form.Item>
 
         <Form.Item
-          label={<p className="font-bold text-md">Tiêu đề tiếng anh</p>}
-          name="title_en"
-          initialValue={title_en}
-          rules={[{ required: false, message: 'Vui lòng nhập tiêu đề tiếng anh' }]}
-        >
-          <Input className="py-2" disabled={isDetail} />
-        </Form.Item>
-
-        <Form.Item
           label={<p className="font-bold text-md">Title Meta</p>}
           name="titleMeta"
           initialValue={titleMeta}
@@ -174,14 +138,6 @@ const NewsCreate = () => {
         </Form.Item>
 
         <Form.Item label={<p className="font-bold text-md">Mô tả</p>} name="description" initialValue={description}>
-          <Input className="py-2" disabled={isDetail} />
-        </Form.Item>
-
-        <Form.Item
-          label={<p className="font-bold text-md">Mô tả (English)</p>}
-          name="description_en"
-          initialValue={description_en}
-        >
           <Input className="py-2" disabled={isDetail} />
         </Form.Item>
 
@@ -221,20 +177,6 @@ const NewsCreate = () => {
             showCreateTableOfContents
             getCreateTableOfContents={(value) => setHasTableOfContents(value)}
             defaultValue={htmlContent}
-            disabled={isDetail}
-          />
-        </Form.Item>
-
-        <Form.Item
-          label={<p className="font-bold text-md">Nội dung (English)</p>}
-          name="html_content_en"
-          initialValue={html_content_en}
-          rules={[{ required: false, message: 'Vui lòng nhập nội dung' }]}
-        >
-          <Editor
-            showCreateTableOfContents
-            getCreateTableOfContents={(value) => setHasTableOfContentsEn(value)}
-            defaultValue={html_content_en}
             disabled={isDetail}
           />
         </Form.Item>

@@ -92,7 +92,6 @@ const CategoryEdit = () => {
 
       form.setFieldsValue({
         name: categoryData.name,
-        name_en: categoryData.name_en,
         title_meta: categoryData.title_meta,
         description: categoryData.description,
         parent_id: parentValue,
@@ -127,14 +126,6 @@ const CategoryEdit = () => {
           rules={[{ required: true, message: 'Vui lòng nhập tên danh mục' }]}
         >
           <Input className="py-2" placeholder="Nhập tên danh mục" />
-        </Form.Item>
-
-        <Form.Item
-          label={<p className="font-bold text-md">Tên danh mục (English)</p>}
-          name="name_en"
-          rules={[{ required: false, message: 'Vui lòng nhập tên danh mục (English)' }]}
-        >
-          <Input className="py-2" placeholder="Nhập tên danh mục (English)" />
         </Form.Item>
 
         <Form.Item label={<p className="font-bold text-md">Title Meta</p>} name="title_meta">
