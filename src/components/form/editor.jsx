@@ -1,5 +1,5 @@
 import { uploadFileCdn } from '@/utils/helper';
-import { Checkbox, Modal, Tooltip } from 'antd';
+import { Checkbox, Modal, Tooltip, message } from 'antd';
 import { memo, useEffect, useState, useRef, useId } from 'react';
 import { FaQuestionCircle } from 'react-icons/fa';
 import RichTextEditor, {
@@ -44,7 +44,6 @@ const Editor = (props) => {
   const [showModalHtml, setShowModalHtml] = useState(false);
   const [key, setKey] = useState(0);
   const [createTableOfContents, setCreateTableOfContents] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
 
   const isInitialMount = useRef(true);
   const isSettingContent = useRef(false);
@@ -53,7 +52,7 @@ const Editor = (props) => {
   // UNIQUE ID CHO MỖI EDITOR
   const editorId = useId();
 
-  // DISABLE UPLOAD TRONG IMAGE EXTENSION - CHỈ SỬ DỤNG CƠ BẢN
+  // SỬ DỤNG BUILT-IN IMAGE UPLOAD CỦA TIPTAP VỚI ERROR HANDLING TỐT HỠN
   const extensions = [
     BaseKit.configure({
       placeholder: {
@@ -86,12 +85,38 @@ const Editor = (props) => {
         rel: 'noopener'
       }
     }),
-    // IMAGE EXTENSION KHÔNG CÓ UPLOAD - CHỈ HIỂN THỊ
+    // SỬ DỤNG BUILT-IN IMAGE UPLOAD VỚI PROPER ERROR HANDLING
     Image.configure({
+      upload: async (file) => {
+        console.log('🔄 Starting image upload...', { fileName: file.name, size: file.size });
+
+        try {
+          // Show loading message
+          message.loading({ content: 'Đang tải hình ảnh...', key: 'uploadImage', duration: 0 });
+
+          const result = await uploadFileCdn({ file });
+
+          console.log('✅ Image upload successful:', result);
+
+          // Hide loading và show success
+          message.destroy('uploadImage');
+          message.success('Tải hình ảnh thành công!');
+
+          return result;
+        } catch (error) {
+          console.error('❌ Image upload failed:', error);
+
+          // Hide loading và show error
+          message.destroy('uploadImage');
+          message.error('Tải hình ảnh thất bại. Vui lòng thử lại!');
+
+          return null;
+        }
+      },
       allowBase64: false,
       inline: false,
       HTMLAttributes: {
-        style: 'max-width: 100%; height: auto;'
+        style: 'max-width: 100%; height: auto; margin: 10px 0;'
       }
     }),
     Blockquote,
@@ -102,61 +127,6 @@ const Editor = (props) => {
     }),
     CodeBlock.configure({ defaultTheme: 'dracula' }),
     Table
-  ];
-
-  // HANDLE MANUAL IMAGE UPLOAD QUA CUSTOM MENU
-  const handleImageUpload = async () => {
-    if (isUploading || disabled || !editorRef.current) return;
-
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.style.display = 'none';
-
-    input.onchange = async (event) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
-
-      setIsUploading(true);
-
-      try {
-        // Upload file
-        const url = await uploadFileCdn({ file });
-
-        if (url && editorRef.current) {
-          const { editor } = editorRef.current;
-
-          // INSERT IMAGE VÀO VỊ TRÍ CURSOR HIỆN TẠI
-          editor
-            .chain()
-            .focus() // Đảm bảo editor được focus
-            .setImage({ src: url, alt: file.name })
-            .run();
-        }
-      } catch (error) {
-        console.error('Error uploading image:', error);
-      } finally {
-        setIsUploading(false);
-        // Clean up input element
-        input.remove();
-      }
-    };
-
-    // Trigger file selection
-    document.body.appendChild(input);
-    input.click();
-  };
-
-  // CUSTOM MENU ITEMS CHO UPLOAD
-  const customMenuItems = [
-    {
-      name: `uploadImage_${editorId}`,
-      tooltip: 'Thêm hình ảnh',
-      display: 'Hình ảnh',
-      icon: '🖼️',
-      disabled: isUploading || disabled,
-      action: handleImageUpload
-    }
   ];
 
   const onChangeContent = (value) => {
@@ -234,20 +204,9 @@ const Editor = (props) => {
         content={content}
         onChangeContent={onChangeContent}
         extensions={extensions}
-        customMenuItems={customMenuItems}
         minHeight={600}
         key={`editor-${editorId}`}
       />
-
-      {/* LOADING INDICATOR KHI UPLOAD */}
-      {isUploading && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-90 p-4 rounded-md shadow-lg z-40">
-          <div className="flex items-center gap-2">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-            <span>Đang tải hình...</span>
-          </div>
-        </div>
-      )}
 
       <div className="absolute bottom-3 right-3 z-30">
         <button
@@ -270,6 +229,8 @@ const Editor = (props) => {
         width="80%"
         okText="Lưu"
         cancelText="Hủy"
+        destroyOnClose={true}
+        maskClosable={false}
       >
         <textarea
           className="w-full"
