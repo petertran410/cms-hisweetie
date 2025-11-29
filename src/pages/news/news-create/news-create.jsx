@@ -228,8 +228,14 @@ const NewsCreate = () => {
           label={<p className="font-bold text-md">Nội dung (English)</p>}
           name="html_content_en"
           initialValue={html_content_en}
+          rules={[{ required: false, message: 'Vui lòng nhập nội dung' }]}
         >
-          <Editor defaultValue={html_content_en} disabled={isDetail} placeholder="English content" />
+          <Editor
+            showCreateTableOfContents
+            getCreateTableOfContents={(value) => setHasTableOfContents(value)}
+            defaultValue={html_content_en}
+            disabled={isDetail}
+          />
         </Form.Item>
 
         <div className="flex items-center gap-8 mt-20 justify-center">
