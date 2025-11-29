@@ -31,12 +31,9 @@ import RichTextEditor, {
   Underline
 } from 'reactjs-tiptap-editor';
 import 'reactjs-tiptap-editor/style.css';
-import FigureImage from '../table/extensions/FigureImage';
-import ImageCaptionModal from '@/components/modals/ImageCaptionModal';
 
 const sanitizeEditorContent = (htmlContent) => {
   if (!htmlContent) return '';
-
   return htmlContent.replace(/>\s+</g, '><').trim();
 };
 
@@ -47,30 +44,16 @@ const Editor = (props) => {
   const [showModalHtml, setShowModalHtml] = useState(false);
   const [key, setKey] = useState(0);
   const [createTableOfContents, setCreateTableOfContents] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const isInitialMount = useRef(true);
   const isSettingContent = useRef(false);
-
-  const [showImageCaptionModal, setShowImageCaptionModal] = useState(false);
-  const [selectedImageNode, setSelectedImageNode] = useState(null);
-  const [selectedImagePos, setSelectedImagePos] = useState(null);
   const editorRef = useRef(null);
 
+  // UNIQUE ID CHO MỖI EDITOR
   const editorId = useId();
-  const eventName = `editFigureImage_${editorId}`;
 
-  const customFigureImage = FigureImage.configure({
-    uploadImage: async (file) => {
-      try {
-        const url = await uploadFileCdn({ file });
-        return url;
-      } catch (error) {
-        console.error('Error uploading image:', error);
-        return null;
-      }
-    }
-  });
-
+  // DISABLE UPLOAD TRONG IMAGE EXTENSION - CHỈ SỬ DỤNG CƠ BẢN
   const extensions = [
     BaseKit.configure({
       placeholder: {
@@ -103,19 +86,14 @@ const Editor = (props) => {
         rel: 'noopener'
       }
     }),
+    // IMAGE EXTENSION KHÔNG CÓ UPLOAD - CHỈ HIỂN THỊ
     Image.configure({
-      upload: (file) => {
-        return uploadFileCdn({ file }).then((url) => {
-          return url;
-        });
-      },
-      allowBase64: true,
-      inline: true,
+      allowBase64: false,
+      inline: false,
       HTMLAttributes: {
-        style: 'display: inline-block; vertical-align: top; margin: 0;'
+        style: 'max-width: 100%; height: auto;'
       }
     }),
-    customFigureImage,
     Blockquote,
     SlashCommand,
     HorizontalRule,
@@ -124,6 +102,61 @@ const Editor = (props) => {
     }),
     CodeBlock.configure({ defaultTheme: 'dracula' }),
     Table
+  ];
+
+  // HANDLE MANUAL IMAGE UPLOAD QUA CUSTOM MENU
+  const handleImageUpload = async () => {
+    if (isUploading || disabled || !editorRef.current) return;
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.style.display = 'none';
+
+    input.onchange = async (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      setIsUploading(true);
+
+      try {
+        // Upload file
+        const url = await uploadFileCdn({ file });
+
+        if (url && editorRef.current) {
+          const { editor } = editorRef.current;
+
+          // INSERT IMAGE VÀO VỊ TRÍ CURSOR HIỆN TẠI
+          editor
+            .chain()
+            .focus() // Đảm bảo editor được focus
+            .setImage({ src: url, alt: file.name })
+            .run();
+        }
+      } catch (error) {
+        console.error('Error uploading image:', error);
+      } finally {
+        setIsUploading(false);
+        // Clean up input element
+        input.remove();
+      }
+    };
+
+    // Trigger file selection
+    document.body.appendChild(input);
+    input.click();
+  };
+
+  // CUSTOM MENU ITEMS CHO UPLOAD
+  const customMenuItems = [
+    {
+      name: `uploadImage_${editorId}`,
+      tooltip: 'Thêm hình ảnh',
+      display: 'Hình ảnh',
+      icon: '🖼️',
+      disabled: isUploading || disabled,
+      action: handleImageUpload
+    }
   ];
 
   const onChangeContent = (value) => {
@@ -161,74 +194,6 @@ const Editor = (props) => {
     }
   }, [getCreateTableOfContents, createTableOfContents]);
 
-  // SỬ DỤNG UNIQUE EVENT NAME CHO MỖI EDITOR
-  useEffect(() => {
-    const handleEditFigureImage = (event) => {
-      const { node, pos } = event.detail;
-      setSelectedImageNode(node);
-      setSelectedImagePos(pos);
-      setShowImageCaptionModal(true);
-    };
-
-    window.addEventListener(eventName, handleEditFigureImage);
-
-    return () => {
-      window.removeEventListener(eventName, handleEditFigureImage);
-    };
-  }, [eventName]);
-
-  const handleSaveImageCaption = (values) => {
-    if (editorRef.current && selectedImageNode && selectedImagePos !== null) {
-      const { editor } = editorRef.current;
-
-      editor
-        .chain()
-        .focus()
-        .updateFigureImage({
-          alt: values.alt,
-          caption: values.caption
-        })
-        .run();
-
-      setShowImageCaptionModal(false);
-      setSelectedImageNode(null);
-      setSelectedImagePos(null);
-    }
-  };
-
-  const customMenuItems = [
-    {
-      name: `insertFigureImage_${editorId}`,
-      tooltip: 'Chèn hình ảnh có chú thích',
-      display: 'Hình + Chú thích',
-      icon: '🖼️',
-      action: async () => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.id = `image-upload-${editorId}`;
-
-        input.onchange = async (event) => {
-          const file = event.target.files[0];
-          if (file && editorRef.current) {
-            try {
-              const url = await uploadFileCdn({ file });
-
-              if (url) {
-                setSelectedImageNode({ attrs: { src: url } });
-                setShowImageCaptionModal(true);
-              }
-            } catch (error) {
-              console.error('Error uploading image:', error);
-            }
-          }
-        };
-
-        input.click();
-      }
-    }
-  ];
-
   const handleModalOk = () => {
     setKey((prev) => prev + 1);
     const cleanContent = sanitizeEditorContent(contentModalHtml?.trim()).replace(/<p><\/p>/g, '');
@@ -260,6 +225,7 @@ const Editor = (props) => {
           </Tooltip>
         </div>
       )}
+
       <RichTextEditor
         ref={editorRef}
         disabled={disabled}
@@ -268,10 +234,20 @@ const Editor = (props) => {
         content={content}
         onChangeContent={onChangeContent}
         extensions={extensions}
-        minHeight={600}
         customMenuItems={customMenuItems}
+        minHeight={600}
         key={`editor-${editorId}`}
       />
+
+      {/* LOADING INDICATOR KHI UPLOAD */}
+      {isUploading && (
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-90 p-4 rounded-md shadow-lg z-40">
+          <div className="flex items-center gap-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+            <span>Đang tải hình...</span>
+          </div>
+        </div>
+      )}
 
       <div className="absolute bottom-3 right-3 z-30">
         <button
@@ -302,17 +278,6 @@ const Editor = (props) => {
           onChange={(e) => setContentModalHtml(e.target.value)}
         />
       </Modal>
-
-      <ImageCaptionModal
-        visible={showImageCaptionModal}
-        onSave={handleSaveImageCaption}
-        onCancel={() => {
-          setShowImageCaptionModal(false);
-          setSelectedImageNode(null);
-          setSelectedImagePos(null);
-        }}
-        initialData={selectedImageNode}
-      />
     </div>
   );
 };
