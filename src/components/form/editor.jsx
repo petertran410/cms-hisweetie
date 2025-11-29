@@ -56,7 +56,49 @@ const Editor = (props) => {
 
   console.log(`🆔 Editor instance created: ${editorInstanceId}`);
 
-  // EXTENSIONS KHÔNG CÓ UPLOAD - CHỈ HIỂN THỊ IMAGE
+  // SCOPED UPLOAD FUNCTION CHO EDITOR INSTANCE NÀY
+  const scopedImageUpload = async (file) => {
+    console.log(`🔄 Scoped upload started for ${editorInstanceId}:`, {
+      fileName: file.name,
+      size: file.size,
+      type: file.type
+    });
+
+    try {
+      // Prevent multiple uploads
+      if (isUploading) {
+        console.log(`⚠️ Upload already in progress for ${editorInstanceId}`);
+        return null;
+      }
+
+      setIsUploading(true);
+
+      message.loading({
+        content: `Đang tải hình ảnh... (${editorInstanceId})`,
+        key: `upload-${editorInstanceId}`,
+        duration: 0
+      });
+
+      const url = await uploadFileCdn({ file });
+      console.log(`✅ Scoped upload successful for ${editorInstanceId}:`, url);
+
+      message.destroy(`upload-${editorInstanceId}`);
+      message.success(`Tải hình ảnh thành công! (${editorInstanceId})`);
+
+      return url;
+    } catch (error) {
+      console.error(`❌ Scoped upload error for ${editorInstanceId}:`, error);
+
+      message.destroy(`upload-${editorInstanceId}`);
+      message.error(`Tải hình ảnh thất bại (${editorInstanceId}): ${error.message || 'Unknown error'}`);
+
+      return null;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // EXTENSIONS VỚI SCOPED UPLOAD FUNCTION
   const extensions = [
     BaseKit.configure({
       placeholder: {
@@ -89,8 +131,9 @@ const Editor = (props) => {
         rel: 'noopener'
       }
     }),
-    // IMAGE EXTENSION KHÔNG CÓ UPLOAD FUNCTION
+    // IMAGE EXTENSION VỚI SCOPED UPLOAD FUNCTION
     Image.configure({
+      upload: scopedImageUpload, // ← PROVIDE UPLOAD FUNCTION
       allowBase64: false,
       inline: false,
       HTMLAttributes: {
@@ -107,10 +150,10 @@ const Editor = (props) => {
     Table
   ];
 
-  // MANUAL UPLOAD FUNCTION BOUND TO SPECIFIC EDITOR INSTANCE
+  // MANUAL UPLOAD FUNCTION (BACKUP - CHỈ NẾU CẦN CUSTOM BUTTON)
   const handleManualImageUpload = async () => {
     if (isUploading || disabled || !editorRef.current) {
-      console.log(`⚠️ Upload blocked for ${editorInstanceId}:`, {
+      console.log(`⚠️ Manual upload blocked for ${editorInstanceId}:`, {
         isUploading,
         disabled,
         hasEditor: !!editorRef.current
@@ -133,51 +176,28 @@ const Editor = (props) => {
         return;
       }
 
-      console.log(`📁 File selected for ${editorInstanceId}:`, {
-        name: file.name,
-        size: file.size,
-        type: file.type
-      });
-
-      setIsUploading(true);
-
       try {
-        message.loading({
-          content: `Đang tải hình ảnh... (${editorInstanceId})`,
-          key: `upload-${editorInstanceId}`,
-          duration: 0
-        });
-
-        // Upload file
-        const url = await uploadFileCdn({ file });
-        console.log(`✅ Upload successful for ${editorInstanceId}:`, url);
+        const url = await scopedImageUpload(file);
 
         if (url && editorRef.current) {
           const { editor } = editorRef.current;
 
-          // ENSURE EDITOR IS FOCUSED AND INSERT IMAGE AT CURRENT POSITION
+          // INSERT IMAGE AT CURRENT POSITION
           editor
             .chain()
-            .focus() // Focus this specific editor
+            .focus()
             .setImage({
               src: url,
               alt: file.name,
-              title: `Image uploaded to ${editorInstanceId}`
+              title: `Manual upload to ${editorInstanceId}`
             })
             .run();
 
-          console.log(`🖼️ Image inserted into ${editorInstanceId}`);
+          console.log(`🖼️ Manual image inserted into ${editorInstanceId}`);
         }
-
-        message.destroy(`upload-${editorInstanceId}`);
-        message.success(`Tải hình ảnh thành công! (${editorInstanceId})`);
       } catch (error) {
-        console.error(`❌ Upload error for ${editorInstanceId}:`, error);
-
-        message.destroy(`upload-${editorInstanceId}`);
-        message.error(`Tải hình ảnh thất bại (${editorInstanceId}): ${error.message}`);
+        console.error(`❌ Manual upload error for ${editorInstanceId}:`, error);
       } finally {
-        setIsUploading(false);
         // Clean up input element
         input.remove();
       }
@@ -188,13 +208,13 @@ const Editor = (props) => {
     input.click();
   };
 
-  // CUSTOM MENU ITEMS CHỈ CHO EDITOR NÀY
+  // CUSTOM MENU ITEMS (OPTIONAL)
   const customMenuItems = [
     {
       name: `manual-upload-${editorInstanceId}`,
-      tooltip: `Thêm hình ảnh vào ${editorInstanceId}`,
-      display: '🖼️ Hình ảnh',
-      icon: '🖼️',
+      tooltip: `Upload hình ảnh thủ công`,
+      display: '📎 Upload',
+      icon: '📎',
       disabled: isUploading || disabled,
       action: handleManualImageUpload
     }
@@ -247,8 +267,10 @@ const Editor = (props) => {
 
   return (
     <div className="relative" key={`${key}-${editorInstanceId}`}>
-      {/* EDITOR IDENTIFIER */}
-      <div className="mb-2 text-xs text-gray-500 font-mono">Editor ID: {editorInstanceId}</div>
+      {/* EDITOR IDENTIFIER - CHỈ HIỂN THỊ KHI DEBUG */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mb-2 text-xs text-gray-500 font-mono">Editor ID: {editorInstanceId}</div>
+      )}
 
       {showCreateTableOfContents && (
         <div className="mb-5 flex items-center gap-2">
