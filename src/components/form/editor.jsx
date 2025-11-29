@@ -1,4 +1,3 @@
-import { uploadFileCdn } from '@/utils/helper';
 import { Checkbox, Modal, Tooltip, message } from 'antd';
 import { memo, useEffect, useState, useRef, useId } from 'react';
 import { FaQuestionCircle } from 'react-icons/fa';
@@ -52,7 +51,41 @@ const Editor = (props) => {
   // UNIQUE ID CHO MỖI EDITOR
   const editorId = useId();
 
-  // SỬ DỤNG BUILT-IN IMAGE UPLOAD CỦA TIPTAP VỚI ERROR HANDLING TỐT HỠN
+  // SỬ DỤNG PROXY UPLOAD THAY VÌ DIRECT CALL
+  const proxyImageUpload = async (file) => {
+    console.log('🔄 Starting proxy upload...', file.name);
+
+    try {
+      message.loading({ content: 'Đang tải hình ảnh...', key: 'uploadImage', duration: 0 });
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // CALL INTERNAL NEXT.JS ROUTE - NO CORS
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Upload failed: ${response.status} - ${errorText}`);
+      }
+
+      const result = await response.text();
+
+      message.destroy('uploadImage');
+      message.success('Upload thành công!');
+
+      return result;
+    } catch (error) {
+      console.error('❌ Upload error:', error);
+      message.destroy('uploadImage');
+      message.error(`Upload thất bại: ${error.message}`);
+      return null;
+    }
+  };
+
   const extensions = [
     BaseKit.configure({
       placeholder: {
@@ -85,34 +118,8 @@ const Editor = (props) => {
         rel: 'noopener'
       }
     }),
-    // SỬ DỤNG BUILT-IN IMAGE UPLOAD VỚI PROPER ERROR HANDLING
     Image.configure({
-      upload: async (file) => {
-        console.log('🔄 Starting image upload...', { fileName: file.name, size: file.size });
-
-        try {
-          // Show loading message
-          message.loading({ content: 'Đang tải hình ảnh...', key: 'uploadImage', duration: 0 });
-
-          const result = await uploadFileCdn({ file });
-
-          console.log('✅ Image upload successful:', result);
-
-          // Hide loading và show success
-          message.destroy('uploadImage');
-          message.success('Tải hình ảnh thành công!');
-
-          return result;
-        } catch (error) {
-          console.error('❌ Image upload failed:', error);
-
-          // Hide loading và show error
-          message.destroy('uploadImage');
-          message.error('Tải hình ảnh thất bại. Vui lòng thử lại!');
-
-          return null;
-        }
-      },
+      upload: proxyImageUpload, // ← Sử dụng proxy function
       allowBase64: false,
       inline: false,
       HTMLAttributes: {

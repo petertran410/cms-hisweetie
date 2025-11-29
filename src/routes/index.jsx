@@ -8,9 +8,8 @@ import Dashboard from '@/pages/dashboard';
 import Login from '@/pages/login';
 import { NewsCreate, NewsList } from '@/pages/news';
 import { AllOrder } from '@/pages/order';
-import { PagesCreate, PagesList, PagesDetail } from '@/pages/pages'; // THÊM PAGES IMPORTS
+import { PagesCreate, PagesList, PagesDetail } from '@/pages/pages';
 import { ProductsCreate, ProductsList } from '@/pages/products';
-import { RecipeCreate, RecipeList } from '@/pages/recipe';
 import { RecruitmentCreate, RecruitmentList } from '@/pages/recruitment';
 import { UserCreate, UserList } from '@/pages/user';
 import { VideoCreate, VideoList } from '@/pages/video';
