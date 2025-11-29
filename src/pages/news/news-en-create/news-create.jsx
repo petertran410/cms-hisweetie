@@ -55,7 +55,7 @@ const NewsCreateEn = () => {
           const data = {
             title_en,
             titleMeta,
-            html_content_en: getHtmlContentWithTOC(htmlContent, hasTableOfContents),
+            html_content_en: getHtmlContentWithTOC(html_content_en, hasTableOfContents),
             description_en,
             imagesUrl,
             type,
