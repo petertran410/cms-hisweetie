@@ -44,50 +44,19 @@ const Editor = (props) => {
   const [showModalHtml, setShowModalHtml] = useState(false);
   const [key, setKey] = useState(0);
   const [createTableOfContents, setCreateTableOfContents] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const isInitialMount = useRef(true);
   const isSettingContent = useRef(false);
   const editorRef = useRef(null);
 
+  // UNIQUE ID CHO MỖI EDITOR INSTANCE
   const editorId = useId();
+  const editorInstanceId = `editor_${editorId.replace(/:/g, '_')}`;
 
-  const imageUpload = async (file) => {
-    console.log('🔄 Starting image upload...', {
-      fileName: file.name,
-      size: file.size,
-      type: file.type
-    });
+  console.log(`🆔 Editor instance created: ${editorInstanceId}`);
 
-    try {
-      message.loading({ content: 'Đang tải hình ảnh...', key: 'uploadImage', duration: 0 });
-
-      const result = await uploadFileCdn({ file });
-
-      console.log('✅ Upload successful:', result);
-
-      message.destroy('uploadImage');
-      message.success('Tải hình ảnh thành công!');
-
-      return result;
-    } catch (error) {
-      console.error('❌ Upload error details:', error);
-
-      message.destroy('uploadImage');
-
-      // DETAILED ERROR MESSAGE
-      let errorMsg = 'Tải hình ảnh thất bại';
-      if (error.message) {
-        errorMsg += `: ${error.message}`;
-      }
-      if (error.response?.data?.message) {
-        errorMsg += `: ${error.response.data.message}`;
-      }
-
-      message.error(errorMsg);
-      return null;
-    }
-  };
-
+  // EXTENSIONS KHÔNG CÓ UPLOAD - CHỈ HIỂN THỊ IMAGE
   const extensions = [
     BaseKit.configure({
       placeholder: {
@@ -120,9 +89,8 @@ const Editor = (props) => {
         rel: 'noopener'
       }
     }),
-    // SỬ DỤNG DIRECT UPLOAD
+    // IMAGE EXTENSION KHÔNG CÓ UPLOAD FUNCTION
     Image.configure({
-      upload: imageUpload,
       allowBase64: false,
       inline: false,
       HTMLAttributes: {
@@ -137,6 +105,99 @@ const Editor = (props) => {
     }),
     CodeBlock.configure({ defaultTheme: 'dracula' }),
     Table
+  ];
+
+  // MANUAL UPLOAD FUNCTION BOUND TO SPECIFIC EDITOR INSTANCE
+  const handleManualImageUpload = async () => {
+    if (isUploading || disabled || !editorRef.current) {
+      console.log(`⚠️ Upload blocked for ${editorInstanceId}:`, {
+        isUploading,
+        disabled,
+        hasEditor: !!editorRef.current
+      });
+      return;
+    }
+
+    console.log(`🔄 Starting manual upload for ${editorInstanceId}`);
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.style.display = 'none';
+    input.id = `image-input-${editorInstanceId}`;
+
+    input.onchange = async (event) => {
+      const file = event.target.files?.[0];
+      if (!file) {
+        console.log(`❌ No file selected for ${editorInstanceId}`);
+        return;
+      }
+
+      console.log(`📁 File selected for ${editorInstanceId}:`, {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      });
+
+      setIsUploading(true);
+
+      try {
+        message.loading({
+          content: `Đang tải hình ảnh... (${editorInstanceId})`,
+          key: `upload-${editorInstanceId}`,
+          duration: 0
+        });
+
+        // Upload file
+        const url = await uploadFileCdn({ file });
+        console.log(`✅ Upload successful for ${editorInstanceId}:`, url);
+
+        if (url && editorRef.current) {
+          const { editor } = editorRef.current;
+
+          // ENSURE EDITOR IS FOCUSED AND INSERT IMAGE AT CURRENT POSITION
+          editor
+            .chain()
+            .focus() // Focus this specific editor
+            .setImage({
+              src: url,
+              alt: file.name,
+              title: `Image uploaded to ${editorInstanceId}`
+            })
+            .run();
+
+          console.log(`🖼️ Image inserted into ${editorInstanceId}`);
+        }
+
+        message.destroy(`upload-${editorInstanceId}`);
+        message.success(`Tải hình ảnh thành công! (${editorInstanceId})`);
+      } catch (error) {
+        console.error(`❌ Upload error for ${editorInstanceId}:`, error);
+
+        message.destroy(`upload-${editorInstanceId}`);
+        message.error(`Tải hình ảnh thất bại (${editorInstanceId}): ${error.message}`);
+      } finally {
+        setIsUploading(false);
+        // Clean up input element
+        input.remove();
+      }
+    };
+
+    // Trigger file selection
+    document.body.appendChild(input);
+    input.click();
+  };
+
+  // CUSTOM MENU ITEMS CHỈ CHO EDITOR NÀY
+  const customMenuItems = [
+    {
+      name: `manual-upload-${editorInstanceId}`,
+      tooltip: `Thêm hình ảnh vào ${editorInstanceId}`,
+      display: '🖼️ Hình ảnh',
+      icon: '🖼️',
+      disabled: isUploading || disabled,
+      action: handleManualImageUpload
+    }
   ];
 
   const onChangeContent = (value) => {
@@ -185,13 +246,16 @@ const Editor = (props) => {
   locale.setLang('vi');
 
   return (
-    <div className="relative" key={`${key}-${editorId}`}>
+    <div className="relative" key={`${key}-${editorInstanceId}`}>
+      {/* EDITOR IDENTIFIER */}
+      <div className="mb-2 text-xs text-gray-500 font-mono">Editor ID: {editorInstanceId}</div>
+
       {showCreateTableOfContents && (
         <div className="mb-5 flex items-center gap-2">
           <Checkbox
             checked={createTableOfContents}
             onChange={(e) => setCreateTableOfContents(e.target.checked)}
-            id={`toc-checkbox-${editorId}`}
+            id={`toc-checkbox-${editorInstanceId}`}
           >
             Tạo mục lục
           </Checkbox>
@@ -214,9 +278,20 @@ const Editor = (props) => {
         content={content}
         onChangeContent={onChangeContent}
         extensions={extensions}
+        customMenuItems={customMenuItems}
         minHeight={600}
-        key={`editor-${editorId}`}
+        key={`editor-content-${editorInstanceId}`}
       />
+
+      {/* UPLOAD LOADING INDICATOR */}
+      {isUploading && (
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-90 p-4 rounded-md shadow-lg z-50">
+          <div className="flex items-center gap-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+            <span>Đang tải hình vào {editorInstanceId}...</span>
+          </div>
+        </div>
+      )}
 
       <div className="absolute bottom-3 right-3 z-30">
         <button
@@ -232,7 +307,7 @@ const Editor = (props) => {
       </div>
 
       <Modal
-        title="Nội dung HTML"
+        title={`Nội dung HTML - ${editorInstanceId}`}
         open={showModalHtml}
         onOk={handleModalOk}
         onCancel={() => setShowModalHtml(false)}
