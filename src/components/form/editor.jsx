@@ -1,3 +1,4 @@
+import { uploadFileCdn } from '@/utils/helper';
 import { Checkbox, Modal, Tooltip, message } from 'antd';
 import { memo, useEffect, useState, useRef, useId } from 'react';
 import { FaQuestionCircle } from 'react-icons/fa';
@@ -48,40 +49,41 @@ const Editor = (props) => {
   const isSettingContent = useRef(false);
   const editorRef = useRef(null);
 
-  // UNIQUE ID CHO MỖI EDITOR
   const editorId = useId();
 
-  // SỬ DỤNG PROXY UPLOAD THAY VÌ DIRECT CALL
-  const proxyImageUpload = async (file) => {
-    console.log('🔄 Starting proxy upload...', file.name);
+  const imageUpload = async (file) => {
+    console.log('🔄 Starting image upload...', {
+      fileName: file.name,
+      size: file.size,
+      type: file.type
+    });
 
     try {
       message.loading({ content: 'Đang tải hình ảnh...', key: 'uploadImage', duration: 0 });
 
-      const formData = new FormData();
-      formData.append('file', file);
+      const result = await uploadFileCdn({ file });
 
-      // CALL INTERNAL NEXT.JS ROUTE - NO CORS
-      const response = await fetch('/api/upload-image', {
-        method: 'POST',
-        body: formData
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Upload failed: ${response.status} - ${errorText}`);
-      }
-
-      const result = await response.text();
+      console.log('✅ Upload successful:', result);
 
       message.destroy('uploadImage');
-      message.success('Upload thành công!');
+      message.success('Tải hình ảnh thành công!');
 
       return result;
     } catch (error) {
-      console.error('❌ Upload error:', error);
+      console.error('❌ Upload error details:', error);
+
       message.destroy('uploadImage');
-      message.error(`Upload thất bại: ${error.message}`);
+
+      // DETAILED ERROR MESSAGE
+      let errorMsg = 'Tải hình ảnh thất bại';
+      if (error.message) {
+        errorMsg += `: ${error.message}`;
+      }
+      if (error.response?.data?.message) {
+        errorMsg += `: ${error.response.data.message}`;
+      }
+
+      message.error(errorMsg);
       return null;
     }
   };
@@ -118,8 +120,9 @@ const Editor = (props) => {
         rel: 'noopener'
       }
     }),
+    // SỬ DỤNG DIRECT UPLOAD
     Image.configure({
-      upload: proxyImageUpload, // ← Sử dụng proxy function
+      upload: imageUpload,
       allowBase64: false,
       inline: false,
       HTMLAttributes: {
