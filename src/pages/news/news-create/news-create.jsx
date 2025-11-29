@@ -22,6 +22,7 @@ const NewsCreate = () => {
   console.log(newsDetail);
   const { isDetail } = useFormType();
   const [hasTableOfContents, setHasTableOfContents] = useState(false);
+  const [hasTableOfContentsEn, setHasTableOfContentsEn] = useState(false);
 
   const onFinish = useCallback(
     (values) => {
@@ -74,7 +75,7 @@ const NewsCreate = () => {
             type,
             embedUrl: embedUrl?.trim() || null,
             title_en,
-            html_content_en
+            html_content_en: getHtmlContentWithTOC(html_content_en, hasTableOfContentsEn)
           };
           id ? updateMutate(data) : createMutate(data);
         })
@@ -82,7 +83,7 @@ const NewsCreate = () => {
           showToast({ type: 'error', message: `Tải ảnh bài viết thất bại. ${e.message}` });
         });
     },
-    [createMutate, updateMutate, id, hasTableOfContents]
+    [createMutate, updateMutate, id, hasTableOfContents, hasTableOfContentsEn]
   );
 
   useScrollTop();
@@ -232,7 +233,7 @@ const NewsCreate = () => {
         >
           <Editor
             showCreateTableOfContents
-            getCreateTableOfContents={(value) => setHasTableOfContents(value)}
+            getCreateTableOfContents={(value) => setHasTableOfContentsEn(value)}
             defaultValue={html_content_en}
             disabled={isDetail}
           />

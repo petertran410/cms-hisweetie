@@ -228,10 +228,8 @@ export const getHtmlContentWithTOC = (htmlContent, hasTableOfContents) => {
   if (!htmlContent) return '';
 
   if (hasTableOfContents) {
-    // Thêm TOC marker vào đầu content
     return htmlContent.startsWith('<toc></toc>') ? htmlContent : `<toc></toc>${htmlContent}`;
   } else {
-    // Remove TOC marker nếu có
     return htmlContent.replace('<toc></toc>', '');
   }
 };
