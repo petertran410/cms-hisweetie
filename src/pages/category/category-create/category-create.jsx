@@ -67,7 +67,6 @@ const CategoryCreate = () => {
           placeholder="Chọn danh mục cha (để trống nếu là danh mục gốc)"
         />
 
-        {/* ✅ SỬA: Sử dụng InputNumber thay vì Input type="number" */}
         <Form.Item
           label={<p className="font-bold text-md">Thứ tự hiển thị</p>}
           name="priority"

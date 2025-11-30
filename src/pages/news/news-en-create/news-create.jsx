@@ -119,26 +119,26 @@ const NewsCreateEn = () => {
           <Input className="py-2" disabled={isDetail} />
         </Form.Item>
 
-        <Form.Item
+        {/* <Form.Item
           label={<p className="font-bold text-md">Title Meta</p>}
           name="titleMeta"
           initialValue={titleMeta}
           rules={[{ required: true, message: 'Vui lòng nhập title meta' }]}
         >
           <Input className="py-2" disabled={isDetail} placeholder="Nhập title meta" />
-        </Form.Item>
+        </Form.Item> */}
 
-        <Form.Item
+        {/* <Form.Item
           label={<p className="font-bold text-md">Loại bài viết</p>}
           name="type"
           initialValue={type || 'NEWS'}
           rules={[{ required: true, message: 'Vui lòng chọn loại bài viết' }]}
         >
           <Select className="h-10" placeholder="Chọn loại bài viết" disabled={isDetail} options={NEWS_TYPE_OPTIONS} />
-        </Form.Item>
+        </Form.Item> */}
 
         <Form.Item
-          label={<p className="font-bold text-md">Mô tả</p>}
+          label={<p className="font-bold text-md">Mô tả (English)</p>}
           name="description_en"
           initialValue={description_en}
         >
@@ -154,7 +154,7 @@ const NewsCreateEn = () => {
           defaultFileList={defaultImages}
         />
 
-        <Form.Item
+        {/* <Form.Item
           label={<p className="font-bold text-md">Link video nhúng (tùy chọn)</p>}
           name="embedUrl"
           initialValue={embedUrl}
@@ -167,10 +167,10 @@ const NewsCreateEn = () => {
           />
         </Form.Item>
 
-        {!isDetail && <GuideGetLink />}
+        {!isDetail && <GuideGetLink />} */}
 
         <Form.Item
-          label={<p className="font-bold text-md">Nội dung</p>}
+          label={<p className="font-bold text-md">Nội dung (English)</p>}
           name="html_content_en"
           initialValue={html_content_en}
           rules={[{ required: true, message: 'Vui lòng nhập nội dung' }]}
