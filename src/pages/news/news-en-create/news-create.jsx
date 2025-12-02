@@ -3,7 +3,6 @@ import { ErrorScreen, LoadingScreen } from '@/components/effect-screen';
 import Editor from '@/components/form/editor';
 import FormItemUpload from '@/components/form/form-upload';
 import { useCreateNews, useQueryNewsDetail, useUpdateNews } from '@/services/news.service';
-import { NEWS_TYPE_OPTIONS } from '@/utils/news-types.constants';
 import { API } from '@/utils/API';
 import { getHtmlContentWithTOC, showToast, useFormType, useScrollTop } from '@/utils/helper';
 import { WEBSITE_NAME } from '@/utils/resource';
@@ -11,7 +10,6 @@ import { Button, Form, Input, Select } from 'antd';
 import { useCallback, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { Link, useParams } from 'react-router-dom';
-import GuideGetLink from './guide-get-link';
 
 const NewsCreateEn = () => {
   const { id } = useParams();

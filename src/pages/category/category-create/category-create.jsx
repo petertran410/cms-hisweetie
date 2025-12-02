@@ -36,13 +36,21 @@ const CategoryCreate = () => {
         autoComplete="off"
         className="mt-10"
         initialValues={{
-          priority: 0 // ✅ Set default value
+          priority: 0
         }}
       >
         <Form.Item
           label={<p className="font-bold text-md">Tên danh mục</p>}
           name="name"
           rules={[{ required: true, message: 'Vui lòng nhập tên danh mục' }]}
+        >
+          <Input className="py-2" placeholder="Nhập tên danh mục" />
+        </Form.Item>
+
+        <Form.Item
+          label={<p className="font-bold text-md">Tên danh mục English</p>}
+          name="name_en"
+          rules={[{ required: false, message: 'Vui lòng nhập tên danh mục' }]}
         >
           <Input className="py-2" placeholder="Nhập tên danh mục" />
         </Form.Item>

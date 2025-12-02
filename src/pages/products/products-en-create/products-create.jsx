@@ -1,0 +1,381 @@
+import { ButtonBack } from '@/components/button';
+import { ErrorScreen, LoadingScreen } from '@/components/effect-screen';
+import { FormSelectQuery } from '@/components/form';
+import Editor from '../../../components/form/editor';
+import FormItemUpload from '@/components/form/form-upload';
+import { useCreateProducts, useQueryProductDetail, useUpdateProducts } from '@/services/products.service';
+import { API } from '@/utils/API';
+import { formatCurrency, showToast } from '@/utils/helper';
+import { WEBSITE_NAME } from '@/utils/resource';
+import { Button, Form, Input, InputNumber, Switch } from 'antd';
+import { useCallback, useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet';
+import { useParams } from 'react-router-dom';
+
+const ProductsCreateEn = () => {
+  const { id } = useParams();
+  const [form] = Form.useForm();
+  const { isPending: loadingCreate, mutate: createMutate } = useCreateProducts();
+  const { isPending: loadingUpdate, mutate: updateMutate } = useUpdateProducts(id);
+  const { isLoading: loadingDetail, data: productsDetail, error: errorDetail } = useQueryProductDetail(id);
+  const [currentPrice, setCurrentPrice] = useState(0);
+  const [isFeaturedProduct, setIsFeaturedProduct] = useState(false);
+
+  const {
+    title,
+    title_en,
+    title_meta,
+    description,
+    description_en,
+    imagesUrl,
+    price,
+    ofCategories,
+    general_description,
+    instruction,
+    instruction_en,
+    isFeatured,
+    featuredThumbnail,
+    category_id,
+    category,
+    price_on
+  } = productsDetail || {};
+
+  console.log(productsDetail);
+
+  const onFinish = useCallback(
+    (values) => {
+      const {
+        title,
+        title_en,
+        title_meta,
+        price,
+        categoryId,
+        description,
+        description_en,
+        imagesUrl,
+        instruction,
+        instruction_en,
+        isFeatured,
+        featuredThumbnail,
+        general_description,
+        price_on
+      } = values || {};
+
+      const extractedCategoryId = categoryId?.value ?? categoryId ?? null;
+
+      const fileList = Array.isArray(imagesUrl) ? imagesUrl : imagesUrl?.fileList || [];
+      const featuredFileList = Array.isArray(featuredThumbnail) ? featuredThumbnail : featuredThumbnail?.fileList || [];
+
+      Promise.all(
+        [...fileList, ...featuredFileList].map(async (item) => {
+          if (item.url) {
+            return item.url;
+          }
+
+          if (!item?.originFileObj) {
+            return null;
+          }
+
+          const formData = new FormData();
+          formData.append('file', item?.originFileObj);
+          return await API.request({
+            url: '/api/file/upload',
+            method: 'POST',
+            params: formData,
+            isUpload: true,
+            headers: {
+              'X-Force-Signature': import.meta.env.VITE_API_KEY
+            }
+          });
+        })
+      )
+        .then((uploadResults) => {
+          const filteredResults = uploadResults.filter(Boolean);
+          let productImagesUrl = [];
+          let featuredImageUrl = null;
+
+          if (!featuredFileList?.length) {
+            productImagesUrl = filteredResults;
+          } else {
+            featuredImageUrl = filteredResults[filteredResults.length - 1];
+            productImagesUrl = filteredResults.slice(0, -1);
+          }
+
+          const data = {
+            title,
+            title_en,
+            title_meta,
+            price: Number(price) && Number(price) > 0 ? price : null,
+            description,
+            description_en,
+            images_url: productImagesUrl,
+            general_description,
+            instruction,
+            instruction_en,
+            is_featured: isFeatured,
+            price_on,
+            featured_thumbnail: isFeatured ? featuredImageUrl : null,
+            categoryIds: extractedCategoryId ? [extractedCategoryId] : []
+          };
+
+          id ? updateMutate(data) : createMutate(data);
+        })
+        .catch((error) => {
+          showToast({
+            type: 'error',
+            message: `Upload failed: ${error.message}`
+          });
+        });
+    },
+    [createMutate, updateMutate, id]
+  );
+
+  useEffect(() => {
+    if (productsDetail && !loadingDetail) {
+      const categoryValue =
+        category && category.name
+          ? {
+              label: category.name,
+              value: category.id
+            }
+          : null;
+
+      form.setFieldsValue({
+        title: title,
+        title_en: title_en,
+        title_meta: title_meta,
+        general_description: general_description,
+        categoryId: categoryValue,
+        price: price,
+        isFeatured: isFeatured,
+        description: description,
+        instruction: instruction,
+        description_en: description_en,
+        instruction_en: instruction_en
+      });
+
+      setCurrentPrice(price || 0);
+      setIsFeaturedProduct(isFeatured || false);
+    }
+  }, [
+    productsDetail,
+    loadingDetail,
+    form,
+    title,
+    title_en,
+    title_meta,
+    general_description,
+    category_id,
+    ofCategories,
+    price,
+    isFeatured,
+    description,
+    instruction,
+    category,
+    description_en,
+    instruction_en
+  ]);
+
+  useEffect(() => {
+    if (id && productsDetail) {
+      setCurrentPrice(productsDetail?.price);
+    }
+  }, [id, productsDetail]);
+
+  useEffect(() => {
+    setIsFeaturedProduct(isFeatured);
+  }, [isFeatured]);
+
+  if (loadingDetail) {
+    return <LoadingScreen className="mt-20" />;
+  }
+
+  if (errorDetail) {
+    return <ErrorScreen message={errorDetail?.message} className="mt-20" />;
+  }
+
+  const arrayImageUrl = imagesUrl && imagesUrl.length > 0 ? imagesUrl : [];
+
+  const initialImages = arrayImageUrl.length > 0 ? arrayImageUrl.map((i) => ({ name: '', url: i })) : undefined;
+
+  const defaultImages =
+    arrayImageUrl.length > 0
+      ? arrayImageUrl.map((i) => ({
+          type: 'image/*',
+          url: i,
+          uid: i,
+          name: ''
+        }))
+      : undefined;
+
+  const initFeaturedImage = featuredThumbnail ? { name: '', url: featuredThumbnail } : undefined;
+  const defaultFeaturedImage = featuredThumbnail
+    ? { type: 'image/*', url: featuredThumbnail, uid: featuredThumbnail, name: '' }
+    : undefined;
+
+  return (
+    <div className="w-full md:w-[60%] lg:w-[50%] 2xl:w-[65%] mx-auto">
+      <Helmet>
+        <title>
+          {id ? 'Cập nhật' : 'Tạo'} sản phẩm | {WEBSITE_NAME}
+        </title>
+      </Helmet>
+
+      <Form
+        form={form}
+        name="productForm"
+        labelCol={{ span: 24 }}
+        wrapperCol={{ span: 24 }}
+        initialValues={{ remember: true }}
+        onFinish={onFinish}
+        autoComplete="off"
+        className="my-10"
+      >
+        <Form.Item
+          label={<p className="font-bold text-md">Tên sản phẩm English</p>}
+          name="title_en"
+          initialValue={title_en}
+          rules={[{ required: true, message: 'Vui lòng nhập tên sản phẩm bằng tiếng anh' }]}
+          className="mb-10"
+        >
+          <Input className="py-2" />
+        </Form.Item>
+
+        {/* <Form.Item
+          label={<p className="font-bold text-md">Title Meta</p>}
+          name="title_meta"
+          initialValue={title_meta}
+          rules={[{ required: true, message: 'Vui lòng nhập title meta sản phẩm' }]}
+          className="mb-10"
+        >
+          <Input className="py-2" />
+        </Form.Item> */}
+
+        {/* <Form.Item
+          label={<p className="font-bold text-md">Meta description</p>}
+          name="general_description"
+          initialValue={general_description}
+          rules={[{ required: false, message: 'Vui lòng nhập meta description' }]}
+          className="mb-10"
+        >
+          <Input.TextArea rows={2} className="py-2" />
+        </Form.Item> */}
+
+        {/* <FormSelectQuery
+          allowClear
+          label="Danh mục"
+          labelKey="displayName"
+          valueKey="id"
+          name="categoryId"
+          request={{
+            url: '/api/category/for-cms'
+          }}
+          placeholder="Chọn danh mục sản phẩm..."
+          initialValue={category_id}
+          // fixedOptions={(inputValue, option) => {
+          //   return option.id !== parseInt(id);
+          // }}
+        /> */}
+
+        {/* <Form.Item
+          label={<p className="font-bold text-md">Giá sản phẩm (VND)</p>}
+          name="price"
+          initialValue={price}
+          className="mt-10 mb-0"
+        >
+          <InputNumber
+            type="number"
+            className="py-1 w-full"
+            onChange={(data) => {
+              setCurrentPrice(data || 0);
+            }}
+          />
+        </Form.Item> */}
+
+        {/* <p className="mt-0.5 ml-2 mb-10">{formatCurrency(currentPrice)}</p> */}
+
+        {/* <Form.Item
+          label={<p className="font-bold text-md">Hiển thị "Liên hệ"</p>}
+          name="price_on"
+          initialValue={price_on}
+          valuePropName="checked"
+          className="mb-10"
+        >
+          <Switch />
+        </Form.Item> */}
+
+        {/* <Form.Item
+          label={<p className="font-bold text-md">Số lượng trong kho</p>}
+          name="quantity"
+          initialValue={quantity}
+          className="mb-10"
+          rules={[{ required: true, message: 'Vui lòng nhập số lượng' }]}
+        >
+          <InputNumber type="number" className="py-1 w-full" />
+        </Form.Item> */}
+
+        <div className="w-60 mb-10">
+          <FormItemUpload
+            name="imagesUrl"
+            label="Ảnh sản phẩm"
+            multiple
+            accept=".JPG, .JPEG, .PNG, .GIF, .BMP, .HEIC, .SVG, .WEBP"
+            initialValue={initialImages}
+            defaultFileList={defaultImages}
+            maxCount={10}
+          />
+        </div>
+
+        <Form.Item
+          label={<p className="font-bold text-md">Sản phẩm nổi bật</p>}
+          name="isFeatured"
+          initialValue={isFeatured}
+          valuePropName="checked"
+          className="mb-10"
+        >
+          <Switch onChange={(e) => setIsFeaturedProduct(e)} />
+        </Form.Item>
+
+        <Form.Item
+          label={<p className="font-bold text-md">Mô tả chung English (Nằm ngay dưới title)</p>}
+          name="description_en"
+          initialValue={description_en}
+          className="mb-10"
+          rules={[{ required: false, message: 'Vui lòng điền thông tin' }]}
+        >
+          <Editor defaultValue={description_en} />
+        </Form.Item>
+
+        <Form.Item
+          label={<p className="font-bold text-md">Thông tin sản phẩm English (Thông tin dài)</p>}
+          name="instruction_en"
+          initialValue={instruction_en}
+          className="mb-10"
+          rules={[{ required: false, message: 'Vui lòng điền thông tin' }]}
+        >
+          <Editor defaultValue={instruction_en} />
+        </Form.Item>
+
+        <div className="flex items-center gap-8 mt-20 justify-center">
+          <div className="hidden md:block">
+            <ButtonBack route="/products" />
+          </div>
+
+          <Form.Item className="mb-0">
+            <Button
+              type="primary"
+              htmlType="submit"
+              size="large"
+              className="px-10"
+              loading={loadingCreate || loadingUpdate}
+            >
+              <span className="font-semibold">{id ? 'Cập nhật' : 'Tạo mới'}</span>
+            </Button>
+          </Form.Item>
+        </div>
+      </Form>
+    </div>
+  );
+};
+
+export default ProductsCreateEn;
