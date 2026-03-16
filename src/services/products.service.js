@@ -24,16 +24,12 @@ export const useQueryProductsList = () => {
         includeHidden: true
       };
 
-      if (keyword) {
-        apiParams.title = keyword;
-      }
-
+      if (keyword) apiParams.title = keyword;
       if (categoryIds) {
         apiParams.categoryIds = categoryIds;
       } else if (categoryId) {
         apiParams.categoryId = categoryId;
       }
-
       if (is_visible !== undefined && is_visible !== '') {
         apiParams.is_visible = is_visible;
       }
@@ -78,23 +74,13 @@ export const useUpdateProducts = (id) => {
         params
       });
     },
-    onSuccess: (data) => {
-      showToast({
-        type: 'success',
-        message: 'Cập nhật sản phẩm thành công!',
-        duration: 3000
-      });
-
+    onSuccess: () => {
+      showToast({ type: 'success', message: 'Cập nhật sản phẩm thành công!', duration: 3000 });
       queryClient.invalidateQueries({ queryKey: ['GET_PRODUCTS_LIST'] });
-
       navigate('/products');
     },
     onError: (e) => {
-      showToast({
-        type: 'error',
-        message: `Cập nhật thất bại: ${e.message}`,
-        duration: 5000
-      });
+      showToast({ type: 'error', message: `Cập nhật thất bại: ${e.message}`, duration: 5000 });
     }
   });
 };
@@ -150,8 +136,8 @@ export const useQueryProductsByHierarchicalCategories = (searchParams = {}) => {
         url: '/api/product/by-hierarchical-categories',
         params: finalParams
       }),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000 // 10 minutes
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000
   });
 };
 
@@ -188,35 +174,19 @@ export const useSyncProducts = () => {
       queryClient.invalidateQueries({ queryKey: ['GET_SYNC_STATUS'] });
     },
     onError: (e) => {
-      showToast({
-        type: 'error',
-        message: `Đồng bộ thất bại: ${e.message}`
-      });
+      showToast({ type: 'error', message: `Đồng bộ thất bại: ${e.message}` });
     }
   });
 };
 
 export const useTestKiotVietConnection = () => {
   return useMutation({
-    mutationFn: () => {
-      return API.request({
-        url: '/api/product/sync/test-connection',
-        method: 'GET'
-      });
-    },
+    mutationFn: () => API.request({ url: '/api/product/sync/test-connection', method: 'GET' }),
     onSuccess: (data) => {
-      showToast({
-        type: data.success ? 'success' : 'error',
-        message: data.message,
-        duration: 5000
-      });
+      showToast({ type: data.success ? 'success' : 'error', message: data.message, duration: 5000 });
     },
     onError: (error) => {
-      showToast({
-        type: 'error',
-        message: `Kiểm tra kết nối thất bại: ${error.message}`,
-        duration: 5000
-      });
+      showToast({ type: 'error', message: `Kiểm tra kết nối thất bại: ${error.message}`, duration: 5000 });
     }
   });
 };
@@ -235,7 +205,7 @@ export const useToggleProductVisibility = () => {
   return useMutation({
     mutationFn: async ({ productId }) => {
       return API.request({
-        url: `/api/product/toggle-visibility/${productId}`,
+        url: `/api/product/site-toggle-visibility/${productId}`,
         method: 'PATCH'
       });
     },
@@ -253,28 +223,19 @@ export const useBulkToggleVisibility = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ productIds, is_visible }) => {
+    mutationFn: ({ productIds, is_visible }) => {
       return API.request({
         url: '/api/product/bulk-toggle-visibility',
         method: 'PATCH',
-        params: {
-          productIds,
-          is_visible
-        }
+        params: { productIds, is_visible }
       });
     },
     onSuccess: (data) => {
-      showToast({
-        type: 'success',
-        message: data.message || 'Cập nhật hàng loạt thành công'
-      });
+      showToast({ type: 'success', message: data.message || 'Cập nhật hàng loạt thành công' });
       queryClient.invalidateQueries({ queryKey: ['GET_PRODUCTS_LIST'] });
     },
     onError: (e) => {
-      showToast({
-        type: 'error',
-        message: `Cập nhật hàng loạt thất bại: ${e.message}`
-      });
+      showToast({ type: 'error', message: `Cập nhật hàng loạt thất bại: ${e.message}` });
     }
   });
 };
@@ -316,10 +277,7 @@ export const useQueryCategoriesForProductDropdown = () => {
   return useQuery({
     queryKey,
     queryFn: async () => {
-      const response = await API.request({
-        url: '/api/category/for-cms'
-      });
-
+      const response = await API.request({ url: '/api/category/for-cms' });
       return response?.data || [];
     },
     staleTime: 5 * 60 * 1000
@@ -339,16 +297,67 @@ export const useUpdateProductCategory = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['GET_PRODUCTS_FOR_CMS']);
-      showToast({
-        type: 'success',
-        message: 'Cập nhật danh mục sản phẩm thành công'
-      });
+      showToast({ type: 'success', message: 'Cập nhật danh mục sản phẩm thành công' });
     },
     onError: (error) => {
-      showToast({
-        type: 'error',
-        message: `Cập nhật thất bại. ${error.message}`
+      showToast({ type: 'error', message: `Cập nhật thất bại. ${error.message}` });
+    }
+  });
+};
+
+export const useUpsertProductSiteConfig = (id) => {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  return useMutation({
+    mutationFn: (params) => {
+      return API.request({
+        url: `/api/product/${id}/site-config`,
+        method: 'PATCH',
+        params
       });
+    },
+    onSuccess: () => {
+      showToast({ type: 'success', message: 'Cập nhật cấu hình sản phẩm thành công!', duration: 3000 });
+      queryClient.invalidateQueries({ queryKey: ['GET_PRODUCTS_LIST'] });
+      queryClient.invalidateQueries({ queryKey: ['GET_PRODUCT_DETAIL', id] });
+      navigate('/products');
+    },
+    onError: (e) => {
+      showToast({ type: 'error', message: `Cập nhật thất bại: ${e.message}`, duration: 5000 });
+    }
+  });
+};
+
+export const useBulkUpsertSiteConfig = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ productIds, siteConfigData }) => {
+      const results = await Promise.allSettled(
+        productIds.map((productId) =>
+          API.request({
+            url: `/api/product/${productId}/site-config`,
+            method: 'PATCH',
+            params: siteConfigData
+          })
+        )
+      );
+
+      const succeeded = results.filter((r) => r.status === 'fulfilled').length;
+      const failed = results.filter((r) => r.status === 'rejected').length;
+
+      return { succeeded, failed, total: productIds.length };
+    },
+    onSuccess: (data) => {
+      showToast({
+        type: 'success',
+        message: `Cập nhật ${data.succeeded}/${data.total} sản phẩm thành công`
+      });
+      queryClient.invalidateQueries({ queryKey: ['GET_PRODUCTS_LIST'] });
+    },
+    onError: (e) => {
+      showToast({ type: 'error', message: `Cập nhật hàng loạt thất bại: ${e.message}` });
     }
   });
 };

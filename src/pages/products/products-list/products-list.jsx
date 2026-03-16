@@ -252,6 +252,16 @@ const ProductsList = () => {
       width: 120,
       align: 'center',
       render: (record) => <Action item={record} />
+    },
+    {
+      title: 'Site Config',
+      dataIndex: 'hasSiteConfig',
+      key: 'hasSiteConfig',
+      width: 100,
+      align: 'center',
+      render: (hasSiteConfig) => (
+        <Tag color={hasSiteConfig ? 'green' : 'orange'}>{hasSiteConfig ? 'Đã cấu hình' : 'Chưa cấu hình'}</Tag>
+      )
     }
   ];
 

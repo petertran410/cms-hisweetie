@@ -1,9 +1,15 @@
+// src/pages/products/products-create/products-create.jsx
 import { ButtonBack } from '@/components/button';
 import { ErrorScreen, LoadingScreen } from '@/components/effect-screen';
 import { FormSelectQuery } from '@/components/form';
 import Editor from '../../../components/form/editor';
 import FormItemUpload from '@/components/form/form-upload';
-import { useCreateProducts, useQueryProductDetail, useUpdateProducts } from '@/services/products.service';
+import {
+  useCreateProducts,
+  useQueryProductDetail,
+  useUpdateProducts,
+  useUpsertProductSiteConfig
+} from '@/services/products.service';
 import { API } from '@/utils/API';
 import { formatCurrency, showToast } from '@/utils/helper';
 import { WEBSITE_NAME } from '@/utils/resource';
@@ -17,6 +23,7 @@ const ProductsCreate = () => {
   const [form] = Form.useForm();
   const { isPending: loadingCreate, mutate: createMutate } = useCreateProducts();
   const { isPending: loadingUpdate, mutate: updateMutate } = useUpdateProducts(id);
+  const { isPending: loadingSiteConfig, mutate: upsertSiteConfig } = useUpsertProductSiteConfig(id);
   const { isLoading: loadingDetail, data: productsDetail, error: errorDetail } = useQueryProductDetail(id);
   const [currentPrice, setCurrentPrice] = useState(0);
   const [isFeaturedProduct, setIsFeaturedProduct] = useState(false);
@@ -27,7 +34,6 @@ const ProductsCreate = () => {
     description,
     imagesUrl,
     price,
-    ofCategories,
     general_description,
     instruction,
     isFeatured,
@@ -35,41 +41,37 @@ const ProductsCreate = () => {
     category_id,
     category,
     kiotViet,
-    price_on
+    price_on,
+    hasSiteConfig
   } = productsDetail || {};
-
-  console.log(productsDetail);
 
   const onFinish = useCallback(
     (values) => {
       const {
-        title,
-        title_meta,
-        price,
+        title: formTitle,
+        title_meta: formTitleMeta,
+        price: formPrice,
         categoryId,
-        description,
-        imagesUrl,
-        instruction,
-        isFeatured,
-        featuredThumbnail,
-        general_description,
-        price_on
+        description: formDescription,
+        imagesUrl: formImagesUrl,
+        instruction: formInstruction,
+        isFeatured: formIsFeatured,
+        featuredThumbnail: formFeaturedThumbnail,
+        general_description: formGeneralDescription,
+        price_on: formPriceOn
       } = values || {};
 
       const extractedCategoryId = categoryId?.value ?? categoryId ?? null;
 
-      const fileList = Array.isArray(imagesUrl) ? imagesUrl : imagesUrl?.fileList || [];
-      const featuredFileList = Array.isArray(featuredThumbnail) ? featuredThumbnail : featuredThumbnail?.fileList || [];
+      const fileList = Array.isArray(formImagesUrl) ? formImagesUrl : formImagesUrl?.fileList || [];
+      const featuredFileList = Array.isArray(formFeaturedThumbnail)
+        ? formFeaturedThumbnail
+        : formFeaturedThumbnail?.fileList || [];
 
       Promise.all(
         [...fileList, ...featuredFileList].map(async (item) => {
-          if (item.url) {
-            return item.url;
-          }
-
-          if (!item?.originFileObj) {
-            return null;
-          }
+          if (item.url) return item.url;
+          if (!item?.originFileObj) return null;
 
           const formData = new FormData();
           formData.append('file', item?.originFileObj);
@@ -78,9 +80,7 @@ const ProductsCreate = () => {
             method: 'POST',
             params: formData,
             isUpload: true,
-            headers: {
-              'X-Force-Signature': import.meta.env.VITE_API_KEY
-            }
+            headers: { 'X-Force-Signature': import.meta.env.VITE_API_KEY }
           });
         })
       )
@@ -96,103 +96,95 @@ const ProductsCreate = () => {
             productImagesUrl = filteredResults.slice(0, -1);
           }
 
-          const data = {
-            title,
-            title_meta,
-            price: Number(price) && Number(price) > 0 ? price : null,
-            description,
-            images_url: productImagesUrl,
-            general_description,
-            instruction,
-            is_featured: isFeatured,
-            price_on,
-            featured_thumbnail: isFeatured ? featuredImageUrl : null,
-            categoryIds: extractedCategoryId ? [extractedCategoryId] : []
-          };
+          if (id) {
+            // ============================
+            // EDIT MODE: 2 lần gọi API
+            // 1) Shared fields → PATCH /api/product/:id
+            // 2) Per-site fields → PATCH /api/product/:id/site-config
+            // ============================
 
-          id ? updateMutate(data) : createMutate(data);
+            // 1) Update shared fields
+            const sharedData = {
+              title: formTitle,
+              images_url: productImagesUrl,
+              kiotviet_price: Number(formPrice) > 0 ? formPrice : null,
+              price_on: formPriceOn
+            };
+
+            updateMutate(sharedData, {
+              onSuccess: () => {
+                // 2) Update per-site config
+                const siteConfigData = {
+                  title_meta: formTitleMeta,
+                  description: formDescription,
+                  general_description: formGeneralDescription,
+                  instruction: formInstruction,
+                  is_featured: formIsFeatured,
+                  is_visible: true,
+                  featured_thumbnail: formIsFeatured ? featuredImageUrl : null,
+                  category_id: extractedCategoryId
+                };
+
+                upsertSiteConfig(siteConfigData);
+              }
+            });
+          } else {
+            // ============================
+            // CREATE MODE: tạo product rồi upsert site config
+            // ============================
+            const data = {
+              title: formTitle,
+              title_meta: formTitleMeta,
+              price: Number(formPrice) > 0 ? formPrice : null,
+              description: formDescription,
+              images_url: productImagesUrl,
+              general_description: formGeneralDescription,
+              instruction: formInstruction,
+              is_featured: formIsFeatured,
+              price_on: formPriceOn,
+              featured_thumbnail: formIsFeatured ? featuredImageUrl : null,
+              categoryIds: extractedCategoryId ? [extractedCategoryId] : []
+            };
+
+            createMutate(data);
+          }
         })
         .catch((error) => {
-          showToast({
-            type: 'error',
-            message: `Upload failed: ${error.message}`
-          });
+          showToast({ type: 'error', message: `Upload failed: ${error.message}` });
         });
     },
-    [createMutate, updateMutate, id]
+    [createMutate, updateMutate, upsertSiteConfig, id]
   );
 
   useEffect(() => {
     if (productsDetail && !loadingDetail) {
-      const categoryValue =
-        category && category.name
-          ? {
-              label: category.name,
-              value: category.id
-            }
-          : null;
+      const categoryValue = category && category.name ? { value: category_id, label: category.name } : undefined;
 
       form.setFieldsValue({
-        title: title,
-        title_meta: title_meta,
-        general_description: general_description,
+        title,
+        title_meta,
+        general_description,
         categoryId: categoryValue,
-        price: price,
-        isFeatured: isFeatured,
-        description: description,
-        instruction: instruction
+        price: price || kiotViet?.price || 0,
+        description,
+        instruction,
+        isFeatured: isFeatured || false,
+        price_on: price_on || false
       });
 
-      setCurrentPrice(price || 0);
+      setCurrentPrice(price || kiotViet?.price || 0);
       setIsFeaturedProduct(isFeatured || false);
     }
-  }, [
-    productsDetail,
-    loadingDetail,
-    form,
-    title,
-    title_meta,
-    general_description,
-    category_id,
-    ofCategories,
-    price,
-    isFeatured,
-    description,
-    instruction,
-    category
-  ]);
+  }, [productsDetail, loadingDetail, form]);
 
-  useEffect(() => {
-    if (id && productsDetail) {
-      setCurrentPrice(productsDetail?.price);
-    }
-  }, [id, productsDetail]);
+  if (id && loadingDetail) return <LoadingScreen className="mt-20" />;
+  if (id && errorDetail) return <ErrorScreen message={errorDetail?.message} className="mt-20" />;
 
-  useEffect(() => {
-    setIsFeaturedProduct(isFeatured);
-  }, [isFeatured]);
+  const arrayImageUrl = Array.isArray(imagesUrl) ? imagesUrl : [];
+  const FormUpload = FormItemUpload;
 
-  if (loadingDetail) {
-    return <LoadingScreen className="mt-20" />;
-  }
-
-  if (errorDetail) {
-    return <ErrorScreen message={errorDetail?.message} className="mt-20" />;
-  }
-
-  const arrayImageUrl = imagesUrl && imagesUrl.length > 0 ? imagesUrl : [];
-
-  const initialImages = arrayImageUrl.length > 0 ? arrayImageUrl.map((i) => ({ name: '', url: i })) : undefined;
-
-  const defaultImages =
-    arrayImageUrl.length > 0
-      ? arrayImageUrl.map((i) => ({
-          type: 'image/*',
-          url: i,
-          uid: i,
-          name: ''
-        }))
-      : undefined;
+  const defaultFileList =
+    arrayImageUrl.length > 0 ? arrayImageUrl.map((i) => ({ type: 'image/*', url: i, uid: i, name: '' })) : undefined;
 
   const initFeaturedImage = featuredThumbnail ? { name: '', url: featuredThumbnail } : undefined;
   const defaultFeaturedImage = featuredThumbnail
@@ -241,7 +233,7 @@ const ProductsCreate = () => {
           label={<p className="font-bold text-md">Meta description</p>}
           name="general_description"
           initialValue={general_description}
-          rules={[{ required: false, message: 'Vui lòng nhập meta description' }]}
+          rules={[{ required: false }]}
           className="mb-10"
         >
           <Input.TextArea rows={2} className="py-2" />
@@ -253,14 +245,9 @@ const ProductsCreate = () => {
           labelKey="displayName"
           valueKey="id"
           name="categoryId"
-          request={{
-            url: '/api/category/for-cms'
-          }}
+          request={{ url: '/api/category/for-cms' }}
           placeholder="Chọn danh mục sản phẩm..."
           initialValue={category_id}
-          // fixedOptions={(inputValue, option) => {
-          //   return option.id !== parseInt(id);
-          // }}
         />
 
         <Form.Item
@@ -269,13 +256,7 @@ const ProductsCreate = () => {
           initialValue={price}
           className="mt-10 mb-0"
         >
-          <InputNumber
-            type="number"
-            className="py-1 w-full"
-            onChange={(data) => {
-              setCurrentPrice(data || 0);
-            }}
-          />
+          <InputNumber type="number" className="py-1 w-full" onChange={(data) => setCurrentPrice(data || 0)} />
         </Form.Item>
 
         <p className="mt-0.5 ml-2 mb-10">{formatCurrency(currentPrice)}</p>
@@ -283,79 +264,55 @@ const ProductsCreate = () => {
         <Form.Item
           label={<p className="font-bold text-md">Hiển thị "Liên hệ"</p>}
           name="price_on"
-          initialValue={price_on}
           valuePropName="checked"
-          className="mb-10"
+          initialValue={price_on || false}
         >
           <Switch />
         </Form.Item>
 
-        {/* <Form.Item
-          label={<p className="font-bold text-md">Số lượng trong kho</p>}
-          name="quantity"
-          initialValue={quantity}
-          className="mb-10"
-          rules={[{ required: true, message: 'Vui lòng nhập số lượng' }]}
-        >
-          <InputNumber type="number" className="py-1 w-full" />
-        </Form.Item> */}
-
-        <div className="w-60 mb-10">
-          <FormItemUpload
-            name="imagesUrl"
-            label="Ảnh sản phẩm"
-            multiple
-            accept=".JPG, .JPEG, .PNG, .GIF, .BMP, .HEIC, .SVG, .WEBP"
-            initialValue={initialImages}
-            defaultFileList={defaultImages}
-            maxCount={10}
-          />
-        </div>
+        <FormUpload
+          name="imagesUrl"
+          label="Hình sản phẩm"
+          maxCount={10}
+          accept="image/*"
+          multiple
+          defaultFileList={defaultFileList}
+        />
 
         <Form.Item
           label={<p className="font-bold text-md">Sản phẩm nổi bật</p>}
           name="isFeatured"
-          initialValue={isFeatured}
           valuePropName="checked"
-          className="mb-10"
+          initialValue={isFeatured || false}
         >
-          <Switch onChange={(e) => setIsFeaturedProduct(e)} />
+          <Switch onChange={(checked) => setIsFeaturedProduct(checked)} />
         </Form.Item>
 
-        {!!isFeaturedProduct && (
-          <div className="w-60 mb-10">
-            <FormItemUpload
-              name="featuredThumbnail"
-              multiple
-              label="Ảnh sản phẩm nổi bật"
-              accept=".JPG, .JPEG, .PNG, .GIF, .BMP, .HEIC, .SVG, .WEBP"
-              initialValue={initFeaturedImage ? [initFeaturedImage] : undefined}
-              defaultFileList={defaultFeaturedImage ? [defaultFeaturedImage] : undefined}
-              maxCount={1}
-            />
-          </div>
+        {isFeaturedProduct && (
+          <FormUpload
+            name="featuredThumbnail"
+            label="Ảnh nổi bật"
+            maxCount={1}
+            accept="image/*"
+            initialValue={initFeaturedImage}
+            defaultFileList={defaultFeaturedImage ? [defaultFeaturedImage] : undefined}
+          />
         )}
 
         <Form.Item
-          label={<p className="font-bold text-md">Mô tả chung (Nằm ngay dưới title)</p>}
+          label={<p className="font-bold text-md">Nội dung mô tả</p>}
           name="description"
           initialValue={description}
-          className="mb-10"
-          rules={[{ required: false, message: 'Vui lòng điền thông tin' }]}
         >
-          {/* <FormEditor defaultValue={description} /> */}
-          <Editor defaultValue={description} />
+          <Editor />
         </Form.Item>
 
         <Form.Item
-          label={<p className="font-bold text-md">Thông tin sản phẩm (Thông tin dài)</p>}
+          label={<p className="font-bold text-md">Hướng dẫn sử dụng</p>}
           name="instruction"
           initialValue={instruction}
-          className="mb-10"
-          rules={[{ required: false, message: 'Vui lòng điền thông tin' }]}
         >
-          {/* <FormEditor defaultValue={instruction} /> */}
-          <Editor defaultValue={instruction} />
+          <Editor />
         </Form.Item>
 
         <div className="flex items-center gap-8 mt-20 justify-center">
@@ -369,7 +326,7 @@ const ProductsCreate = () => {
               htmlType="submit"
               size="large"
               className="px-10"
-              loading={loadingCreate || loadingUpdate}
+              loading={loadingCreate || loadingUpdate || loadingSiteConfig}
             >
               <span className="font-semibold">{id ? 'Cập nhật' : 'Tạo mới'}</span>
             </Button>

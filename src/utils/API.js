@@ -2,9 +2,11 @@ import { CK_JWT_TOKEN } from '@/states/common';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
+const getWebsiteCode = () => localStorage.getItem('website') || 'lermao';
+
 export const API = {
   request: (config) => {
-    const websiteCode = localStorage.getItem('website');
+    const websiteCode = getWebsiteCode();
     const baseUrlDefault =
       websiteCode === 'dieptra' ? import.meta.env.VITE_DIEP_TRA_API_DOMAIN : import.meta.env.VITE_LERMAO_API_DOMAIN;
 
@@ -21,6 +23,7 @@ export const API = {
       headers: {
         'Content-Type': isUpload ? 'multipart/form-data' : 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        'X-Site-Code': websiteCode,
         ...headers
       },
       data: method !== 'GET' ? params : undefined,
@@ -63,7 +66,7 @@ export const API = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const websiteCode = localStorage.getItem('website');
+    const websiteCode = getWebsiteCode();
     const baseUrlDefault =
       websiteCode === 'dieptra' ? import.meta.env.VITE_DIEP_TRA_API_DOMAIN : import.meta.env.VITE_LERMAO_API_DOMAIN;
 
@@ -77,6 +80,7 @@ export const API = {
         'Content-Type': 'multipart/form-data',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         'X-Force-Signature': import.meta.env.VITE_API_KEY,
+        'X-Site-Code': websiteCode,
         ...headers
       },
       data: formData,
