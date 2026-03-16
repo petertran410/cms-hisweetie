@@ -1,11 +1,6 @@
 import { ErrorScreen } from '@/components/effect-screen';
 import { CreateButton, Pagination } from '@/components/table';
-import {
-  useQueryProductsList,
-  useSyncProducts,
-  useQuerySyncStatus,
-  useToggleProductVisibility
-} from '@/services/products.service';
+import { useQueryProductsList, useSyncProducts, useToggleProductVisibility } from '@/services/products.service';
 import { TableStyle } from '@/styles/table.style';
 import { formatCurrency, useGetParamsURL } from '@/utils/helper';
 import { WEBSITE_NAME } from '@/utils/resource';
@@ -29,7 +24,6 @@ import ImportProduct from './import-product';
 
 const ProductsList = () => {
   const { data: dataQuery = {}, isLoading, error } = useQueryProductsList();
-  const { data: syncStatus } = useQuerySyncStatus();
   const { mutate: syncProducts, isPending: isSyncing } = useSyncProducts();
   const { mutate: toggleVisibility, isPending: isToggling } = useToggleProductVisibility();
   const paramsURL = useGetParamsURL();
@@ -265,38 +259,6 @@ const ProductsList = () => {
     }
   ];
 
-  const renderSyncStatus = () => {
-    if (!syncStatus) return null;
-
-    const { lastSync, totalProducts, summary } = syncStatus;
-    const lastSyncDate = lastSync ? new Date(lastSync).toLocaleString('vi-VN') : 'Chưa đồng bộ';
-
-    return (
-      <Alert
-        type="info"
-        showIcon
-        icon={<FaInfoCircle />}
-        message="Trạng thái đồng bộ KiotViet"
-        description={
-          <div className="space-y-2">
-            <div>Lần cuối: {lastSyncDate}</div>
-            <div className="flex gap-4 text-sm">
-              <span>Tổng: {totalProducts}</span>
-              <span>Đã đồng bộ: {summary?.synced || 0}</span>
-              <span>Lỗi: {summary?.failed || 0}</span>
-            </div>
-          </div>
-        }
-        action={
-          <Button type="primary" size="small" loading={isSyncing} onClick={() => syncProducts()} icon={<FaSync />}>
-            Đồng bộ ngay
-          </Button>
-        }
-        className="mb-4"
-      />
-    );
-  };
-
   const renderStatistics = () => {
     const { total = totalElements || 0, visible = 0, hidden = 0, featured = 0 } = statistics;
 
@@ -363,8 +325,6 @@ const ProductsList = () => {
             <CreateButton route="products" />
           </Space>
         </div>
-
-        {renderSyncStatus()}
 
         {renderStatistics()}
 

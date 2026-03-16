@@ -171,7 +171,6 @@ export const useSyncProducts = () => {
         message: `Đồng bộ thành công! ${data.summary?.synced || 0} sản phẩm đã được cập nhật.`
       });
       queryClient.invalidateQueries({ queryKey: ['GET_PRODUCTS_LIST'] });
-      queryClient.invalidateQueries({ queryKey: ['GET_SYNC_STATUS'] });
     },
     onError: (e) => {
       showToast({ type: 'error', message: `Đồng bộ thất bại: ${e.message}` });
@@ -191,14 +190,6 @@ export const useTestKiotVietConnection = () => {
   });
 };
 
-export const useQuerySyncStatus = () => {
-  return useQuery({
-    queryKey: ['GET_SYNC_STATUS'],
-    queryFn: () => API.request({ url: '/api/product/kiotviet/sync/status' }),
-    staleTime: 30000
-  });
-};
-
 export const useToggleProductVisibility = () => {
   const queryClient = useQueryClient();
 
@@ -209,7 +200,7 @@ export const useToggleProductVisibility = () => {
         method: 'PATCH'
       });
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['GET_PRODUCTS_LIST'] });
       queryClient.invalidateQueries({ queryKey: ['GET_PRODUCT_DETAIL'] });
     },
