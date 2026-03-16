@@ -41,8 +41,7 @@ const ProductsCreate = () => {
     category_id,
     category,
     kiotViet,
-    price_on,
-    hasSiteConfig
+    price_on
   } = productsDetail || {};
 
   const onFinish = useCallback(
@@ -97,24 +96,14 @@ const ProductsCreate = () => {
           }
 
           if (id) {
-            // ============================
-            // EDIT MODE: 2 lần gọi API
-            // 1) Shared fields → PATCH /api/product/:id
-            // 2) Per-site fields → PATCH /api/product/:id/site-config
-            // ============================
-
-            // 1) Update shared fields
             const sharedData = {
-              title: formTitle,
-              images_url: productImagesUrl,
-              kiotviet_price: Number(formPrice) > 0 ? formPrice : null,
-              price_on: formPriceOn
+              kiotviet_price: Number(formPrice) > 0 ? formPrice : null
             };
 
             updateMutate(sharedData, {
               onSuccess: () => {
-                // 2) Update per-site config
                 const siteConfigData = {
+                  title: formTitle,
                   title_meta: formTitleMeta,
                   description: formDescription,
                   general_description: formGeneralDescription,
@@ -122,16 +111,15 @@ const ProductsCreate = () => {
                   is_featured: formIsFeatured,
                   is_visible: true,
                   featured_thumbnail: formIsFeatured ? featuredImageUrl : null,
-                  category_id: extractedCategoryId
+                  category_id: extractedCategoryId,
+                  price_on: formPriceOn,
+                  images_url: productImagesUrl
                 };
 
                 upsertSiteConfig(siteConfigData);
               }
             });
           } else {
-            // ============================
-            // CREATE MODE: tạo product rồi upsert site config
-            // ============================
             const data = {
               title: formTitle,
               title_meta: formTitleMeta,
