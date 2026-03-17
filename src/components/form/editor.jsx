@@ -139,9 +139,13 @@ const Editor = (props) => {
   const editorRef = useRef(null);
 
   const onChangeContent = (value) => {
-    if (isInitialMount.current || isSettingContent.current) {
+    if (isSettingContent.current) {
       setContent(value);
       return;
+    }
+
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
     }
 
     const cleanContent = value.trim().replace(/<p><\/p>/g, '');

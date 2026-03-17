@@ -27,6 +27,7 @@ const ProductsCreate = () => {
   const { isLoading: loadingDetail, data: productsDetail, error: errorDetail } = useQueryProductDetail(id);
   const [currentPrice, setCurrentPrice] = useState(0);
   const [isFeaturedProduct, setIsFeaturedProduct] = useState(false);
+  const [editorKey, setEditorKey] = useState(0);
 
   const {
     title,
@@ -162,6 +163,7 @@ const ProductsCreate = () => {
 
       setCurrentPrice(price || kiotViet?.price || 0);
       setIsFeaturedProduct(isFeatured || false);
+      setEditorKey((prev) => prev + 1);
     }
   }, [productsDetail, loadingDetail, form]);
 
@@ -292,7 +294,7 @@ const ProductsCreate = () => {
           name="description"
           initialValue={description}
         >
-          <Editor />
+          <Editor key={`desc-${editorKey}`} defaultValue={description} />
         </Form.Item>
 
         <Form.Item
@@ -300,7 +302,7 @@ const ProductsCreate = () => {
           name="instruction"
           initialValue={instruction}
         >
-          <Editor />
+          <Editor key={`inst-${editorKey}`} defaultValue={instruction} />
         </Form.Item>
 
         <div className="flex items-center gap-8 mt-20 justify-center">

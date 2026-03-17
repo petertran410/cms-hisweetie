@@ -20,6 +20,7 @@ const ProductsCreateEn = () => {
   const { isLoading: loadingDetail, data: productsDetail, error: errorDetail } = useQueryProductDetail(id);
   const [currentPrice, setCurrentPrice] = useState(0);
   const [isFeaturedProduct, setIsFeaturedProduct] = useState(false);
+  const [editorKey, setEditorKey] = useState(0);
 
   const {
     title,
@@ -156,6 +157,7 @@ const ProductsCreateEn = () => {
 
       setCurrentPrice(price || 0);
       setIsFeaturedProduct(isFeatured || false);
+      setEditorKey((prev) => prev + 1);
     }
   }, [
     productsDetail,
