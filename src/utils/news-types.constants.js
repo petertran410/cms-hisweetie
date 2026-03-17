@@ -7,7 +7,8 @@ export const NEWS_TYPES = {
   KIEN_THUC_TRA: 'KIEN_THUC_TRA',
   TREND_PHA_CHE: 'TREND_PHA_CHE',
   REVIEW_SAN_PHAM: 'REVIEW_SAN_PHAM',
-  CONG_THUC_PHA_CHE: 'CONG_THUC_PHA_CHE'
+  CONG_THUC_PHA_CHE: 'CONG_THUC_PHA_CHE',
+  WORKSHOP: 'WORKSHOP'
 };
 
 export const NEWS_TYPE_LABELS = {
@@ -18,7 +19,8 @@ export const NEWS_TYPE_LABELS = {
   [NEWS_TYPES.KIEN_THUC_TRA]: 'Kiến Thức Về Trà',
   [NEWS_TYPES.TREND_PHA_CHE]: 'Trend Pha Chế',
   [NEWS_TYPES.REVIEW_SAN_PHAM]: 'Review - Đánh Giá Sản Phẩm',
-  [NEWS_TYPES.CONG_THUC_PHA_CHE]: 'Công thức pha chế'
+  [NEWS_TYPES.CONG_THUC_PHA_CHE]: 'Công thức pha chế',
+  [NEWS_TYPES.WORKSHOP]: 'Workshop pha chế'
 };
 
 // Dùng cho dropdown options trong form
