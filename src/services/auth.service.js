@@ -37,10 +37,11 @@ export const useMutateLogin = () => {
       const token = response.token;
 
       setToken(token);
-      Cookies.set(CK_JWT_TOKEN, token, { expires: 60, secure: true });
+      Cookies.set(CK_JWT_TOKEN, token, { expires: 60 });
+
+      startTokenRenewal();
 
       await new Promise((resolve) => setTimeout(resolve, 100));
-
       queryClient.invalidateQueries({ queryKey: ['GET_USER_INFO'] });
 
       setTimeout(() => {
@@ -104,4 +105,38 @@ export const useQueryUserInfo = () => {
     enabled: !!Cookies.get(CK_JWT_TOKEN), // Only run when token exists
     staleTime: 5 * 60 * 1000 // 5 minutes
   });
+};
+
+let renewInterval = null;
+
+export const startTokenRenewal = () => {
+  if (renewInterval) clearInterval(renewInterval);
+
+  renewInterval = setInterval(async () => {
+    const token = Cookies.get(CK_JWT_TOKEN);
+    if (!token) {
+      clearInterval(renewInterval);
+      return;
+    }
+
+    try {
+      const response = await API.request({
+        url: '/api/auth/renew',
+        method: 'POST'
+      });
+
+      if (response?.token) {
+        Cookies.set(CK_JWT_TOKEN, response.token, { expires: 60 });
+      }
+    } catch (error) {
+      console.error('Auto-renew failed:', error);
+    }
+  }, 20 * 60 * 1000); // 20 phút
+};
+
+export const stopTokenRenewal = () => {
+  if (renewInterval) {
+    clearInterval(renewInterval);
+    renewInterval = null;
+  }
 };
