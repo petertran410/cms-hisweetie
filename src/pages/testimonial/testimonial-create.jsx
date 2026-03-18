@@ -1,19 +1,20 @@
+import { ButtonBack } from '@/components/button';
 import { LoadingScreen } from '@/components/effect-screen';
-import Editor from '@/components/form/editor';
 import FormItemUpload from '@/components/form/form-upload';
 import { useCreateTestimonial, useQueryTestimonialDetail, useUpdateTestimonial } from '@/services/testimonial.service';
 import { API } from '@/utils/API';
 import { showToast } from '@/utils/helper';
 import { WEBSITE_NAME } from '@/utils/resource';
-import { Button, Form, Input } from 'antd';
+import { Button, Flex, Form, Input } from 'antd';
 import { useCallback, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { FaSave, FaStar } from 'react-icons/fa';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+
+const { TextArea } = Input;
 
 const TestimonialCreate = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [form] = Form.useForm();
   const { isPending: loadingCreate, mutate: createMutate } = useCreateTestimonial();
   const { isPending: loadingUpdate, mutate: updateMutate } = useUpdateTestimonial(id);
@@ -72,9 +73,8 @@ const TestimonialCreate = () => {
         </title>
       </Helmet>
 
-      <div className="flex justify-center py-8">
-        <div className="w-full max-w-[680px] 2xl:max-w-[800px]">
-          {/* Header */}
+      <Flex justify="center" py-8>
+        <div className="w-full max-w-[680px]">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
               <FaStar className="text-blue-500" />
@@ -85,9 +85,8 @@ const TestimonialCreate = () => {
             </div>
           </div>
 
-          {/* Card */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-            <Form form={form} layout="vertical" onFinish={onFinish} requiredMark={false}>
+            <Form form={form} layout="vertical" onFinish={onFinish} className="max-w-2xl mt-4 items-center">
               <Form.Item
                 label={<span className="font-semibold text-gray-700">Tên khách hàng</span>}
                 name="name"
@@ -100,11 +99,15 @@ const TestimonialCreate = () => {
               <Form.Item
                 label={<span className="font-semibold text-gray-700">Nội dung đánh giá</span>}
                 name="review_description"
-                initialValue={detail?.review_description}
                 rules={[{ required: true, message: 'Vui lòng nhập nội dung' }]}
                 className="mb-6"
               >
-                <Editor defaultValue={detail?.review_description} />
+                <TextArea
+                  rows={5}
+                  placeholder="Nhập nội dung đánh giá của khách hàng..."
+                  className="!rounded-lg !py-3 !px-4"
+                  style={{ resize: 'vertical' }}
+                />
               </Form.Item>
 
               <div className="mb-8">
@@ -117,7 +120,6 @@ const TestimonialCreate = () => {
                 />
               </div>
 
-              {/* Actions */}
               <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
                 <Button
                   type="primary"
@@ -137,7 +139,7 @@ const TestimonialCreate = () => {
             </Form>
           </div>
         </div>
-      </div>
+      </Flex>
     </>
   );
 };
