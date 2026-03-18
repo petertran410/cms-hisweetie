@@ -1,4 +1,5 @@
 import { LoadingScreen } from '@/components/effect-screen';
+import Editor from '@/components/form/editor';
 import FormItemUpload from '@/components/form/form-upload';
 import { useCreateTestimonial, useQueryTestimonialDetail, useUpdateTestimonial } from '@/services/testimonial.service';
 import { API } from '@/utils/API';
@@ -9,8 +10,6 @@ import { useCallback, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { FaSave, FaStar } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
-
-const { TextArea } = Input;
 
 const TestimonialCreate = () => {
   const { id } = useParams();
@@ -74,7 +73,7 @@ const TestimonialCreate = () => {
       </Helmet>
 
       <div className="flex justify-center py-8">
-        <div className="w-full max-w-[680px]">
+        <div className="w-full max-w-[680px] 2xl:max-w-[800px]">
           {/* Header */}
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
@@ -101,15 +100,11 @@ const TestimonialCreate = () => {
               <Form.Item
                 label={<span className="font-semibold text-gray-700">Nội dung đánh giá</span>}
                 name="review_description"
+                initialValue={detail?.review_description}
                 rules={[{ required: true, message: 'Vui lòng nhập nội dung' }]}
                 className="mb-6"
               >
-                <TextArea
-                  rows={5}
-                  placeholder="Nhập nội dung đánh giá của khách hàng..."
-                  className="!rounded-lg !py-3 !px-4"
-                  style={{ resize: 'vertical' }}
-                />
+                <Editor defaultValue={detail?.review_description} />
               </Form.Item>
 
               <div className="mb-8">
