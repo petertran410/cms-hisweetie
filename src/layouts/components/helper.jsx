@@ -18,23 +18,21 @@ export const getMenuList = (userRoles) => {
   const currentWebsite = localStorage.getItem('website') || 'lermao';
 
   const menuItemsSuperAdmin = [
-    // getMenuItem('Đơn hàng', 'orders', <FaMoneyBill />),
     getMenuItem('Sản phẩm', 'products', <FaProductHunt />),
-    // getMenuItem('Công thức', 'recipes', <FaAlignLeft />),
     getMenuItem('Danh mục', 'categories', <BiSolidCategory />),
     getMenuItem('Người dùng', 'users', <FaUserFriends />),
     getMenuItem('Tin tức', 'news', <FaNewspaper />),
-    getMenuItem('Video', 'videos', <FaVideo />)
+    getMenuItem('Video', 'videos', <FaVideo />),
+    getMenuItem('Đánh giá KH', 'testimonials', <FaStar />)
   ];
 
   const menuItemsAdmin = [
-    // getMenuItem('Đơn hàng', 'orders', <FaMoneyBill />),
     getMenuItem('Sản phẩm', 'products', <FaProductHunt />),
-    // getMenuItem('Công thức', 'recipes', <FaAlignLeft />),
     getMenuItem('Danh mục', 'categories', <BiSolidCategory />),
     getMenuItem('Người dùng', 'users', <FaUserFriends />),
     getMenuItem('Tin tức', 'news', <FaNewspaper />),
-    getMenuItem('Video', 'videos', <FaVideo />)
+    getMenuItem('Video', 'videos', <FaVideo />),
+    getMenuItem('Đánh giá KH', 'testimonials', <FaStar />)
   ];
 
   if (userRoles?.includes('ROLE_SUPER_ADMIN')) {
@@ -45,7 +43,6 @@ export const getMenuList = (userRoles) => {
       ...menuItemsSuperAdmin,
       getMenuItem('Việc làm', 'recruitment', <FaFileAlt />),
       getMenuItem('Bài viết văn hoá', 'blog-culture', <FaFileArchive />)
-      // getMenuItem('Quản lý trang', 'pages', <FaFilePen />)
     ];
   } else {
     if (currentWebsite === 'lermao') {
@@ -54,9 +51,7 @@ export const getMenuList = (userRoles) => {
     return [
       ...menuItemsAdmin,
       getMenuItem('Việc làm', 'recruitment', <FaFileAlt />),
-      getMenuItem('Bài viết văn hoá', 'blog-culture', <FaFileArchive />),
-      // getMenuItem('Quản lý trang', 'pages', <FaFilePen />)
-      getMenuItem('Đánh giá KH', 'testimonials', <FaStar />)
+      getMenuItem('Bài viết văn hoá', 'blog-culture', <FaFileArchive />)
     ];
   }
 };
