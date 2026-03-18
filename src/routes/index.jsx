@@ -17,6 +17,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { Route, Routes } from 'react-router-dom';
 import NewsCreateEn from '../pages/news/news-en-create/news-create';
 import ProductsCreateEn from '../pages/products/products-en-create/products-create';
+import { TestimonialCreate, TestimonialList } from '../pages/testimonial';
 
 const AppRoute = () => {
   return (
@@ -91,6 +92,12 @@ const AppRoute = () => {
             <Route path="create" element={<RecipeCreate />} />
             <Route path=":id/edit" element={<RecipeCreate />} />
           </Route> */}
+
+          <Route path="testimonials">
+            <Route path="" element={<TestimonialList />} />
+            <Route path="create" element={<TestimonialCreate />} />
+            <Route path=":id/edit" element={<TestimonialCreate />} />
+          </Route>
 
           <Route path="*" element={<NotFound404 />} />
         </Route>

@@ -1,6 +1,6 @@
 // src/layouts/components/helper.jsx - UPDATED
 import { BiSolidCategory } from 'react-icons/bi';
-import { FaFileAlt, FaFileArchive, FaUserFriends, FaVideo } from 'react-icons/fa';
+import { FaFileAlt, FaFileArchive, FaStar, FaUserFriends, FaVideo } from 'react-icons/fa';
 import { FaAlignLeft, FaMoneyBill, FaNewspaper, FaProductHunt, FaFilePen } from 'react-icons/fa6';
 import { useLocation } from 'react-router-dom';
 
@@ -54,8 +54,9 @@ export const getMenuList = (userRoles) => {
     return [
       ...menuItemsAdmin,
       getMenuItem('Việc làm', 'recruitment', <FaFileAlt />),
-      getMenuItem('Bài viết văn hoá', 'blog-culture', <FaFileArchive />)
+      getMenuItem('Bài viết văn hoá', 'blog-culture', <FaFileArchive />),
       // getMenuItem('Quản lý trang', 'pages', <FaFilePen />)
+      getMenuItem('Đánh giá KH', 'testimonials', <FaStar />)
     ];
   }
 };
@@ -578,6 +579,30 @@ export const MENU_ROUTES = [
       }
     ],
     section: 'Danh sách feedback'
+  },
+  {
+    key: 'testimonials',
+    route: '/testimonials',
+    breadcrumb: [{ title: 'Đánh giá khách hàng', route: '/testimonials' }],
+    section: 'Đánh giá khách hàng'
+  },
+  {
+    key: 'testimonials/create',
+    route: '/testimonials/create',
+    breadcrumb: [
+      { title: 'Đánh giá khách hàng', route: '/testimonials' },
+      { title: 'Tạo đánh giá', route: '/testimonials/create' }
+    ],
+    section: 'Tạo đánh giá'
+  },
+  {
+    key: 'testimonials/:id/edit',
+    route: '/testimonials/:id/edit',
+    breadcrumb: [
+      { title: 'Đánh giá khách hàng', route: '/testimonials' },
+      { title: 'Cập nhật đánh giá', route: '/testimonials/:id/edit' }
+    ],
+    section: 'Cập nhật đánh giá'
   }
 ];
 
