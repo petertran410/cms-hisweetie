@@ -1,14 +1,44 @@
 import { useQueryCategoryList } from '@/services/category.service';
 import { WEBSITE_NAME } from '@/utils/resource';
-import { Tag, Select, Button, Table, Pagination, Spin, Tooltip } from 'antd';
+import { Tag, Button, Table, Pagination, Tooltip, Switch, message } from 'antd';
 import { Helmet } from 'react-helmet';
 import Action from './action';
 import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { API } from '@/utils/API';
+import { useQueryClient } from '@tanstack/react-query';
+import { FaStar } from 'react-icons/fa';
 
 const CategoryList = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data, isLoading } = useQueryCategoryList();
   const { content, totalElements, totalPages, number: currentPage } = data || {};
+  const [togglingIds, setTogglingIds] = useState(new Set());
+
+  const handleToggleFeatured = async (record) => {
+    const categoryId = record.id;
+    setTogglingIds((prev) => new Set(prev).add(categoryId));
+
+    try {
+      await API.request({
+        url: `/api/category/${categoryId}`,
+        method: 'PATCH',
+        params: { is_featured: !record.is_featured }
+      });
+
+      queryClient.invalidateQueries(['GET_CATEGORY_LIST']);
+      message.success(`Đã ${!record.is_featured ? 'bật' : 'tắt'} danh mục nổi bật`);
+    } catch (error) {
+      message.error(`Cập nhật thất bại: ${error.message}`);
+    } finally {
+      setTogglingIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(categoryId);
+        return newSet;
+      });
+    }
+  };
 
   const columns = [
     {
@@ -44,17 +74,36 @@ const CategoryList = () => {
       title: 'Danh mục cha',
       dataIndex: 'parent_name',
       width: 150,
-      render: (parentName, record) => {
+      render: (parentName) => {
         if (parentName) {
           return (
             <Tooltip title={`Danh mục cha: ${parentName}`}>
               <Tag color="orange">{parentName}</Tag>
             </Tooltip>
           );
-        } else {
-          return <Tag color="blue">Danh mục gốc</Tag>;
         }
+        return <Tag color="blue">Danh mục gốc</Tag>;
       }
+    },
+    {
+      title: (
+        <div className="flex items-center justify-center gap-1">
+          <FaStar className="text-yellow-500" size={14} />
+          <span>Nổi bật</span>
+        </div>
+      ),
+      dataIndex: 'is_featured',
+      key: 'is_featured',
+      width: 100,
+      align: 'center',
+      render: (isFeatured, record) => (
+        <Switch
+          checked={!!isFeatured}
+          loading={togglingIds.has(record.id)}
+          onChange={() => handleToggleFeatured(record)}
+          size="small"
+        />
+      )
     },
     {
       title: 'Thứ tự',

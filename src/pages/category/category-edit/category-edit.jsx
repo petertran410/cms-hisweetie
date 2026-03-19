@@ -5,7 +5,7 @@ import { API } from '@/utils/API';
 import { showToast } from '@/utils/helper';
 import { useQueryCategoryDetail, useUpdateCategory } from '@/services/category.service';
 import { WEBSITE_NAME } from '@/utils/resource';
-import { Button, Form, Input, InputNumber } from 'antd';
+import { Button, Checkbox, Form, Input, InputNumber } from 'antd';
 import { useCallback, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { useParams } from 'react-router-dom';
@@ -67,7 +67,8 @@ const CategoryEdit = () => {
         ...values,
         priority: values.priority ? Number(values.priority) : 0,
         parent_id: values.parent_id?.value ?? values.parent_id ?? null,
-        image_url: uploadedImageUrl
+        image_url: uploadedImageUrl,
+        is_featured: values.is_featured ?? false
       };
 
       console.log('Updating with data:', transformedValues);
@@ -97,6 +98,7 @@ const CategoryEdit = () => {
         description: categoryData.description,
         parent_id: parentValue,
         priority: categoryData.priority || 0,
+        is_featured: categoryData.is_featured ?? false,
         image_url: imageFileList.length > 0 ? { fileList: imageFileList } : undefined
       });
     }
@@ -179,6 +181,13 @@ const CategoryEdit = () => {
             style={{ width: '100%' }}
           />
         </Form.Item>
+
+        <Form.Item name="is_featured" valuePropName="checked">
+          <Checkbox>
+            <span className="font-bold text-md">Danh mục nổi bật</span>
+          </Checkbox>
+        </Form.Item>
+
         <div className="w-60 mb-10">
           <FormUpload
             name="image_url"

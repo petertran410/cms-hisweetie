@@ -2,7 +2,7 @@ import { ButtonBack } from '@/components/button';
 import { FormSelectQuery } from '@/components/form';
 import { useCreateCategory } from '@/services/category.service';
 import { WEBSITE_NAME } from '@/utils/resource';
-import { Button, Form, Input, InputNumber } from 'antd';
+import { Button, Checkbox, Form, Input, InputNumber } from 'antd';
 import { Helmet } from 'react-helmet';
 
 const { TextArea } = Input;
@@ -15,7 +15,8 @@ const CategoryCreate = () => {
     const transformedValues = {
       ...values,
       priority: values.priority ? Number(values.priority) : 0,
-      parent_id: values.parent_id?.value ?? values.parent_id ?? null
+      parent_id: values.parent_id?.value ?? values.parent_id ?? null,
+      is_featured: values.is_featured ?? false
     };
 
     createMutate(transformedValues);
@@ -36,7 +37,8 @@ const CategoryCreate = () => {
         autoComplete="off"
         className="mt-10"
         initialValues={{
-          priority: 0
+          priority: 0,
+          is_featured: false
         }}
       >
         <Form.Item
@@ -93,6 +95,12 @@ const CategoryCreate = () => {
             precision={0} // Chỉ cho phép số nguyên
             style={{ width: '100%' }}
           />
+        </Form.Item>
+
+        <Form.Item name="is_featured" valuePropName="checked">
+          <Checkbox>
+            <span className="font-bold text-md">Danh mục nổi bật</span>
+          </Checkbox>
         </Form.Item>
 
         <div className="flex items-center gap-8 mt-20 justify-center">
