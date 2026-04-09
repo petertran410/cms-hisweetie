@@ -43,7 +43,7 @@ const ProductsList = () => {
     try {
       setTogglingIds((prev) => new Set([...prev, productId]));
 
-      await toggleVisibility(
+      toggleVisibility(
         { productId },
         {
           onSuccess: () => {
@@ -227,7 +227,8 @@ const ProductsList = () => {
       width: 100,
       align: 'right',
       render: (record) => {
-        const isVisible = record.is_visible === true;
+        console.log(record);
+        const isVisible = record.isVisible === true;
         const isCurrentlyToggling = togglingIds.has(record.id);
 
         return (
