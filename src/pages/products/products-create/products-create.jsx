@@ -37,13 +37,15 @@ const ProductsCreate = () => {
     price,
     general_description,
     instruction,
-    isFeatured,
+    is_featured,
     featuredThumbnail,
     category_id,
     category,
     kiotViet,
     price_on
   } = productsDetail || {};
+
+  console.log(productsDetail);
 
   const onFinish = useCallback(
     (values) => {
@@ -55,7 +57,7 @@ const ProductsCreate = () => {
         description: formDescription,
         imagesUrl: formImagesUrl,
         instruction: formInstruction,
-        isFeatured: formIsFeatured,
+        is_featured: formIsFeatured,
         featuredThumbnail: formFeaturedThumbnail,
         general_description: formGeneralDescription,
         price_on: formPriceOn
@@ -157,12 +159,12 @@ const ProductsCreate = () => {
         price: price || kiotViet?.price || 0,
         description,
         instruction,
-        isFeatured: isFeatured || false,
+        isFeatured: is_featured || false,
         price_on: price_on || false
       });
 
       setCurrentPrice(price || kiotViet?.price || 0);
-      setIsFeaturedProduct(isFeatured || false);
+      setIsFeaturedProduct(is_featured || false);
       setEditorKey((prev) => prev + 1);
     }
   }, [productsDetail, loadingDetail, form]);
@@ -273,7 +275,7 @@ const ProductsCreate = () => {
           label={<p className="font-bold text-md">Sản phẩm nổi bật</p>}
           name="isFeatured"
           valuePropName="checked"
-          initialValue={isFeatured || false}
+          initialValue={is_featured || false}
         >
           <Switch onChange={(checked) => setIsFeaturedProduct(checked)} />
         </Form.Item>

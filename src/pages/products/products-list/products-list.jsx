@@ -109,7 +109,6 @@ const ProductsList = () => {
       render: (imagesUrl, record) => {
         let imageUrl = null;
 
-        // Ưu tiên images_url, không thì lấy kiotviet_images[0]
         if (Array.isArray(imagesUrl) && imagesUrl.length > 0) {
           imageUrl = imagesUrl[0];
         } else if (Array.isArray(record.kiotviet_images) && record.kiotviet_images.length > 0) {
@@ -252,16 +251,6 @@ const ProductsList = () => {
       width: 120,
       align: 'center',
       render: (record) => <Action item={record} />
-    },
-    {
-      title: 'Site Config',
-      dataIndex: 'hasSiteConfig',
-      key: 'hasSiteConfig',
-      width: 100,
-      align: 'center',
-      render: (hasSiteConfig) => (
-        <Tag color={hasSiteConfig ? 'green' : 'orange'}>{hasSiteConfig ? 'Đã cấu hình' : 'Chưa cấu hình'}</Tag>
-      )
     }
   ];
 
