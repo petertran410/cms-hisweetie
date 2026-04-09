@@ -37,15 +37,14 @@ const ProductsCreate = () => {
     price,
     general_description,
     instruction,
-    is_featured,
+    // FIX BUG 1: backend trả về isFeatured (camelCase), không phải is_featured
+    isFeatured,
     featuredThumbnail,
     category_id,
     category,
     kiotViet,
     price_on
   } = productsDetail || {};
-
-  console.log(productsDetail);
 
   const onFinish = useCallback(
     (values) => {
@@ -57,7 +56,7 @@ const ProductsCreate = () => {
         description: formDescription,
         imagesUrl: formImagesUrl,
         instruction: formInstruction,
-        is_featured: formIsFeatured,
+        isFeatured: formIsFeatured,
         featuredThumbnail: formFeaturedThumbnail,
         general_description: formGeneralDescription,
         price_on: formPriceOn
@@ -65,10 +64,12 @@ const ProductsCreate = () => {
 
       const extractedCategoryId = categoryId?.value ?? categoryId ?? null;
 
-      const fileList = Array.isArray(formImagesUrl) ? formImagesUrl : formImagesUrl?.fileList || [];
-      const featuredFileList = Array.isArray(formFeaturedThumbnail)
-        ? formFeaturedThumbnail
-        : formFeaturedThumbnail?.fileList || [];
+      // FIX BUG 2: nếu form không có giá trị (undefined) thì fallback về existing data
+      const rawFileList = formImagesUrl ?? [];
+      const fileList = Array.isArray(rawFileList) ? rawFileList : rawFileList?.fileList || [];
+
+      const rawFeaturedList = formFeaturedThumbnail ?? [];
+      const featuredFileList = Array.isArray(rawFeaturedList) ? rawFeaturedList : rawFeaturedList?.fileList || [];
 
       Promise.all(
         [...fileList, ...featuredFileList].map(async (item) => {
@@ -96,6 +97,17 @@ const ProductsCreate = () => {
           } else {
             featuredImageUrl = filteredResults[filteredResults.length - 1];
             productImagesUrl = filteredResults.slice(0, -1);
+          }
+
+          // FIX BUG 2: nếu productImagesUrl rỗng và đang edit,
+          // giữ nguyên existing images thay vì gửi [] lên backend
+          if (id && productImagesUrl.length === 0 && Array.isArray(imagesUrl) && imagesUrl.length > 0) {
+            productImagesUrl = imagesUrl;
+          }
+
+          // FIX BUG 2: tương tự cho featuredThumbnail
+          if (id && formIsFeatured && !featuredImageUrl && featuredThumbnail) {
+            featuredImageUrl = featuredThumbnail;
           }
 
           if (id) {
@@ -144,12 +156,24 @@ const ProductsCreate = () => {
           showToast({ type: 'error', message: `Upload failed: ${error.message}` });
         });
     },
-    [createMutate, updateMutate, upsertSiteConfig, id]
+    [createMutate, updateMutate, upsertSiteConfig, id, imagesUrl, featuredThumbnail]
   );
 
   useEffect(() => {
     if (productsDetail && !loadingDetail) {
       const categoryValue = category && category.name ? { value: category_id, label: category.name } : undefined;
+
+      // FIX BUG 2: seed imagesUrl và featuredThumbnail vào form value
+      // để AntD form nhận biết existing files khi submit
+      const arrayImageUrl = Array.isArray(imagesUrl) ? imagesUrl : [];
+      const existingFileList =
+        arrayImageUrl.length > 0
+          ? arrayImageUrl.map((i) => ({ type: 'image/*', url: i, uid: i, name: '' }))
+          : undefined;
+
+      const existingFeaturedFile = featuredThumbnail
+        ? [{ type: 'image/*', url: featuredThumbnail, uid: featuredThumbnail, name: '' }]
+        : undefined;
 
       form.setFieldsValue({
         title,
@@ -159,12 +183,17 @@ const ProductsCreate = () => {
         price: price || kiotViet?.price || 0,
         description,
         instruction,
-        isFeatured: is_featured || false,
-        price_on: price_on || false
+        // FIX BUG 1: dùng isFeatured (camelCase từ backend)
+        isFeatured: isFeatured || false,
+        price_on: price_on || false,
+        // FIX BUG 2: seed existing files vào form
+        imagesUrl: existingFileList,
+        featuredThumbnail: existingFeaturedFile
       });
 
       setCurrentPrice(price || kiotViet?.price || 0);
-      setIsFeaturedProduct(is_featured || false);
+      // FIX BUG 1: dùng isFeatured
+      setIsFeaturedProduct(isFeatured || false);
       setEditorKey((prev) => prev + 1);
     }
   }, [productsDetail, loadingDetail, form]);
@@ -275,7 +304,7 @@ const ProductsCreate = () => {
           label={<p className="font-bold text-md">Sản phẩm nổi bật</p>}
           name="isFeatured"
           valuePropName="checked"
-          initialValue={is_featured || false}
+          initialValue={isFeatured || false}
         >
           <Switch onChange={(checked) => setIsFeaturedProduct(checked)} />
         </Form.Item>
