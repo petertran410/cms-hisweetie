@@ -25,7 +25,6 @@ import {
 } from 'react-icons/fa';
 import Action from './action';
 import TableFilter from './filter';
-import ImportProduct from './import-product';
 
 const ProductsList = () => {
   const { data: dataQuery = {}, isLoading, error } = useQueryProductsList();

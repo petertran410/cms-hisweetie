@@ -21,7 +21,9 @@ export const useQueryProductsList = () => {
       const apiParams = {
         pageSize: 10,
         pageNumber: Number(page) - 1,
-        includeHidden: true
+        includeHidden: true,
+        orderBy: 'id',
+        isDesc: true
       };
 
       if (keyword) apiParams.title = keyword;
