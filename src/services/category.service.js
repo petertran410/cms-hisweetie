@@ -225,3 +225,64 @@ export const useReassignProducts = () => {
     }
   });
 };
+
+// Gộp danh mục: 1 thao tác = reassign sản phẩm + re-parent con + ẩn danh mục cũ + tạo redirect prefix.
+export const useMergeCategory = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ fromCategoryId, toCategoryId }) => {
+      const response = await API.request({
+        url: `/api/category/merge`,
+        method: 'POST',
+        params: { fromCategoryId, toCategoryId }
+      });
+
+      return response?.data || {};
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(['GET_CATEGORY_LIST']);
+      queryClient.invalidateQueries(['GET_CATEGORIES_FOR_DROPDOWN']);
+
+      showToast({
+        type: 'success',
+        message: `Đã gộp danh mục: chuyển ${data.movedProducts || 0} sản phẩm, ${
+          data.movedChildren || 0
+        } danh mục con, tạo redirect.`
+      });
+    },
+    onError: (error) => {
+      showToast({
+        type: 'error',
+        message: `Gộp danh mục thất bại. ${error.message}`
+      });
+    }
+  });
+};
+
+// Bật/tắt hiển thị danh mục (is_active). Tắt = ẩn khỏi client, link danh mục không vào được.
+export const useToggleCategoryActive = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, is_active }) => {
+      return API.request({
+        url: `/api/category/${id}`,
+        method: 'PATCH',
+        params: { is_active }
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['GET_CATEGORY_LIST']);
+      queryClient.invalidateQueries(['GET_CATEGORIES_FOR_DROPDOWN']);
+
+      showToast({ type: 'success', message: 'Cập nhật trạng thái hiển thị thành công' });
+    },
+    onError: (error) => {
+      showToast({
+        type: 'error',
+        message: `Cập nhật trạng thái thất bại. ${error.message}`
+      });
+    }
+  });
+};

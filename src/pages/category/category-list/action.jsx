@@ -1,16 +1,26 @@
-import { useDeleteCategory, useReassignProducts } from '@/services/category.service';
+import { useDeleteCategory, useReassignProducts, useMergeCategory } from '@/services/category.service';
 import { Button, Space, Modal, message } from 'antd';
 import { memo, useState } from 'react';
-import { FaEdit, FaTrash } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaCodeBranch } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import ReassignModal from '../reassignModal';
+import MergeModal from '../mergeModal';
 
 const Action = ({ item }) => {
   const navigate = useNavigate();
   const { mutate: deleteMutate, isPending: deleteLoading } = useDeleteCategory();
   const { mutate: reassignMutate, isPending: reassignLoading } = useReassignProducts();
+  const { mutate: mergeMutate, isPending: mergeLoading } = useMergeCategory();
 
   const [showReassignModal, setShowReassignModal] = useState(false);
+  const [showMergeModal, setShowMergeModal] = useState(false);
+
+  const handleMerge = (targetCategoryId) => {
+    mergeMutate(
+      { fromCategoryId: item.id, toCategoryId: targetCategoryId },
+      { onSuccess: () => setShowMergeModal(false) }
+    );
+  };
 
   const handleReassignAndDelete = async (targetCategoryId) => {
     try {
@@ -60,6 +70,12 @@ const Action = ({ item }) => {
         />
         <Button
           type="link"
+          icon={<FaCodeBranch />}
+          onClick={() => setShowMergeModal(true)}
+          title="Gộp vào danh mục khác"
+        />
+        <Button
+          type="link"
           danger
           icon={<FaTrash />}
           onClick={handleDelete}
@@ -74,6 +90,14 @@ const Action = ({ item }) => {
         onConfirm={handleReassignAndDelete}
         category={item}
         loading={reassignLoading}
+      />
+
+      <MergeModal
+        visible={showMergeModal}
+        onCancel={() => setShowMergeModal(false)}
+        onConfirm={handleMerge}
+        category={item}
+        loading={mergeLoading}
       />
     </>
   );

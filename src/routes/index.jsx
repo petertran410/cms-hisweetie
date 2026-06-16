@@ -11,6 +11,7 @@ import { AllOrder } from '@/pages/order';
 import { PagesCreate, PagesList, PagesDetail } from '@/pages/pages';
 import { ProductsCreate, ProductsList } from '@/pages/products';
 import { RecruitmentCreate, RecruitmentList } from '@/pages/recruitment';
+import { RedirectCreate, RedirectEdit, RedirectList } from '@/pages/url-redirect';
 import { UserCreate, UserList } from '@/pages/user';
 import { VideoCreate, VideoList } from '@/pages/video';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -97,6 +98,12 @@ const AppRoute = () => {
             <Route path="" element={<TestimonialList />} />
             <Route path="create" element={<TestimonialCreate />} />
             <Route path=":id/edit" element={<TestimonialCreate />} />
+          </Route>
+
+          <Route path="redirects">
+            <Route path="" element={<RedirectList />} />
+            <Route path="create" element={<RedirectCreate />} />
+            <Route path=":id/edit" element={<RedirectEdit />} />
           </Route>
 
           <Route path="*" element={<NotFound404 />} />

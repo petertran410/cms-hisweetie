@@ -2,6 +2,7 @@
 import { BiSolidCategory } from 'react-icons/bi';
 import { FaFileAlt, FaFileArchive, FaStar, FaUserFriends, FaVideo } from 'react-icons/fa';
 import { FaAlignLeft, FaMoneyBill, FaNewspaper, FaProductHunt, FaFilePen } from 'react-icons/fa6';
+import { TbArrowsExchange } from 'react-icons/tb';
 import { useLocation } from 'react-router-dom';
 
 const getMenuItem = (label, key, icon, children, type) => {
@@ -42,7 +43,8 @@ export const getMenuList = (userRoles) => {
     return [
       ...menuItemsSuperAdmin,
       getMenuItem('Việc làm', 'recruitment', <FaFileAlt />),
-      getMenuItem('Bài viết văn hoá', 'blog-culture', <FaFileArchive />)
+      getMenuItem('Bài viết văn hoá', 'blog-culture', <FaFileArchive />),
+      getMenuItem('Điều hướng URL', 'redirects', <TbArrowsExchange />)
     ];
   } else {
     if (currentWebsite === 'lermao') {
@@ -51,7 +53,8 @@ export const getMenuList = (userRoles) => {
     return [
       ...menuItemsAdmin,
       getMenuItem('Việc làm', 'recruitment', <FaFileAlt />),
-      getMenuItem('Bài viết văn hoá', 'blog-culture', <FaFileArchive />)
+      getMenuItem('Bài viết văn hoá', 'blog-culture', <FaFileArchive />),
+      getMenuItem('Điều hướng URL', 'redirects', <TbArrowsExchange />)
     ];
   }
 };
@@ -598,6 +601,30 @@ export const MENU_ROUTES = [
       { title: 'Cập nhật đánh giá', route: '/testimonials/:id/edit' }
     ],
     section: 'Cập nhật đánh giá'
+  },
+  {
+    key: 'redirects',
+    route: '/redirects',
+    breadcrumb: [{ title: 'Điều hướng URL', route: '/redirects' }],
+    section: 'Danh sách điều hướng URL'
+  },
+  {
+    key: 'redirects/create',
+    route: '/redirects/create',
+    breadcrumb: [
+      { title: 'Điều hướng URL', route: '/redirects' },
+      { title: 'Tạo điều hướng', route: '/redirects/create' }
+    ],
+    section: 'Tạo điều hướng URL'
+  },
+  {
+    key: 'redirects/:id/edit',
+    route: '/redirects/:id/edit',
+    breadcrumb: [
+      { title: 'Điều hướng URL', route: '/redirects' },
+      { title: 'Cập nhật điều hướng', route: '/redirects/:id/edit' }
+    ],
+    section: 'Cập nhật điều hướng URL'
   }
 ];
 

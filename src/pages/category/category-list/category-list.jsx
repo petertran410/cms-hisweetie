@@ -15,6 +15,7 @@ const CategoryList = () => {
   const { data, isLoading } = useQueryCategoryList();
   const { content, totalElements, totalPages, number: currentPage } = data || {};
   const [togglingIds, setTogglingIds] = useState(new Set());
+  const [activeTogglingIds, setActiveTogglingIds] = useState(new Set());
 
   const handleToggleFeatured = async (record) => {
     const categoryId = record.id;
@@ -33,6 +34,30 @@ const CategoryList = () => {
       message.error(`Cập nhật thất bại: ${error.message}`);
     } finally {
       setTogglingIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(categoryId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleToggleActive = async (record) => {
+    const categoryId = record.id;
+    setActiveTogglingIds((prev) => new Set(prev).add(categoryId));
+
+    try {
+      await API.request({
+        url: `/api/category/${categoryId}`,
+        method: 'PATCH',
+        params: { is_active: !record.is_active }
+      });
+
+      queryClient.invalidateQueries(['GET_CATEGORY_LIST']);
+      message.success(`Đã ${!record.is_active ? 'hiển thị' : 'ẩn'} danh mục`);
+    } catch (error) {
+      message.error(`Cập nhật thất bại: ${error.message}`);
+    } finally {
+      setActiveTogglingIds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(categoryId);
         return newSet;
@@ -101,6 +126,21 @@ const CategoryList = () => {
           checked={!!isFeatured}
           loading={togglingIds.has(record.id)}
           onChange={() => handleToggleFeatured(record)}
+          size="small"
+        />
+      )
+    },
+    {
+      title: 'Hiển thị',
+      dataIndex: 'is_active',
+      key: 'is_active',
+      width: 100,
+      align: 'center',
+      render: (isActive, record) => (
+        <Switch
+          checked={isActive !== false}
+          loading={activeTogglingIds.has(record.id)}
+          onChange={() => handleToggleActive(record)}
           size="small"
         />
       )
