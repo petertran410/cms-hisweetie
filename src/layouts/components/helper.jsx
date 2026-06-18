@@ -3,6 +3,7 @@ import { BiSolidCategory } from 'react-icons/bi';
 import { FaFileAlt, FaFileArchive, FaStar, FaUserFriends, FaVideo } from 'react-icons/fa';
 import { FaAlignLeft, FaMoneyBill, FaNewspaper, FaProductHunt, FaFilePen } from 'react-icons/fa6';
 import { TbArrowsExchange } from 'react-icons/tb';
+import { IoSettingsSharp } from 'react-icons/io5';
 import { useLocation } from 'react-router-dom';
 
 const getMenuItem = (label, key, icon, children, type) => {
@@ -44,7 +45,8 @@ export const getMenuList = (userRoles) => {
       ...menuItemsSuperAdmin,
       getMenuItem('Việc làm', 'recruitment', <FaFileAlt />),
       getMenuItem('Bài viết văn hoá', 'blog-culture', <FaFileArchive />),
-      getMenuItem('Điều hướng URL', 'redirects', <TbArrowsExchange />)
+      getMenuItem('Điều hướng URL', 'redirects', <TbArrowsExchange />),
+      getMenuItem('Cấu hình', 'settings', <IoSettingsSharp />)
     ];
   } else {
     if (currentWebsite === 'lermao') {
@@ -54,7 +56,8 @@ export const getMenuList = (userRoles) => {
       ...menuItemsAdmin,
       getMenuItem('Việc làm', 'recruitment', <FaFileAlt />),
       getMenuItem('Bài viết văn hoá', 'blog-culture', <FaFileArchive />),
-      getMenuItem('Điều hướng URL', 'redirects', <TbArrowsExchange />)
+      getMenuItem('Điều hướng URL', 'redirects', <TbArrowsExchange />),
+      getMenuItem('Cấu hình', 'settings', <IoSettingsSharp />)
     ];
   }
 };
@@ -625,6 +628,12 @@ export const MENU_ROUTES = [
       { title: 'Cập nhật điều hướng', route: '/redirects/:id/edit' }
     ],
     section: 'Cập nhật điều hướng URL'
+  },
+  {
+    key: 'settings',
+    route: '/settings',
+    breadcrumb: [{ title: 'Cấu hình', route: '/settings' }],
+    section: 'Cấu hình'
   }
 ];
 
