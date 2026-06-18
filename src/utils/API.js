@@ -117,7 +117,11 @@ export const API = {
           message: e?.response?.data?.message || e.message
         });
 
-        const error = e?.response?.data ? { message: e?.response?.data?.description } : e;
+        const responseData = e?.response?.data;
+        // NestJS trả lỗi dạng { statusCode, message, error }. message có thể là string hoặc string[].
+        const rawMessage = responseData?.message ?? responseData?.description;
+        const normalizedMessage = Array.isArray(rawMessage) ? rawMessage.join(', ') : rawMessage;
+        const error = responseData ? { message: normalizedMessage } : e;
         return Promise.reject(error);
       });
   },
