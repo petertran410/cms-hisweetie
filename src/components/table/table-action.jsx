@@ -1,7 +1,6 @@
 import { Modal, Tooltip } from 'antd';
 import { memo, useState } from 'react';
 import { FaPencilAlt, FaTrashAlt } from 'react-icons/fa';
-import { RiEnglishInput } from 'react-icons/ri';
 import { FaEye } from 'react-icons/fa6';
 import { Link } from 'react-router-dom';
 
@@ -29,16 +28,6 @@ const TableAction = (props) => {
           <Link to={`/${route}/${id}/edit`} type="primary">
             <div className="w-10 h-9 rounded-md flex items-center justify-center bg-[#009dff] hover:bg-[#008ee6] duration-200">
               <FaPencilAlt size={13} color="#FFF" />
-            </div>
-          </Link>
-        </Tooltip>
-      )}
-
-      {!disableEdit && (
-        <Tooltip title="Chỉnh sửa">
-          <Link to={`/${route}/${id}/edit-en`} type="primary">
-            <div className="w-10 h-9 rounded-md flex items-center justify-center bg-[#009dff] hover:bg-[#008ee6] duration-200">
-              <RiEnglishInput size={13} color="#FFF" />
             </div>
           </Link>
         </Tooltip>
