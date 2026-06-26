@@ -1,5 +1,6 @@
 import { ButtonBack } from '@/components/button';
 import { FormSelectQuery } from '@/components/form';
+import Editor from '@/components/form/editor';
 import { useCreateCategory } from '@/services/category.service';
 import { WEBSITE_NAME } from '@/utils/resource';
 import { Button, Checkbox, Form, Input, InputNumber } from 'antd';
@@ -63,6 +64,22 @@ const CategoryCreate = () => {
 
         <Form.Item label={<p className="font-bold text-md">Mô tả danh mục</p>} name="description">
           <TextArea className="py-2" placeholder="Nhập mô tả cho danh mục (không bắt buộc)" rows={4} />
+        </Form.Item>
+
+        <Form.Item
+          label={<p className="font-bold text-md">Top Text (ô phía trên danh sách sản phẩm)</p>}
+          name="top_text"
+          tooltip="Nội dung HTML từ rich text editor. Hiển thị phía trên danh sách sản phẩm ở trang client, dùng cho SEO."
+        >
+          <Editor defaultValue="" />
+        </Form.Item>
+
+        <Form.Item
+          label={<p className="font-bold text-md">Bottom Content (ô phía dưới danh sách sản phẩm)</p>}
+          name="bottom_content"
+          tooltip="Nội dung HTML từ rich text editor. Hiển thị phía dưới danh sách sản phẩm ở trang client, dùng cho SEO."
+        >
+          <Editor defaultValue="" />
         </Form.Item>
 
         <FormSelectQuery

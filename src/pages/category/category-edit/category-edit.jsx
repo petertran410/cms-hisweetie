@@ -1,6 +1,7 @@
 import { ButtonBack } from '@/components/button';
 import { LoadingScreen } from '@/components/effect-screen';
 import { FormSelectQuery, FormUpload } from '@/components/form';
+import Editor from '@/components/form/editor';
 import { API } from '@/utils/API';
 import { showToast } from '@/utils/helper';
 import { useQueryCategoryDetail, useUpdateCategory } from '@/services/category.service';
@@ -96,6 +97,8 @@ const CategoryEdit = () => {
         name_en: categoryData.name_en,
         title_meta: categoryData.title_meta,
         description: categoryData.description,
+        top_text: categoryData.top_text,
+        bottom_content: categoryData.bottom_content,
         parent_id: parentValue,
         priority: categoryData.priority || 0,
         is_featured: categoryData.is_featured ?? false,
@@ -145,6 +148,22 @@ const CategoryEdit = () => {
 
         <Form.Item label={<p className="font-bold text-md">Mô tả danh mục</p>} name="description">
           <TextArea className="py-2" placeholder="Nhập mô tả cho danh mục" rows={4} />
+        </Form.Item>
+
+        <Form.Item
+          label={<p className="font-bold text-md">Top Text (ô phía trên danh sách sản phẩm)</p>}
+          name="top_text"
+          tooltip="Nội dung HTML từ rich text editor. Hiển thị phía trên danh sách sản phẩm ở trang client, dùng cho SEO."
+        >
+          <Editor defaultValue={categoryData?.top_text || ''} />
+        </Form.Item>
+
+        <Form.Item
+          label={<p className="font-bold text-md">Bottom Content (ô phía dưới danh sách sản phẩm)</p>}
+          name="bottom_content"
+          tooltip="Nội dung HTML từ rich text editor. Hiển thị phía dưới danh sách sản phẩm ở trang client, dùng cho SEO."
+        >
+          <Editor defaultValue={categoryData?.bottom_content || ''} />
         </Form.Item>
 
         <FormSelectQuery
