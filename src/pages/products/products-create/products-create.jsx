@@ -17,6 +17,7 @@ import { Button, Form, Input, InputNumber, Switch } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { useParams } from 'react-router-dom';
+import GuideGetLink from '../../news/news-create/guide-get-link';
 
 const ProductsCreate = () => {
   const { id } = useParams();
@@ -43,7 +44,8 @@ const ProductsCreate = () => {
     category_id,
     category,
     kiotViet,
-    price_on
+    price_on,
+    embedUrl
   } = productsDetail || {};
 
   const onFinish = useCallback(
@@ -59,7 +61,8 @@ const ProductsCreate = () => {
         isFeatured: formIsFeatured,
         featuredThumbnail: formFeaturedThumbnail,
         general_description: formGeneralDescription,
-        price_on: formPriceOn
+        price_on: formPriceOn,
+        embedUrl: formEmbedUrl
       } = values || {};
 
       const extractedCategoryId = categoryId?.value ?? categoryId ?? null;
@@ -128,7 +131,8 @@ const ProductsCreate = () => {
                   featured_thumbnail: formIsFeatured ? featuredImageUrl : null,
                   category_id: extractedCategoryId,
                   price_on: formPriceOn,
-                  images_url: productImagesUrl
+                  images_url: productImagesUrl,
+                  embed_url: formEmbedUrl?.trim() || null
                 };
 
                 upsertSiteConfig(siteConfigData);
@@ -146,7 +150,8 @@ const ProductsCreate = () => {
               is_featured: formIsFeatured,
               price_on: formPriceOn,
               featured_thumbnail: formIsFeatured ? featuredImageUrl : null,
-              categoryIds: extractedCategoryId ? [extractedCategoryId] : []
+              categoryIds: extractedCategoryId ? [extractedCategoryId] : [],
+              embed_url: formEmbedUrl?.trim() || null
             };
 
             createMutate(data);
@@ -188,7 +193,8 @@ const ProductsCreate = () => {
         price_on: price_on || false,
         // FIX BUG 2: seed existing files vào form
         imagesUrl: existingFileList,
-        featuredThumbnail: existingFeaturedFile
+        featuredThumbnail: existingFeaturedFile,
+        embedUrl: embedUrl || ''
       });
 
       setCurrentPrice(price || kiotViet?.price || 0);
@@ -319,6 +325,20 @@ const ProductsCreate = () => {
             defaultFileList={defaultFeaturedImage ? [defaultFeaturedImage] : undefined}
           />
         )}
+
+        <Form.Item
+          label={<p className="font-bold text-md">Link video nhúng (tùy chọn)</p>}
+          name="embedUrl"
+          initialValue={embedUrl}
+        >
+          <Input.TextArea
+            rows={4}
+            className="py-2"
+            placeholder="Mẫu: https://www.youtube.com/embed/4letvWcz-ic?si=vn0hTIJto8GLbiRl"
+          />
+        </Form.Item>
+
+        <GuideGetLink />
 
         <Form.Item
           label={<p className="font-bold text-md">Nội dung mô tả</p>}
