@@ -44,6 +44,8 @@ const ProductsCreate = () => {
     category_id,
     category,
     kiotViet,
+    pos,
+    isFromPos,
     price_on,
     embedUrl
   } = productsDetail || {};
@@ -114,30 +116,33 @@ const ProductsCreate = () => {
           }
 
           if (id) {
-            const sharedData = {
-              kiotviet_price: Number(formPrice) > 0 ? formPrice : null
+            const siteConfigData = {
+              title: formTitle,
+              title_meta: formTitleMeta,
+              description: formDescription,
+              general_description: formGeneralDescription,
+              instruction: formInstruction,
+              is_featured: formIsFeatured,
+              is_visible: true,
+              featured_thumbnail: formIsFeatured ? featuredImageUrl : null,
+              category_id: extractedCategoryId,
+              price_on: formPriceOn,
+              images_url: productImagesUrl,
+              embed_url: formEmbedUrl?.trim() || null
             };
 
-            updateMutate(sharedData, {
-              onSuccess: () => {
-                const siteConfigData = {
-                  title: formTitle,
-                  title_meta: formTitleMeta,
-                  description: formDescription,
-                  general_description: formGeneralDescription,
-                  instruction: formInstruction,
-                  is_featured: formIsFeatured,
-                  is_visible: true,
-                  featured_thumbnail: formIsFeatured ? featuredImageUrl : null,
-                  category_id: extractedCategoryId,
-                  price_on: formPriceOn,
-                  images_url: productImagesUrl,
-                  embed_url: formEmbedUrl?.trim() || null
-                };
-
-                upsertSiteConfig(siteConfigData);
-              }
-            });
+            if (isFromPos) {
+              upsertSiteConfig(siteConfigData);
+            } else {
+              updateMutate(
+                { kiotviet_price: Number(formPrice) > 0 ? formPrice : null },
+                {
+                  onSuccess: () => {
+                    upsertSiteConfig(siteConfigData);
+                  }
+                }
+              );
+            }
           } else {
             const data = {
               title: formTitle,
@@ -161,7 +166,7 @@ const ProductsCreate = () => {
           showToast({ type: 'error', message: `Upload failed: ${error.message}` });
         });
     },
-    [createMutate, updateMutate, upsertSiteConfig, id, imagesUrl, featuredThumbnail]
+    [createMutate, updateMutate, upsertSiteConfig, id, imagesUrl, featuredThumbnail, isFromPos]
   );
 
   useEffect(() => {
@@ -185,7 +190,7 @@ const ProductsCreate = () => {
         title_meta,
         general_description,
         categoryId: categoryValue,
-        price: price || kiotViet?.price || 0,
+        price: price ?? kiotViet?.price ?? 0,
         description,
         instruction,
         // FIX BUG 1: dùng isFeatured (camelCase từ backend)
@@ -197,7 +202,7 @@ const ProductsCreate = () => {
         embedUrl: embedUrl || ''
       });
 
-      setCurrentPrice(price || kiotViet?.price || 0);
+      setCurrentPrice(price ?? kiotViet?.price ?? 0);
       // FIX BUG 1: dùng isFeatured
       setIsFeaturedProduct(isFeatured || false);
       setEditorKey((prev) => prev + 1);
@@ -277,13 +282,29 @@ const ProductsCreate = () => {
           initialValue={category_id}
         />
 
+        {isFromPos && (
+          <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-2">
+            <Form.Item label={<p className="font-bold text-md">Mã sản phẩm POS</p>} className="mb-0">
+              <Input value={pos?.code || ''} readOnly />
+            </Form.Item>
+            <Form.Item label={<p className="font-bold text-md">Tên từ POS</p>} className="mb-0">
+              <Input value={pos?.name || ''} readOnly />
+            </Form.Item>
+          </div>
+        )}
+
         <Form.Item
-          label={<p className="font-bold text-md">Giá sản phẩm (VND)</p>}
+          label={<p className="font-bold text-md">{isFromPos ? 'Giá POS - BẢNG GIÁ LẺ HCM (VND)' : 'Giá sản phẩm (VND)'}</p>}
           name="price"
           initialValue={price}
           className="mt-10 mb-0"
         >
-          <InputNumber type="number" className="py-1 w-full" onChange={(data) => setCurrentPrice(data || 0)} />
+          <InputNumber
+            type="number"
+            className="py-1 w-full"
+            disabled={isFromPos}
+            onChange={(data) => setCurrentPrice(data || 0)}
+          />
         </Form.Item>
 
         <p className="mt-0.5 ml-2 mb-10">{formatCurrency(currentPrice)}</p>

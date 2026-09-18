@@ -158,22 +158,22 @@ export const useQueryCategoryHierarchyInfo = (categoryIds) => {
   });
 };
 
-export const useSyncProducts = () => {
+export const useSyncProductsFromPos = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: () =>
       API.request({
-        url: '/api/product/products',
+        url: '/api/product/pos/sync',
         method: 'POST'
       }),
     onSuccess: (data) => {
       showToast({
-        type: 'success',
-        message: `Đồng bộ thành công! ${data.summary?.synced || 0} sản phẩm đã được cập nhật.`
+        type: data.success ? 'success' : 'info',
+        message: `Đồng bộ POS hoàn tất: ${data.summary?.updated || 0} cập nhật, ${data.summary?.created || 0} tạo mới.`
       });
       queryClient.invalidateQueries({ queryKey: ['GET_PRODUCTS_LIST'] });
-      queryClient.invalidateQueries({ queryKey: ['GET_SYNC_STATUS'] });
+      queryClient.invalidateQueries({ queryKey: ['GET_POS_SYNC_STATUS'] });
     },
     onError: (e) => {
       showToast({
@@ -209,10 +209,10 @@ export const useTestKiotVietConnection = () => {
   });
 };
 
-export const useQuerySyncStatus = () => {
+export const useQueryPosSyncStatus = () => {
   return useQuery({
-    queryKey: ['GET_SYNC_STATUS'],
-    queryFn: () => API.request({ url: '/api/product/kiotviet/sync/status' }),
+    queryKey: ['GET_POS_SYNC_STATUS'],
+    queryFn: () => API.request({ url: '/api/product/pos/sync/status' }),
     staleTime: 30000
   });
 };

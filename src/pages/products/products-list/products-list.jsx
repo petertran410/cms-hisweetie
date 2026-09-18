@@ -2,9 +2,9 @@ import { ErrorScreen } from '@/components/effect-screen';
 import { CreateButton, Pagination } from '@/components/table';
 import {
   useQueryProductsList,
-  useSyncProducts,
+  useSyncProductsFromPos,
   useToggleProductVisibility,
-  useQuerySyncStatus
+  useQueryPosSyncStatus
 } from '../../../services/products.service';
 import { TableStyle } from '@/styles/table.style';
 import { formatCurrency, useGetParamsURL } from '@/utils/helper';
@@ -28,9 +28,9 @@ import TableFilter from './filter';
 
 const ProductsList = () => {
   const { data: dataQuery = {}, isLoading, error } = useQueryProductsList();
-  const { data: syncStatus } = useQuerySyncStatus();
-  const { mutate: syncProducts, isPending: isSyncing } = useSyncProducts();
-  const { mutate: toggleVisibility, isPending: isToggling } = useToggleProductVisibility();
+  const { data: syncStatus } = useQueryPosSyncStatus();
+  const { mutate: syncProducts, isPending: isSyncing } = useSyncProductsFromPos();
+  const { mutate: toggleVisibility } = useToggleProductVisibility();
   const paramsURL = useGetParamsURL();
   const { page = 1 } = paramsURL || {};
   const queryClient = useQueryClient();
@@ -95,7 +95,7 @@ const ProductsList = () => {
       width: 120,
       align: 'center',
       render: (record) => {
-        const code = record.kiotviet_code;
+        const code = record.posCode || record.kiotviet_code;
         return code ? <span className="font-medium">{code}</span> : <span className="text-sm">Chưa có code</span>;
       }
     },
@@ -110,6 +110,8 @@ const ProductsList = () => {
 
         if (Array.isArray(imagesUrl) && imagesUrl.length > 0) {
           imageUrl = imagesUrl[0];
+        } else if (Array.isArray(record.posImages) && record.posImages.length > 0) {
+          imageUrl = record.posImages[0];
         } else if (Array.isArray(record.kiotviet_images) && record.kiotviet_images.length > 0) {
           imageUrl = record.kiotviet_images[0];
         }
@@ -135,24 +137,25 @@ const ProductsList = () => {
       key: 'title',
       width: 250,
       render: (record) => {
-        let name;
-        if (record.title === null) {
-          name = record.kiotviet_name;
-        } else {
-          name = record.title;
-        }
+        const name = record.title || record.posName || record.kiotviet_name || 'Chưa có tên';
+        const isFromPos = record.isFromPos;
         const isFromKiotViet = record.isFromKiotViet;
 
         return (
           <div className="space-y-1">
             <div className="font-medium text-gray-800 line-clamp-2">{name}</div>
             <div className="flex gap-1">
-              {isFromKiotViet && (
+              {isFromPos ? (
+                <Tag color="blue" className="text-xs">
+                  <FaSync className="inline mr-1" />
+                  POS
+                </Tag>
+              ) : isFromKiotViet ? (
                 <Tag color="orange" className="text-xs">
                   <FaSync className="inline mr-1" />
                   KiotViet
                 </Tag>
-              )}
+              ) : null}
               {record.isFeatured && (
                 <Tag color="gold" className="text-xs">
                   <FaCheck className="inline mr-1" />
@@ -205,10 +208,10 @@ const ProductsList = () => {
       width: 120,
       align: 'right',
       render: (record) => {
-        const price = record.kiotviet_price;
+        const price = record.price ?? record.kiotviet_price;
         const isPriceOn = record.price_on;
 
-        if (price) {
+        if (price !== null && price !== undefined && price > 0) {
           return (
             <span className="font-medium text-green-600">
               {formatCurrency(price)}
@@ -226,7 +229,6 @@ const ProductsList = () => {
       width: 100,
       align: 'right',
       render: (record) => {
-        console.log(record);
         const isVisible = record.isVisible === true;
         const isCurrentlyToggling = togglingIds.has(record.id);
 
@@ -239,7 +241,13 @@ const ProductsList = () => {
               size="small"
               checkedChildren={<FaEye />}
               unCheckedChildren={<FaEyeSlash />}
-              onChange={() => handleVisibilityToggle(record.id, isVisible, record.kiotviet_name)}
+              onChange={() =>
+                handleVisibilityToggle(
+                  record.id,
+                  isVisible,
+                  record.title || record.posName || record.kiotviet_name
+                )
+              }
             />
           </Tooltip>
         );
@@ -257,28 +265,45 @@ const ProductsList = () => {
   const renderSyncStatus = () => {
     if (!syncStatus) return null;
 
-    const { lastSync, totalProducts, summary } = syncStatus;
+    const {
+      lastSync,
+      totalProducts,
+      mappedProducts,
+      pricedProducts,
+      summary,
+      status,
+      errorMessage,
+      priceBook
+    } = syncStatus;
     const lastSyncDate = lastSync ? new Date(lastSync).toLocaleString('vi-VN') : 'Chưa đồng bộ';
+    const alertType = status === 'FAILED' ? 'error' : status === 'PARTIAL' ? 'warning' : 'info';
 
     return (
       <Alert
-        type="info"
+        type={alertType}
         showIcon
         icon={<FaInfoCircle />}
-        message="Trạng thái đồng bộ KiotViet"
+        message="Trạng thái đồng bộ POS"
         description={
           <div className="space-y-2">
             <div>Lần cuối: {lastSyncDate}</div>
             <div className="flex gap-4 text-sm">
               <span>Tổng: {totalProducts}</span>
-              <span>Đã đồng bộ: {summary?.synced || 0}</span>
+              <span>Đã map POS: {mappedProducts || 0}</span>
+              <span>Có giá POS: {pricedProducts || 0}</span>
+              <span>Cập nhật: {summary?.updated || 0}</span>
+              <span>Tạo mới: {summary?.created || 0}</span>
               <span>Lỗi: {summary?.failed || 0}</span>
             </div>
+            <div className="text-sm">
+              Bảng giá: {priceBook?.id || 22} - {priceBook?.name || 'BẢNG GIÁ LẺ HCM'}
+            </div>
+            {errorMessage && <div className="text-sm text-red-600">{errorMessage}</div>}
           </div>
         }
         action={
           <Button type="primary" size="small" loading={isSyncing} onClick={() => syncProducts()} icon={<FaSync />}>
-            Đồng bộ ngay
+            Đồng bộ POS
           </Button>
         }
         className="mb-4"
