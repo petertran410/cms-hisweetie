@@ -11,7 +11,7 @@ import {
   useUpsertProductSiteConfig
 } from '@/services/products.service';
 import { API } from '@/utils/API';
-import { formatCurrency, showToast } from '@/utils/helper';
+import { convertSlugURL, formatCurrency, showToast } from '@/utils/helper';
 import { WEBSITE_NAME } from '@/utils/resource';
 import { Button, Form, Input, InputNumber, Switch } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
@@ -118,12 +118,12 @@ const ProductsCreate = () => {
           if (id) {
             const siteConfigData = {
               title: formTitle,
+              slug: convertSlugURL(formTitle),
               title_meta: formTitleMeta,
               description: formDescription,
               general_description: formGeneralDescription,
               instruction: formInstruction,
               is_featured: formIsFeatured,
-              is_visible: true,
               featured_thumbnail: formIsFeatured ? featuredImageUrl : null,
               category_id: extractedCategoryId,
               price_on: formPriceOn,
