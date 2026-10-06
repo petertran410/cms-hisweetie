@@ -52,3 +52,46 @@
 .ProseMirror .ProseMirror-selectednode {
   outline: none !important;
 }
+
+/* Keep each rich-text toolbar visible while scrolling through its own content. */
+.hisweetie-rich-text-editor .reactjs-tiptap-editor > div > div {
+  display: flex;
+  flex-direction: column;
+  height: min(90vh, 1000px);
+  min-height: 600px;
+}
+
+.hisweetie-rich-text-editor
+  .reactjs-tiptap-editor
+  [class*='richtext-px-1'][class*='richtext-py-2'][class*='richtext-border-b'] {
+  order: 1;
+  flex: 0 0 auto;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+
+.hisweetie-rich-text-editor .hisweetie-editor-content {
+  order: 2;
+  flex: 1 1 auto;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+@media (max-width: 991px) {
+  .hisweetie-rich-text-editor .reactjs-tiptap-editor > div > div {
+    height: min(82vh, 800px);
+    min-height: 420px;
+  }
+
+  .hisweetie-rich-text-editor
+    .reactjs-tiptap-editor
+    [class*='richtext-px-1'][class*='richtext-py-2'][class*='richtext-border-b'] {
+    top: 0;
+  }
+}

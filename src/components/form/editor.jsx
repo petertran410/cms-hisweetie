@@ -254,7 +254,7 @@ const Editor = (props) => {
   locale.setLang('vi');
 
   return (
-    <div className="relative" key={key}>
+    <div className="relative hisweetie-rich-text-editor" key={key}>
       {showCreateTableOfContents && (
         <div className="mb-5 flex items-center gap-2">
           <Checkbox checked={createTableOfContents} onChange={(e) => setCreateTableOfContents(e.target.checked)}>
@@ -279,6 +279,7 @@ const Editor = (props) => {
         onChangeContent={onChangeContent}
         extensions={extensions}
         minHeight={600}
+        contentClass="hisweetie-editor-content"
         customMenuItems={customMenuItems}
       />
 

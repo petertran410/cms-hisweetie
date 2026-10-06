@@ -1,29 +1,119 @@
 import { FilterSearch } from '@/components/filter';
 import { Button, Space, Dropdown } from 'antd';
 import { useParamsURL, useRemoveParamURL } from '@/utils/helper';
-import { memo, useMemo, useState, useEffect } from 'react';
+import { memo, useMemo, useState, useEffect, useRef } from 'react';
 import { FaList, FaEye, FaEyeSlash, FaChevronDown, FaChevronRight } from 'react-icons/fa';
 import { useQueryCategoriesForProductDropdown } from '@/services/category.service';
+
+const PRODUCTS_LIST_PARAMS = ['keyword', 'categoryId', 'categoryIds', 'is_visible', 'page'];
+
+const getProductsFilterStorageKey = () =>
+  `cms-products-list-filters:${localStorage.getItem('website') || 'lermao'}`;
+
+const readStoredProductListParams = () => {
+  try {
+    const storedValue = localStorage.getItem(getProductsFilterStorageKey());
+    if (!storedValue) return null;
+
+    const parsedValue = JSON.parse(storedValue);
+    return parsedValue && typeof parsedValue === 'object' && !Array.isArray(parsedValue) ? parsedValue : null;
+  } catch (error) {
+    console.warn('Không thể đọc bộ lọc sản phẩm từ localStorage:', error);
+    return null;
+  }
+};
 
 const TableFilter = () => {
   const { paramsURL, setParamsURL } = useParamsURL();
   const removeParamsURL = useRemoveParamURL();
   const { is_visible, categoryId } = paramsURL || {};
   const { data: categoriesData = [], isLoading: categoriesLoading } = useQueryCategoriesForProductDropdown();
+  const hasInitializedStorage = useRef(false);
+
+  const normalizedCategories = useMemo(() => {
+    const categories = Array.isArray(categoriesData)
+      ? categoriesData
+      : categoriesData?.data || categoriesData?.content || [];
+
+    return categories
+      .filter((category) => category && typeof category === 'object')
+      .map((category) => ({
+        ...category,
+        id: Number(category.id),
+        parent_id: category.parent_id === null || category.parent_id === undefined ? null : Number(category.parent_id)
+      }));
+  }, [categoriesData]);
+
+  const visibleCategories = useMemo(
+    () =>
+      normalizedCategories.filter(
+        (category) =>
+          category.is_active !== false &&
+          category.is_active !== 0 &&
+          category.is_active !== 'false' &&
+          category.is_active !== '0'
+      ),
+    [normalizedCategories]
+  );
 
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-  // Build category tree và getAllDescendantIds
+  useEffect(() => {
+    const storedParams = readStoredProductListParams();
+    const hasUrlParams = PRODUCTS_LIST_PARAMS.some((key) =>
+      Object.prototype.hasOwnProperty.call(paramsURL || {}, key)
+    );
+
+    if (!hasInitializedStorage.current) {
+      hasInitializedStorage.current = true;
+
+      if (!hasUrlParams && storedParams && Object.keys(storedParams).length > 0) {
+        setParamsURL(storedParams);
+        return;
+      }
+    }
+
+    const currentParams = PRODUCTS_LIST_PARAMS.reduce((result, key) => {
+      if (paramsURL?.[key] !== undefined && paramsURL?.[key] !== '') {
+        result[key] = paramsURL[key];
+      }
+      return result;
+    }, {});
+
+    try {
+      if (Object.keys(currentParams).length > 0) {
+        localStorage.setItem(getProductsFilterStorageKey(), JSON.stringify(currentParams));
+      } else {
+        localStorage.removeItem(getProductsFilterStorageKey());
+      }
+    } catch (error) {
+      console.warn('Không thể lưu bộ lọc sản phẩm vào localStorage:', error);
+    }
+  }, [paramsURL, setParamsURL]);
+
+  // Build category tree and get all descendant IDs for the backend filter.
   const { categoryTree, categoryMap, getAllDescendantIds } = useMemo(() => {
     const map = new Map();
+    const descendantMap = new Map();
     const tree = [];
 
-    categoriesData.forEach((cat) => {
+    normalizedCategories.forEach((cat) => {
+      descendantMap.set(cat.id, { ...cat, children: [] });
+    });
+
+    normalizedCategories.forEach((cat) => {
+      const node = descendantMap.get(cat.id);
+      if (cat.parent_id && descendantMap.has(cat.parent_id)) {
+        descendantMap.get(cat.parent_id).children.push(node);
+      }
+    });
+
+    visibleCategories.forEach((cat) => {
       map.set(cat.id, { ...cat, children: [] });
     });
 
-    categoriesData.forEach((cat) => {
+    visibleCategories.forEach((cat) => {
       const node = map.get(cat.id);
       if (cat.parent_id && map.has(cat.parent_id)) {
         map.get(cat.parent_id).children.push(node);
@@ -34,7 +124,7 @@ const TableFilter = () => {
 
     const getDescendantIds = (categoryId) => {
       const ids = [categoryId];
-      const category = map.get(categoryId);
+      const category = descendantMap.get(categoryId);
 
       if (category?.children && category.children.length > 0) {
         category.children.forEach((child) => {
@@ -50,7 +140,7 @@ const TableFilter = () => {
       categoryMap: map,
       getAllDescendantIds: getDescendantIds
     };
-  }, [categoriesData]);
+  }, [normalizedCategories, visibleCategories]);
 
   useEffect(() => {
     if (categoryId && categoryMap.has(Number(categoryId))) {
@@ -59,6 +149,12 @@ const TableFilter = () => {
       setSelectedCategory(null);
     }
   }, [categoryId, categoryMap]);
+
+  useEffect(() => {
+    if (!categoriesLoading && categoryId && !categoryMap.has(Number(categoryId))) {
+      removeParamsURL(['categoryId', 'categoryIds', 'page']);
+    }
+  }, [categoriesLoading, categoryId, categoryMap, removeParamsURL]);
 
   const handleVisibilityFilter = (value) => {
     if (value === 'all') {

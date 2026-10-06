@@ -1,6 +1,6 @@
 import { API } from '@/utils/API';
 import { showToast } from '@/utils/helper';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -27,11 +27,8 @@ export const useQueryProductsList = () => {
       };
 
       if (keyword) apiParams.title = keyword;
-      if (categoryIds) {
-        apiParams.categoryIds = categoryIds;
-      } else if (categoryId) {
-        apiParams.categoryId = categoryId;
-      }
+      if (categoryIds) apiParams.categoryIds = categoryIds;
+      if (categoryId) apiParams.categoryId = categoryId;
       if (is_visible !== undefined && is_visible !== '') {
         apiParams.is_visible = is_visible;
       }
@@ -67,6 +64,7 @@ export const useCreateProducts = () => {
 export const useUpdateProducts = (id) => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const location = useLocation();
 
   return useMutation({
     mutationFn: (params) => {
@@ -79,7 +77,7 @@ export const useUpdateProducts = (id) => {
     onSuccess: () => {
       showToast({ type: 'success', message: 'Cập nhật sản phẩm thành công!', duration: 3000 });
       queryClient.invalidateQueries({ queryKey: ['GET_PRODUCTS_LIST'] });
-      navigate('/products');
+      navigate(location.state?.from || '/products');
     },
     onError: (e) => {
       showToast({ type: 'error', message: `Cập nhật thất bại: ${e.message}`, duration: 5000 });
@@ -326,6 +324,7 @@ export const useUpdateProductCategory = () => {
 export const useUpsertProductSiteConfig = (id) => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const location = useLocation();
 
   return useMutation({
     mutationFn: (params) => {
@@ -339,7 +338,7 @@ export const useUpsertProductSiteConfig = (id) => {
       showToast({ type: 'success', message: 'Cập nhật cấu hình sản phẩm thành công!', duration: 3000 });
       queryClient.invalidateQueries({ queryKey: ['GET_PRODUCTS_LIST'] });
       queryClient.invalidateQueries({ queryKey: ['GET_PRODUCT_DETAIL', id] });
-      navigate('/products');
+      navigate(location.state?.from || '/products');
     },
     onError: (e) => {
       showToast({ type: 'error', message: `Cập nhật thất bại: ${e.message}`, duration: 5000 });

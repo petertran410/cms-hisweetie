@@ -1,12 +1,16 @@
 import { useParamsURL, useRemoveParamURL } from '@/utils/helper';
 import { Input } from 'antd';
-import { memo, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 
 const FilterSearch = ({ placeholder = 'Nhập từ khóa...', label = 'Tìm kiếm' }) => {
   const { paramsURL, setParamsURL } = useParamsURL();
   const removeParamsURL = useRemoveParamURL();
   const { keyword = '' } = paramsURL || {};
   const [text, setText] = useState(keyword);
+
+  useEffect(() => {
+    setText(keyword);
+  }, [keyword]);
 
   return (
     <div>
@@ -15,10 +19,11 @@ const FilterSearch = ({ placeholder = 'Nhập từ khóa...', label = 'Tìm ki�
         className="h-10"
         allowClear
         placeholder={placeholder}
-        defaultValue={keyword ? `${keyword}` : undefined}
+        value={text}
         onChange={(e) => {
           const value = e.target.value;
           if (!value) {
+            setText('');
             removeParamsURL(['keyword']);
             return;
           }
@@ -26,7 +31,7 @@ const FilterSearch = ({ placeholder = 'Nhập từ khóa...', label = 'Tìm ki�
         }}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
-            setParamsURL({ keyword: text, page: '1' });
+            setParamsURL({ ...paramsURL, keyword: text, page: '1' });
           }
         }}
       />
