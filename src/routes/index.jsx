@@ -17,8 +17,6 @@ import { UserCreate, UserList } from '@/pages/user';
 import { VideoCreate, VideoList } from '@/pages/video';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Route, Routes } from 'react-router-dom';
-import NewsCreateEn from '../pages/news/news-en-create/news-create';
-import ProductsCreateEn from '../pages/products/products-en-create/products-create';
 import { TestimonialCreate, TestimonialList } from '../pages/testimonial';
 
 const AppRoute = () => {
@@ -44,7 +42,6 @@ const AppRoute = () => {
             <Route path="" element={<NewsList />} />
             <Route path="create" element={<NewsCreate />} />
             <Route path=":id/edit" element={<NewsCreate />} />
-            <Route path=":id/edit-en" element={<NewsCreateEn />} />
             <Route path=":id/detail" element={<NewsCreate />} />
           </Route>
 
@@ -86,7 +83,6 @@ const AppRoute = () => {
             <Route path="" element={<ProductsList />} />
             <Route path="create" element={<ProductsCreate />} />
             <Route path=":id/edit" element={<ProductsCreate />} />
-            <Route path=":id/edit-en" element={<ProductsCreateEn />} />
           </Route>
 
           {/* <Route path="recipes">

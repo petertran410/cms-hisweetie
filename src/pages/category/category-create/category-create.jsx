@@ -50,14 +50,6 @@ const CategoryCreate = () => {
           <Input className="py-2" placeholder="Nhập tên danh mục" />
         </Form.Item>
 
-        <Form.Item
-          label={<p className="font-bold text-md">Tên danh mục English</p>}
-          name="name_en"
-          rules={[{ required: false, message: 'Vui lòng nhập tên danh mục' }]}
-        >
-          <Input className="py-2" placeholder="Nhập tên danh mục" />
-        </Form.Item>
-
         <Form.Item label={<p className="font-bold text-md">Title Meta</p>} name="title_meta">
           <TextArea className="py-2" placeholder="Nhập mô tả title meta cho danh mục (không bắt buộc)" rows={4} />
         </Form.Item>

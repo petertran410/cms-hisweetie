@@ -147,7 +147,7 @@ const ProductsCreate = () => {
             const data = {
               title: formTitle,
               title_meta: formTitleMeta,
-              price: Number(formPrice) > 0 ? formPrice : null,
+              kiotviet_price: Number(formPrice) > 0 ? Number(formPrice) : null,
               description: formDescription,
               images_url: productImagesUrl,
               general_description: formGeneralDescription,
@@ -155,7 +155,7 @@ const ProductsCreate = () => {
               is_featured: formIsFeatured,
               price_on: formPriceOn,
               featured_thumbnail: formIsFeatured ? featuredImageUrl : null,
-              categoryIds: extractedCategoryId ? [extractedCategoryId] : [],
+              category_id: extractedCategoryId ? Number(extractedCategoryId) : null,
               embed_url: formEmbedUrl?.trim() || null
             };
 
