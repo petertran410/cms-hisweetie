@@ -7,7 +7,10 @@ import { NEWS_TYPE_OPTIONS } from '@/utils/news-types.constants';
 import { API } from '@/utils/API';
 import { getHtmlContentWithTOC, showToast, useFormType, useScrollTop } from '@/utils/helper';
 import { WEBSITE_NAME } from '@/utils/resource';
-import { Button, Form, Input, Select } from 'antd';
+import { Button, ConfigProvider, DatePicker, Form, Input, Select } from 'antd';
+import locale from 'antd/locale/vi_VN';
+import dayjs from 'dayjs';
+import 'dayjs/locale/vi';
 import { useCallback, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { Link, useParams } from 'react-router-dom';
@@ -24,7 +27,7 @@ const NewsCreate = () => {
 
   const onFinish = useCallback(
     (values) => {
-      const { title, htmlContent, description, imagesUrl, type, embedUrl, titleMeta } = values || {};
+      const { title, htmlContent, description, imagesUrl, type, embedUrl, titleMeta, createdDate } = values || {};
       const fileData = imagesUrl?.fileList || imagesUrl || [];
       const fileList = fileData?.[fileData.length - 1] ? [fileData?.[fileData.length - 1]] : [];
 
@@ -59,7 +62,8 @@ const NewsCreate = () => {
             description,
             imagesUrl,
             type,
-            embedUrl: embedUrl?.trim() || null
+            embedUrl: embedUrl?.trim() || null,
+            createdDate: createdDate ? createdDate.toISOString() : undefined
           };
           id ? updateMutate(data) : createMutate(data);
         })
@@ -80,7 +84,7 @@ const NewsCreate = () => {
     return <ErrorScreen message={errorDetail?.message} className="mt-20" />;
   }
 
-  const { title, description, htmlContent, imagesUrl, type, embedUrl, titleMeta } = newsDetail || {};
+  const { title, description, htmlContent, imagesUrl, type, embedUrl, titleMeta, createdDate } = newsDetail || {};
 
   const initialImages = Array.isArray(imagesUrl) ? imagesUrl.map((i) => ({ name: '', url: i })) : undefined;
 
@@ -136,6 +140,34 @@ const NewsCreate = () => {
         >
           <Select className="h-10" placeholder="Chọn loại bài viết" disabled={isDetail} options={NEWS_TYPE_OPTIONS} />
         </Form.Item>
+
+        {/* Ngày tạo: mặc định hiện tại (tạo mới) / ngày cũ (sửa). Không cho chọn tương lai. */}
+        <ConfigProvider locale={locale}>
+          <Form.Item
+            label={<p className="font-bold text-md">Ngày tạo</p>}
+            name="createdDate"
+            initialValue={createdDate ? dayjs(createdDate) : dayjs()}
+            rules={[
+              { required: true, message: 'Vui lòng chọn ngày tạo' },
+              {
+                validator: (_, value) =>
+                  value && value.isAfter(dayjs())
+                    ? Promise.reject(new Error('Không được chọn thời điểm trong tương lai'))
+                    : Promise.resolve()
+              }
+            ]}
+          >
+            <DatePicker
+              showTime={{ format: 'HH:mm' }}
+              format="DD/MM/YYYY HH:mm"
+              style={{ width: '100%' }}
+              className="h-10"
+              placeholder="Chọn ngày tạo"
+              disabledDate={(current) => current && current.isAfter(dayjs(), 'day')}
+              disabled={isDetail}
+            />
+          </Form.Item>
+        </ConfigProvider>
 
         <Form.Item label={<p className="font-bold text-md">Mô tả</p>} name="description" initialValue={description}>
           <Input className="py-2" disabled={isDetail} />
