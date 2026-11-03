@@ -13,8 +13,8 @@ import {
 import { API } from '@/utils/API';
 import { convertSlugURL, formatCurrency, showToast } from '@/utils/helper';
 import { WEBSITE_NAME } from '@/utils/resource';
-import { Button, Form, Input, InputNumber, Switch } from 'antd';
-import { useCallback, useEffect, useState } from 'react';
+import { Button, Form, Image, Input, InputNumber, Switch } from 'antd';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { useParams } from 'react-router-dom';
 import GuideGetLink from '../../news/news-create/guide-get-link';
@@ -47,8 +47,21 @@ const ProductsCreate = () => {
     pos,
     isFromPos,
     price_on,
-    embedUrl
+    embedUrl,
+    cmsImagesUrl,
+    thirdPartyImages,
+    usePosImages
   } = productsDetail || {};
+
+  // Hình CMS tự upload (sửa/xoá được). Backend cũ chưa có cmsImagesUrl → dùng imagesUrl như trước.
+  const ownImages = useMemo(() => {
+    if (Array.isArray(cmsImagesUrl)) return cmsImagesUrl;
+    return Array.isArray(imagesUrl) ? imagesUrl : [];
+  }, [cmsImagesUrl, imagesUrl]);
+  // Hình đồng bộ từ POS/KiotViet: chỉ xem, không sửa/xoá
+  const posImageList = Array.isArray(thirdPartyImages) ? thirdPartyImages : [];
+  const showPosImages = !!id && (isFromPos || posImageList.length > 0);
+  const watchUsePosImages = Form.useWatch('usePosImages', form);
 
   const onFinish = useCallback(
     (values) => {
@@ -64,7 +77,8 @@ const ProductsCreate = () => {
         featuredThumbnail: formFeaturedThumbnail,
         general_description: formGeneralDescription,
         price_on: formPriceOn,
-        embedUrl: formEmbedUrl
+        embedUrl: formEmbedUrl,
+        usePosImages: formUsePosImages
       } = values || {};
 
       const extractedCategoryId = categoryId?.value ?? categoryId ?? null;
@@ -104,10 +118,10 @@ const ProductsCreate = () => {
             productImagesUrl = filteredResults.slice(0, -1);
           }
 
-          // FIX BUG 2: nếu productImagesUrl rỗng và đang edit,
-          // giữ nguyên existing images thay vì gửi [] lên backend
-          if (id && productImagesUrl.length === 0 && Array.isArray(imagesUrl) && imagesUrl.length > 0) {
-            productImagesUrl = imagesUrl;
+          // Chỉ giữ hình cũ khi field chưa từng được set (undefined).
+          // Người dùng xoá hết hình → gửi [] để xoá thật.
+          if (id && formImagesUrl === undefined && productImagesUrl.length === 0 && ownImages.length > 0) {
+            productImagesUrl = ownImages;
           }
 
           // FIX BUG 2: tương tự cho featuredThumbnail
@@ -128,7 +142,9 @@ const ProductsCreate = () => {
               category_id: extractedCategoryId,
               price_on: formPriceOn,
               images_url: productImagesUrl,
-              embed_url: formEmbedUrl?.trim() || null
+              embed_url: formEmbedUrl?.trim() || null,
+              // undefined (không có khối hình POS) → backend bỏ qua, giữ giá trị cũ
+              use_pos_images: typeof formUsePosImages === 'boolean' ? formUsePosImages : undefined
             };
 
             if (isFromPos) {
@@ -166,20 +182,17 @@ const ProductsCreate = () => {
           showToast({ type: 'error', message: `Upload failed: ${error.message}` });
         });
     },
-    [createMutate, updateMutate, upsertSiteConfig, id, imagesUrl, featuredThumbnail, isFromPos]
+    [createMutate, updateMutate, upsertSiteConfig, id, ownImages, featuredThumbnail, isFromPos]
   );
 
   useEffect(() => {
     if (productsDetail && !loadingDetail) {
       const categoryValue = category && category.name ? { value: category_id, label: category.name } : undefined;
 
-      // FIX BUG 2: seed imagesUrl và featuredThumbnail vào form value
-      // để AntD form nhận biết existing files khi submit
-      const arrayImageUrl = Array.isArray(imagesUrl) ? imagesUrl : [];
+      // FIX BUG 2: seed hình CMS và featuredThumbnail vào form value
+      // để AntD form nhận biết existing files khi submit (không seed hình POS)
       const existingFileList =
-        arrayImageUrl.length > 0
-          ? arrayImageUrl.map((i) => ({ type: 'image/*', url: i, uid: i, name: '' }))
-          : undefined;
+        ownImages.length > 0 ? ownImages.map((i) => ({ type: 'image/*', url: i, uid: i, name: '' })) : undefined;
 
       const existingFeaturedFile = featuredThumbnail
         ? [{ type: 'image/*', url: featuredThumbnail, uid: featuredThumbnail, name: '' }]
@@ -199,7 +212,8 @@ const ProductsCreate = () => {
         // FIX BUG 2: seed existing files vào form
         imagesUrl: existingFileList,
         featuredThumbnail: existingFeaturedFile,
-        embedUrl: embedUrl || ''
+        embedUrl: embedUrl || '',
+        usePosImages: usePosImages ?? true
       });
 
       setCurrentPrice(price ?? kiotViet?.price ?? 0);
@@ -212,11 +226,10 @@ const ProductsCreate = () => {
   if (id && loadingDetail) return <LoadingScreen className="mt-20" />;
   if (id && errorDetail) return <ErrorScreen message={errorDetail?.message} className="mt-20" />;
 
-  const arrayImageUrl = Array.isArray(imagesUrl) ? imagesUrl : [];
   const FormUpload = FormItemUpload;
 
   const defaultFileList =
-    arrayImageUrl.length > 0 ? arrayImageUrl.map((i) => ({ type: 'image/*', url: i, uid: i, name: '' })) : undefined;
+    ownImages.length > 0 ? ownImages.map((i) => ({ type: 'image/*', url: i, uid: i, name: '' })) : undefined;
 
   const initFeaturedImage = featuredThumbnail ? { name: '', url: featuredThumbnail } : undefined;
   const defaultFeaturedImage = featuredThumbnail
@@ -326,6 +339,35 @@ const ProductsCreate = () => {
           multiple
           defaultFileList={defaultFileList}
         />
+
+        {showPosImages && (
+          <div className="mb-10 rounded-md border border-solid border-gray-200 p-4">
+            <Form.Item
+              label={<p className="font-bold text-md">Dùng hình ảnh từ POS</p>}
+              name="usePosImages"
+              valuePropName="checked"
+              initialValue={usePosImages ?? true}
+              extra="Bật: web hiển thị hình CMS trước, hình POS sau. Tắt: chỉ hiển thị hình CMS. Hình POS được đồng bộ tự động, không thể xoá hoặc thay đổi tại đây."
+              className="mb-4"
+            >
+              <Switch />
+            </Form.Item>
+
+            {posImageList.length > 0 ? (
+              <div className={watchUsePosImages === false ? 'opacity-40' : ''}>
+                <Image.PreviewGroup>
+                  <div className="flex flex-wrap gap-3">
+                    {posImageList.map((url) => (
+                      <Image key={url} src={url} width={96} height={96} className="rounded object-cover" />
+                    ))}
+                  </div>
+                </Image.PreviewGroup>
+              </div>
+            ) : (
+              <p className="text-gray-500">POS chưa có hình cho sản phẩm này.</p>
+            )}
+          </div>
+        )}
 
         <Form.Item
           label={<p className="font-bold text-md">Sản phẩm nổi bật</p>}
