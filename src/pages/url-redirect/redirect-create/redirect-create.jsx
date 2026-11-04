@@ -3,8 +3,10 @@ import { useCreateRedirect } from '@/services/redirect.service';
 import { WEBSITE_NAME } from '@/utils/resource';
 import { Button, Checkbox, Form, Input, Select } from 'antd';
 import { Helmet } from 'react-helmet';
+import { getPathExamples } from '../path-examples';
 
 const { TextArea } = Input;
+const PATH_EXAMPLES = getPathExamples();
 
 const STATUS_OPTIONS = [
   { value: 301, label: '301 - Chuyển hướng vĩnh viễn' },
@@ -59,7 +61,7 @@ const RedirectCreate = () => {
           name="source_path"
           rules={PATH_RULE}
         >
-          <Input className="py-2" placeholder="/san-pham/nguyen-lieu-pha-che-lermao/mut-pha-che-lermao" />
+          <Input className="py-2" placeholder={PATH_EXAMPLES.source} />
         </Form.Item>
 
         <Form.Item
@@ -67,7 +69,7 @@ const RedirectCreate = () => {
           name="target_path"
           rules={PATH_RULE}
         >
-          <Input className="py-2" placeholder="/san-pham/nguyen-lieu-pha-che/mut-pha-che" />
+          <Input className="py-2" placeholder={PATH_EXAMPLES.target} />
         </Form.Item>
 
         <Form.Item label={<p className="font-bold text-md">Loại chuyển hướng</p>} name="status_code">

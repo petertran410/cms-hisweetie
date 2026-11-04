@@ -4,6 +4,9 @@ import { Tag, Button, Table, Pagination } from 'antd';
 import { Helmet } from 'react-helmet';
 import Action from './action';
 import { Link, useNavigate } from 'react-router-dom';
+import { getPathExamples } from '../path-examples';
+
+const { siteName } = getPathExamples();
 
 const RedirectList = () => {
   const navigate = useNavigate();
@@ -65,7 +68,7 @@ const RedirectList = () => {
       </Helmet>
 
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Quản lý điều hướng URL (301)</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Quản lý điều hướng URL (301) – {siteName}</h1>
         <Link to="/redirects/create">
           <Button type="primary" size="large">
             Tạo redirect

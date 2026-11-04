@@ -22,6 +22,18 @@ const App = () => {
     }
   }, [location.pathname]);
 
+  // Tab khác đổi site → tải lại tab này để giao diện và X-Site-Code khớp site mới,
+  // tránh lưu nhầm dữ liệu sang site kia.
+  useEffect(() => {
+    const onStorage = (event) => {
+      if (event.key !== 'website' || event.newValue === event.oldValue) return;
+      window.alert('Site đã được chuyển ở tab khác. Trang sẽ tải lại theo site mới.');
+      window.location.reload();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
   return (
     <div>
       <AppRoute />

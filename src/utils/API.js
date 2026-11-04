@@ -2,7 +2,12 @@ import { CK_JWT_TOKEN } from '@/states/common';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
-const getWebsiteCode = () => localStorage.getItem('website') || 'lermao';
+// Chốt site 1 lần khi tải trang: localStorage dùng chung mọi tab, nếu đọc mỗi request
+// thì tab khác đổi site sẽ làm tab này gửi nhầm X-Site-Code (lưu dữ liệu sang site kia).
+// Đổi site luôn reload trang (select-website.jsx, App.jsx) nên giá trị này luôn đúng.
+const SITE_CODE_AT_LOAD = localStorage.getItem('website') || 'lermao';
+
+export const getWebsiteCode = () => SITE_CODE_AT_LOAD;
 
 let isRenewing = false;
 let renewPromise = null;

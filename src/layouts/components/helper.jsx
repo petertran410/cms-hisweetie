@@ -5,6 +5,7 @@ import { FaAlignLeft, FaMoneyBill, FaNewspaper, FaProductHunt, FaFilePen } from 
 import { TbArrowsExchange } from 'react-icons/tb';
 import { IoSettingsSharp } from 'react-icons/io5';
 import { useLocation } from 'react-router-dom';
+import { getWebsiteCode } from '@/utils/API';
 
 const getMenuItem = (label, key, icon, children, type) => {
   return {
@@ -17,7 +18,7 @@ const getMenuItem = (label, key, icon, children, type) => {
 };
 
 export const getMenuList = (userRoles) => {
-  const currentWebsite = localStorage.getItem('website') || 'lermao';
+  const currentWebsite = getWebsiteCode();
 
   const menuItemsSuperAdmin = [
     getMenuItem('Sản phẩm', 'products', <FaProductHunt />),
@@ -37,26 +38,29 @@ export const getMenuList = (userRoles) => {
     getMenuItem('Đánh giá KH', 'testimonials', <FaStar />)
   ];
 
+  // Điều hướng URL có ở cả 2 site; dữ liệu tách riêng theo X-Site-Code
+  const redirectMenuItem = getMenuItem('Điều hướng URL', 'redirects', <TbArrowsExchange />);
+
   if (userRoles?.includes('ROLE_SUPER_ADMIN')) {
     if (currentWebsite === 'lermao') {
-      return menuItemsSuperAdmin;
+      return [...menuItemsSuperAdmin, redirectMenuItem];
     }
     return [
       ...menuItemsSuperAdmin,
       getMenuItem('Việc làm', 'recruitment', <FaFileAlt />),
       getMenuItem('Bài viết văn hoá', 'blog-culture', <FaFileArchive />),
-      getMenuItem('Điều hướng URL', 'redirects', <TbArrowsExchange />),
+      redirectMenuItem,
       getMenuItem('Cấu hình', 'settings', <IoSettingsSharp />)
     ];
   } else {
     if (currentWebsite === 'lermao') {
-      return menuItemsAdmin;
+      return [...menuItemsAdmin, redirectMenuItem];
     }
     return [
       ...menuItemsAdmin,
       getMenuItem('Việc làm', 'recruitment', <FaFileAlt />),
       getMenuItem('Bài viết văn hoá', 'blog-culture', <FaFileArchive />),
-      getMenuItem('Điều hướng URL', 'redirects', <TbArrowsExchange />),
+      redirectMenuItem,
       getMenuItem('Cấu hình', 'settings', <IoSettingsSharp />)
     ];
   }
