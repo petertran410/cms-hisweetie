@@ -213,7 +213,7 @@ const ProductsCreate = () => {
         imagesUrl: existingFileList,
         featuredThumbnail: existingFeaturedFile,
         embedUrl: embedUrl || '',
-        usePosImages: usePosImages ?? true
+        usePosImages: usePosImages ?? false
       });
 
       setCurrentPrice(price ?? kiotViet?.price ?? 0);
@@ -346,7 +346,7 @@ const ProductsCreate = () => {
               label={<p className="font-bold text-md">Dùng hình ảnh từ POS</p>}
               name="usePosImages"
               valuePropName="checked"
-              initialValue={usePosImages ?? true}
+              initialValue={usePosImages ?? false}
               extra="Bật: web hiển thị hình CMS trước, hình POS sau. Tắt: chỉ hiển thị hình CMS. Hình POS được đồng bộ tự động, không thể xoá hoặc thay đổi tại đây."
               className="mb-4"
             >
